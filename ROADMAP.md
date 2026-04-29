@@ -15,9 +15,9 @@ Major future updates for `delcard_games`.
 
 | Item | Status |
 | --- | --- |
-| Improve network error handling and user feedback | Not started |
+| Improve network error handling and user feedback | Done |
 | More reliable reconnection with full state resync | Not started |
-| Handle non-host player disconnect mid-game | Not started |
+| Handle non-host player disconnect mid-game | Done |
 | Evaluate dedicated PeerJS server (controlled signaling) | Not started |
 | Add TURN support for strict networks / difficult NATs | Not started |
 | Anti-desync strategy (host/client state verification) | Not started |

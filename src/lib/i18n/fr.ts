@@ -99,6 +99,7 @@ export default {
 	network: {
 		connectionLost: 'La connexion avec le host a été perdue.',
 		connectionError: 'Erreur de connexion.',
+		hostNotFound: 'Salon introuvable — vérifie le code.',
 		hostGone: 'Le host a quitté la partie.',
 		kicked: 'Tu as été éjecté par le host.',
 		sessionFull: 'Nombre maximal de joueurs atteint dans la session.'

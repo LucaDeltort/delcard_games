@@ -43,8 +43,13 @@ export class GameClient {
 			})
 		})
 
-		this.peer.on('error', () => {
-			this.onDisconnected?.(get(t)('network.connectionError'))
+		this.peer.on('error', (err) => {
+			const type = (err as { type?: string }).type
+			if (type === 'peer-unavailable') {
+				this.onDisconnected?.(get(t)('network.hostNotFound'))
+			} else {
+				this.onDisconnected?.(get(t)('network.connectionError'))
+			}
 		})
 	}
 

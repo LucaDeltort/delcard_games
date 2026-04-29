@@ -28,6 +28,7 @@ export class GameHost {
 	onReady?: () => void
 	onLobbyChange?: (players: LobbyPlayer[]) => void
 	onState?: (state: GameStateGeneric) => void
+	onError?: (message: string) => void
 
 	constructor(def: GameDefinition<GameStateGeneric>, hostName: string) {
 		this.def = def
@@ -60,11 +61,12 @@ export class GameHost {
 		this.peer.on('open', () => this.onReady?.())
 
 		this.peer.on('error', (err) => {
-			// Retry with a new code on collision
 			if ((err as { type?: string }).type === 'unavailable-id') {
 				this._code = generateCode()
 				this.peer.destroy()
 				this.initPeer()
+			} else {
+				this.onError?.(get(t)('network.connectionError'))
 			}
 		})
 
@@ -97,7 +99,32 @@ export class GameHost {
 		conn.on('close', () => {
 			this.clients.delete(conn.peer)
 			this.broadcastLobby()
+			this.handlePlayerDisconnect(conn.peer)
 		})
+	}
+
+	private handlePlayerDisconnect(playerId: string) {
+		if (!this.state || this.state.phase === 'gameover') return
+
+		let next: GameStateGeneric
+		if (this.def.onPlayerDisconnect) {
+			next = this.def.onPlayerDisconnect(this.state, playerId)
+		} else {
+			const remaining = 1 + this.clients.size
+			if (remaining < this.def.minPlayers) {
+				next = {
+					...this.state,
+					phase: 'gameover',
+					players: this.state.players.filter((p) => p !== playerId)
+				}
+			} else {
+				return
+			}
+		}
+
+		this.state = next
+		this.onState?.(next)
+		this.broadcastState(next)
 	}
 
 	private handleAction(playerId: string, action: Action) {

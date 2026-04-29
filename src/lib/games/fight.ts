@@ -386,6 +386,23 @@ export const fight: GameDefinition<FightState> = {
 		return s
 	},
 
+	onPlayerDisconnect(state, playerId) {
+		if (!state.activePlayers.includes(playerId)) {
+			return { ...state, players: state.players.filter((p) => p !== playerId) }
+		}
+		let s = eliminatePlayer(state, playerId, null)
+		s = { ...s, players: s.players.filter((p) => p !== playerId) }
+		if (s.phase === 'gameover') return s
+		if (state.turnPlayerId === playerId || state.pendingBonusAction === playerId) {
+			s = {
+				...s,
+				turnPlayerId: nextActivePid(s.activePlayers, playerId),
+				pendingBonusAction: null
+			}
+		}
+		return s
+	},
+
 	isOver(state) {
 		return state.phase === 'gameover'
 	},

@@ -99,6 +99,7 @@ export default {
 	network: {
 		connectionLost: 'Connection with host was lost.',
 		connectionError: 'Connection error.',
+		hostNotFound: 'Room not found — check the code.',
 		hostGone: 'The host left the game.',
 		kicked: 'You were kicked by the host.',
 		sessionFull: 'Maximum number of players reached in this session.'

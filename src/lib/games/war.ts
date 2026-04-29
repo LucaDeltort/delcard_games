@@ -106,6 +106,14 @@ export const war: GameDefinition<WarState> = {
 		return { ...state, zones, turnPlayerId: state.players[0], phase: 'reviewing' }
 	},
 
+	onPlayerDisconnect(state, playerId) {
+		return {
+			...state,
+			phase: 'gameover',
+			players: state.players.filter((p) => p !== playerId)
+		}
+	},
+
 	isOver(state) {
 		return state.phase === 'gameover'
 	},

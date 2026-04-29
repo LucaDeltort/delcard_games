@@ -24,6 +24,7 @@ let gameState = $state<GameStateGeneric | null>(null)
 let lobbyPlayers = $state<{ id: string; name: string }[]>([])
 let myPlayerId = $state('')
 let disconnectedMsg = $state('')
+let hostError = $state('')
 let validActions = $state<Action[]>([])
 let codeCopied = $state(false)
 let confirmOpen = $state(false)
@@ -58,6 +59,9 @@ onMount(() => {
 		}
 		host.onState = (state) => {
 			gameState = state
+		}
+		host.onError = (msg) => {
+			hostError = msg
 		}
 	} else {
 		const client = get(activeClient)
@@ -149,6 +153,16 @@ $effect(() => {
 	}
 })
 </script>
+
+<!-- ── Host error banner ─────────────────────────────────────── -->
+{#if hostError}
+	<div class="fixed top-0 right-0 left-0 z-50 flex items-center justify-between gap-4 bg-destructive/90 px-4 py-2 text-sm text-destructive-foreground">
+		<span>{hostError}</span>
+		<button onclick={() => (hostError = '')} class="shrink-0 opacity-70 hover:opacity-100">
+			<X size={16} />
+		</button>
+	</div>
+{/if}
 
 <!-- ── Disconnected ───────────────────────────────────────────── -->
 {#if disconnectedMsg}
