@@ -119,6 +119,23 @@ type GameDefinition<S> = {
 - `DeckTheme` = visual assets, separate from type, interchangeable
 - Folders: `src/lib/decks/<type>/`
 
+## Commit Convention
+
+Format: `type(scope): subject`
+
+- **scope** = branch name — auto-enforced by the `rtk` PreToolUse hook, do not set manually
+- **subject** = lowercase, imperative, no period
+- **body** = bullet points when commit covers multiple changes
+
+Types: `feat` `fix` `chore` `docs` `refactor` `test` `init`
+
+Examples:
+```
+feat(dev): Add game lobby UI
+fix(dev): Correct card shuffle distribution
+docs(main): Update deployment guide
+```
+
 ## File Structure
 
 ```
