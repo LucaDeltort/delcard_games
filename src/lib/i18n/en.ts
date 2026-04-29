@@ -100,6 +100,7 @@ export default {
 		connectionLost: 'Connection with host was lost.',
 		connectionError: 'Connection error.',
 		hostNotFound: 'Room not found — check the code.',
+		reconnecting: 'Reconnecting…',
 		hostGone: 'The host left the game.',
 		kicked: 'You were kicked by the host.',
 		sessionFull: 'Maximum number of players reached in this session.'

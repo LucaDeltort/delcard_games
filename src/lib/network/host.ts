@@ -7,6 +7,7 @@ import type { ClientMessage, HostMessage, LobbyPlayer } from './messages'
 
 const CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
 const PEER_PREFIX = 'delcard-'
+const RECONNECT_WINDOW_MS = 20_000
 
 function generateCode(): string {
 	return Array.from(
@@ -21,6 +22,7 @@ export class GameHost {
 	private def: GameDefinition<GameStateGeneric>
 	private peer!: Peer
 	private clients = new Map<string, ClientEntry>()
+	private pendingDisconnects = new Map<string, ReturnType<typeof setTimeout>>()
 	private state: GameStateGeneric | null = null
 	private _code: string
 	private hostName: string
@@ -78,6 +80,18 @@ export class GameHost {
 			const msg = raw as ClientMessage
 
 			if (msg.type === 'JOIN') {
+				// Reconnecting player: cancel the pending disconnect timer and restore
+				const pendingTimer = this.pendingDisconnects.get(conn.peer)
+				if (pendingTimer !== undefined) {
+					clearTimeout(pendingTimer)
+					this.pendingDisconnects.delete(conn.peer)
+					this.clients.set(conn.peer, { conn, name: msg.playerName })
+					conn.send({ type: 'WELCOME', playerId: conn.peer } as HostMessage)
+					this.broadcastLobby()
+					if (this.state) this.sendStateTo(conn, this.state)
+					return
+				}
+
 				if (this.clients.size + 1 >= this.def.maxPlayers) {
 					const rejected: HostMessage = {
 						type: 'REJECTED',
@@ -88,8 +102,7 @@ export class GameHost {
 					return
 				}
 				this.clients.set(conn.peer, { conn, name: msg.playerName })
-				const welcome: HostMessage = { type: 'WELCOME', playerId: conn.peer }
-				conn.send(welcome)
+				conn.send({ type: 'WELCOME', playerId: conn.peer } as HostMessage)
 				this.broadcastLobby()
 			} else if (msg.type === 'ACTION') {
 				this.handleAction(conn.peer, msg.action)
@@ -99,7 +112,15 @@ export class GameHost {
 		conn.on('close', () => {
 			this.clients.delete(conn.peer)
 			this.broadcastLobby()
-			this.handlePlayerDisconnect(conn.peer)
+
+			if (!this.state || this.state.phase === 'gameover') return
+
+			// Grace period: give the player time to reconnect before processing disconnect
+			const timer = setTimeout(() => {
+				this.pendingDisconnects.delete(conn.peer)
+				this.handlePlayerDisconnect(conn.peer)
+			}, RECONNECT_WINDOW_MS)
+			this.pendingDisconnects.set(conn.peer, timer)
 		})
 	}
 
@@ -150,6 +171,10 @@ export class GameHost {
 		this.broadcast({ type: 'STATE', state })
 	}
 
+	private sendStateTo(conn: DataConnection, state: GameStateGeneric) {
+		conn.send({ type: 'STATE', state } as HostMessage)
+	}
+
 	private broadcast(msg: HostMessage) {
 		for (const { conn } of this.clients.values()) {
 			conn.send(msg)
@@ -180,6 +205,8 @@ export class GameHost {
 	}
 
 	close(message?: string) {
+		for (const timer of this.pendingDisconnects.values()) clearTimeout(timer)
+		this.pendingDisconnects.clear()
 		this.broadcast({ type: 'HOST_GONE', message: message ?? get(t)('network.hostGone') })
 		this.peer.destroy()
 	}

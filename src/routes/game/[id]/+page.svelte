@@ -24,6 +24,7 @@ let gameState = $state<GameStateGeneric | null>(null)
 let lobbyPlayers = $state<{ id: string; name: string }[]>([])
 let myPlayerId = $state('')
 let disconnectedMsg = $state('')
+let reconnecting = $state(false)
 let hostError = $state('')
 let validActions = $state<Action[]>([])
 let codeCopied = $state(false)
@@ -76,10 +77,15 @@ onMount(() => {
 			lobbyPlayers = players
 		}
 		client.onState = (state) => {
+			reconnecting = false
 			gameState = state
 		}
 		client.onDisconnected = (msg) => {
+			reconnecting = false
 			disconnectedMsg = msg
+		}
+		client.onReconnecting = () => {
+			reconnecting = true
 		}
 		// Read state that may have arrived before onMount ran
 		myPlayerId = client.playerId ?? ''
@@ -153,6 +159,13 @@ $effect(() => {
 	}
 })
 </script>
+
+<!-- ── Reconnecting overlay ──────────────────────────────────── -->
+{#if reconnecting}
+	<div class="fixed inset-0 z-50 flex flex-col items-center justify-center gap-3 bg-background/80 backdrop-blur-sm">
+		<p class="text-sm text-muted-foreground">{$t('network.reconnecting')}</p>
+	</div>
+{/if}
 
 <!-- ── Host error banner ─────────────────────────────────────── -->
 {#if hostError}
