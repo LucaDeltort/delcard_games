@@ -1,3 +1,5 @@
+export type DeckType = 'FrenchDeckWithJoker' | 'FrenchDeckWithoutJoker'
+
 export interface Card {
 	id: string
 	face: string // e.g. 'A', 'K', '7', 'Joker'

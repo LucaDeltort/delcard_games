@@ -1,6 +1,6 @@
 <script lang="ts">
 import type { Card } from '$lib/core/types'
-import { defaultStandardPack } from '$lib/decks/standard/packs'
+import { defaultFrenchDeckPack } from '$lib/decks/FrenchDeck/packs'
 
 let {
 	card = null,
@@ -13,7 +13,7 @@ let {
 } = $props()
 
 // Future: replace with a per-player store (localStorage-backed)
-const pack = defaultStandardPack
+const pack = defaultFrenchDeckPack
 const ext = pack.ext ?? '.png'
 
 const sizes = {

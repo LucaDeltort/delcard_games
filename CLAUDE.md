@@ -125,7 +125,6 @@ Format: `type(scope): subject`
 
 - **scope** = branch name — auto-enforced by the `rtk` PreToolUse hook, do not set manually
 - **subject** = lowercase, imperative, no period
-- **body** = bullet points when commit covers multiple changes
 
 Types: `feat` `fix` `chore` `docs` `refactor` `test` `init`
 
@@ -135,6 +134,8 @@ feat(dev): Add game lobby UI
 fix(dev): Correct card shuffle distribution
 docs(main): Update deployment guide
 ```
+
+No body and co-author trailers for now, to keep it simple.
 
 ## File Structure
 

@@ -76,10 +76,12 @@ type Action = {
 ## The GameDefinition interface
 
 ```typescript
+type DeckType = 'FrenchDeckWithJoker' | 'FrenchDeckWithoutJoker';
+
 type GameDefinition<S extends GameStateGeneric> = {
 	id: string;
 	name: string;
-	deckType: string;
+	deckType: DeckType;
 	minPlayers: number;
 	maxPlayers: number;
 
@@ -88,6 +90,11 @@ type GameDefinition<S extends GameStateGeneric> = {
 	applyAction: (state: S, action: Action) => S;
 	isOver: (state: S) => boolean;
 	getWinner: (state: S) => string | null;
+
+	// Optional. Called by the host when a non-host player disconnects mid-game.
+	// Return a state that continues (player removed/skipped) or ends the game.
+	// Omit to fall back to a generic gameover when players drop below minPlayers.
+	onPlayerDisconnect?: (state: S, playerId: string) => S;
 };
 ```
 
@@ -125,7 +132,7 @@ Each player needs three zones:
 
 ```typescript
 setup(players) {
-  const { hands } = deal(createShuffledDeck(), 26, 2);
+  const { hands } = deal(createDeck('FrenchDeckWithoutJoker'), 26, 2);
   const zones: WarState['zones'] = {};
   players.forEach((pid, i) => {
     zones[`deck_${pid}`]   = createZone(`deck_${pid}`,   'hidden', hands[i], pid);
@@ -135,6 +142,8 @@ setup(players) {
   return { players, zones, turnPlayerId: players[0], phase: 'playing', activeGameId: 'war' };
 }
 ```
+
+Note: Pass `deckType` to `createDeck()`. War uses `'FrenchDeckWithoutJoker'` (52 cards); use `'FrenchDeckWithJoker'` (54 cards with 2 jokers) for games that need them.
 
 ### 4 — Implement getValidActions
 
@@ -191,7 +200,7 @@ All utilities are exported from `$lib/engine`.
 | `createCard(face, suit?, isHidden?)`    | Creates a card with a unique id                      |
 | `shuffle(items)`                        | Fisher-Yates shuffle, returns a new array            |
 | `deal(deck, countPerPlayer, nbPlayers)` | Round-robin deal, returns `{ hands, remaining }`     |
-| `drawCard(deck)`                        | Removes and returns the top card, or `null` if empty |
+| `drawCard(deck)`                        | Returns `{ card, remaining }` or `null` if empty     |
 | `topCard(pile)`                         | Peeks at the top card without removing it            |
 
 ### Zones
@@ -205,8 +214,7 @@ All utilities are exported from `$lib/engine`.
 
 | Function               | Description                      |
 | ---------------------- | -------------------------------- |
-| `createStandardDeck()` | Unshuffled 52-card standard deck |
-| `createShuffledDeck()` | Shuffled 52-card standard deck   |
+| `createDeck(deckType)` | Shuffled deck for the given type |
 
 ### Turn
 
@@ -218,7 +226,9 @@ All utilities are exported from `$lib/engine`.
 
 ## Tips
 
-**Custom decks.** If your game needs extra cards (jokers, wildcards…), create them locally in `setup` with `createCard` and add them to the deck before shuffling.
+**Jokers.** Use `'FrenchDeckWithJoker'` in `deckType` to include 2 joker cards (54 cards total). Use `'FrenchDeckWithoutJoker'` for a standard 52-card deck. The engine filters automatically.
+
+**Custom cards.** If your game needs wildcard or game-specific cards beyond jokers, create them locally in `setup` with `createCard` and add them to the deck before shuffling.
 
 **Tracking non-card state.** HP, scores, timers — store them directly on the state object as extra fields. Only use zones for actual cards.
 

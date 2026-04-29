@@ -1,4 +1,4 @@
-import type { GameStateGeneric } from '$lib/core/types'
+import type { DeckType, GameStateGeneric } from '$lib/core/types'
 
 export type Action = {
 	type: string
@@ -15,7 +15,7 @@ export type Action = {
 export type GameDefinition<S extends GameStateGeneric> = {
 	id: string
 	name: string
-	deckType: string
+	deckType: DeckType
 	minPlayers: number
 	maxPlayers: number
 

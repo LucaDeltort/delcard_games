@@ -1,6 +1,6 @@
 import type { Card, GameStateGeneric } from '$lib/core/types'
 import type { GameDefinition } from '$lib/engine'
-import { createShuffledDeck, createZone, shuffle } from '$lib/engine'
+import { createDeck, createZone, shuffle } from '$lib/engine'
 
 const CARD_VALUES: Record<string, number> = {
 	A: 1,
@@ -170,12 +170,12 @@ function dragonAwakening(state: FightState, currentPlayer: string): FightState {
 export const fight: GameDefinition<FightState> = {
 	id: 'fight',
 	name: 'The Fight',
-	deckType: 'standard',
+	deckType: 'FrenchDeckWithoutJoker',
 	minPlayers: 3,
 	maxPlayers: 6,
 
 	setup(players) {
-		let drawCards = createShuffledDeck()
+		let drawCards = createDeck('FrenchDeckWithoutJoker')
 		let discardCards: Card[] = []
 
 		const hands: Record<string, Card[]> = {}

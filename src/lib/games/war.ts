@@ -1,6 +1,6 @@
 import type { GameStateGeneric } from '$lib/core/types'
 import type { GameDefinition } from '$lib/engine'
-import { createShuffledDeck, createZone, deal, moveCard, nextPlayer } from '$lib/engine'
+import { createDeck, createZone, deal, moveCard, nextPlayer } from '$lib/engine'
 
 type WarState = GameStateGeneric & {
 	phase: 'playing' | 'reviewing' | 'gameover'
@@ -25,12 +25,12 @@ const FACE_VALUES: Record<string, number> = {
 export const war: GameDefinition<WarState> = {
 	id: 'war',
 	name: 'War',
-	deckType: 'standard',
+	deckType: 'FrenchDeckWithoutJoker',
 	minPlayers: 2,
 	maxPlayers: 2,
 
 	setup(players) {
-		const { hands } = deal(createShuffledDeck(), 26, 2)
+		const { hands } = deal(createDeck('FrenchDeckWithoutJoker'), 26, 2)
 		const zones: WarState['zones'] = {}
 		players.forEach((pid, i) => {
 			zones[`deck_${pid}`] = createZone(`deck_${pid}`, 'hidden', hands[i], pid)
