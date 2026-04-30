@@ -83,6 +83,7 @@ Online card games platform for friends. P2P full client-side, no backend.
 ## Stack
 
 - SvelteKit + TypeScript + Tailwind CSS v4 + PeerJS
+- UI components: `shadcn-svelte` (bits-ui) — use shadcn components when available
 - Icons: `lucide-svelte` — always use Lucide for any icon need
 
 ## Network (PeerJS, star topology)
