@@ -27,6 +27,7 @@ export class GameHost {
 	private state: GameStateGeneric | null = null
 	private _code: string
 	private hostName: string
+	private _stateSeq = 0
 
 	onReady?: () => void
 	onLobbyChange?: (players: LobbyPlayer[]) => void
@@ -107,6 +108,8 @@ export class GameHost {
 				this.broadcastLobby()
 			} else if (msg.type === 'ACTION') {
 				this.handleAction(conn.peer, msg.action)
+			} else if (msg.type === 'RESYNC') {
+				if (this.state) this.sendStateTo(conn, this.state)
 			}
 		})
 
@@ -169,11 +172,12 @@ export class GameHost {
 	}
 
 	private broadcastState(state: GameStateGeneric) {
-		this.broadcast({ type: 'STATE', state })
+		this._stateSeq++
+		this.broadcast({ type: 'STATE', state, seq: this._stateSeq })
 	}
 
 	private sendStateTo(conn: DataConnection, state: GameStateGeneric) {
-		conn.send({ type: 'STATE', state } as HostMessage)
+		conn.send({ type: 'STATE', state, seq: this._stateSeq } as HostMessage)
 	}
 
 	private broadcast(msg: HostMessage) {

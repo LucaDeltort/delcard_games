@@ -20,6 +20,7 @@ export class GameClient {
 	private _code: string
 	private _playerName: string
 	private _qualityInterval: ReturnType<typeof setInterval> | null = null
+	private _lastSeq = 0
 
 	onWelcome?: (playerId: string) => void
 	onLobby?: (players: LobbyPlayer[]) => void
@@ -77,6 +78,7 @@ export class GameClient {
 
 	private tryReconnect() {
 		if (this._intentionalClose || this.peer.destroyed) return
+		this._lastSeq = 0
 		if (this.peer.disconnected) {
 			this.peer.reconnect()
 			this.peer.once('open', () => this.openConnection())
@@ -97,6 +99,10 @@ export class GameClient {
 				this.onLobby?.(msg.players)
 				break
 			case 'STATE':
+				if (this._lastSeq > 0 && msg.seq !== this._lastSeq + 1) {
+					this.conn?.send({ type: 'RESYNC' } as ClientMessage)
+				}
+				this._lastSeq = msg.seq
 				this.onState?.(msg.state)
 				break
 			case 'HOST_GONE':
