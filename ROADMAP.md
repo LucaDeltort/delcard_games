@@ -28,9 +28,9 @@ Major future updates for `delcard_games`.
 
 | Item | Status |
 | --- | --- |
-| PWA support + mobile / responsive polish | Not started |
+| PWA support + mobile / responsive polish | Done |
 | Rematch / new game without full rejoin | Done |
-| Player kick / remove from session (host power) | Not started |
+| Player kick / remove from session (host power) | Done |
 
 ## Tier 4 — Test coverage
 
