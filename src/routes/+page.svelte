@@ -48,7 +48,7 @@ async function createGame() {
 }
 </script>
 
-<main class="flex min-h-screen flex-col items-center justify-center gap-16 px-4">
+<main class="flex flex-1 flex-col items-center justify-center gap-16 px-4 pb-14 pt-4">
 	<header class="text-center">
 		<img src={logo} alt="Delcard" class="mx-auto h-28 w-28 sm:h-32 sm:w-32" />
 		<h1 class="mt-3 text-6xl tracking-wide text-foreground sm:text-7xl">DELCARD</h1>

@@ -78,8 +78,14 @@
 	* {
 		@apply border-border outline-ring/50;
 	}
+	html {
+		background: oklch(0.13 0 0);
+		border: none;
+	}
 	body {
 		@apply bg-background font-sans text-foreground antialiased;
+		padding-top: env(safe-area-inset-top);
+		border: none;
 	}
 	h1,
 	h2,
