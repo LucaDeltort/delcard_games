@@ -11,7 +11,9 @@
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
 		"format": "biome format --write .",
-		"lint": "biome check --write ."
+		"lint": "biome check --write .",
+		"test": "vitest run",
+		"test:watch": "vitest"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "^2.4.13",
@@ -27,7 +29,8 @@
 		"tailwindcss": "^4.1.17",
 		"typescript": "^5.9.3",
 		"typescript-eslint": "^8.48.1",
-		"vite": "^7.2.6"
+		"vite": "^7.2.6",
+		"vitest": "^4.1.5"
 	},
 	"dependencies": {
 		"bits-ui": "^2.18.0",

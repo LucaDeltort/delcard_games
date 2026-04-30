@@ -36,7 +36,7 @@ Major future updates for `delcard_games`.
 
 | Item | Status |
 | --- | --- |
-| Increase test coverage for engine and critical network flows | Not started |
+| Increase test coverage for engine and critical network flows | Done |
 
 ## Tier 5 — Content
 
