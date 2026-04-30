@@ -29,6 +29,7 @@ let hostError = $state('')
 let validActions = $state<Action[]>([])
 let codeCopied = $state(false)
 let confirmOpen = $state(false)
+let connectionQuality = $state<'good' | 'warn' | 'poor' | null>(null)
 let pendingDestination = ''
 let _skipConfirm = false
 let kickTarget = $state<{ id: string; name: string } | null>(null)
@@ -86,6 +87,9 @@ onMount(() => {
 		}
 		client.onReconnecting = () => {
 			reconnecting = true
+		}
+		client.onQualityChange = (q) => {
+			connectionQuality = q
 		}
 		// Read state that may have arrived before onMount ran
 		myPlayerId = client.playerId ?? ''
@@ -164,6 +168,19 @@ $effect(() => {
 {#if reconnecting}
 	<div class="fixed inset-0 z-50 flex flex-col items-center justify-center gap-3 bg-background/80 backdrop-blur-sm">
 		<p class="text-sm text-muted-foreground">{$t('network.reconnecting')}</p>
+	</div>
+{/if}
+
+<!-- ── Connection quality dot ────────────────────────────────── -->
+{#if !isHost && connectionQuality && gameState && gameState.phase !== 'gameover'}
+	<div class="fixed bottom-4 right-4 z-40" title="Connection: {connectionQuality}">
+		<span
+			class="block h-2.5 w-2.5 rounded-full {connectionQuality === 'good'
+				? 'bg-green-500'
+				: connectionQuality === 'warn'
+					? 'bg-yellow-500'
+					: 'bg-red-500'}"
+		></span>
 	</div>
 {/if}
 

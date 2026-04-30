@@ -18,10 +18,10 @@ Major future updates for `delcard_games`.
 | Improve network error handling and user feedback | Done |
 | More reliable reconnection with full state resync | Done |
 | Handle non-host player disconnect mid-game | Done |
-| Evaluate dedicated PeerJS server (controlled signaling) | Not started |
-| Add TURN support for strict networks / difficult NATs | Not started |
+| Evaluate dedicated PeerJS server (controlled signaling) | Skipped — contradicts no-server philosophy |
+| Add TURN support for strict networks / difficult NATs | Skipped — requires server infrastructure |
 | Anti-desync strategy (host/client state verification) | Not started |
-| Connection quality indicator (latency / drop warning) | Not started |
+| Connection quality indicator (latency / drop warning) | Done |
 | Host migration (session survives if host leaves) | Not started |
 
 ## Tier 3 — Core UX

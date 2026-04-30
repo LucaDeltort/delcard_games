@@ -4,6 +4,7 @@ import type { GameStateGeneric } from '$lib/core/types'
 import type { Action } from '$lib/engine'
 import { t } from '$lib/i18n'
 import type { ClientMessage, HostMessage, LobbyPlayer } from './messages'
+import { peerOptions } from './peer-config'
 
 const PEER_PREFIX = 'delcard-'
 const MAX_RETRIES = 3
@@ -18,17 +19,19 @@ export class GameClient {
 	private _retryCount = 0
 	private _code: string
 	private _playerName: string
+	private _qualityInterval: ReturnType<typeof setInterval> | null = null
 
 	onWelcome?: (playerId: string) => void
 	onLobby?: (players: LobbyPlayer[]) => void
 	onState?: (state: GameStateGeneric) => void
 	onDisconnected?: (message: string) => void
 	onReconnecting?: () => void
+	onQualityChange?: (quality: 'good' | 'warn' | 'poor') => void
 
 	constructor(code: string, playerName: string) {
 		this._code = code
 		this._playerName = playerName
-		this.peer = new Peer()
+		this.peer = new Peer(peerOptions() ?? {})
 
 		this.peer.on('open', () => this.openConnection())
 
@@ -48,11 +51,13 @@ export class GameClient {
 
 		conn.on('open', () => {
 			conn.send({ type: 'JOIN', playerName: this._playerName } as ClientMessage)
+			this.startQualityPolling(conn)
 		})
 
 		conn.on('data', (raw) => this.handleMessage(raw as HostMessage))
 
 		conn.on('close', () => {
+			this.stopQualityPolling()
 			if (this._intentionalClose) return
 			this._retryCount++
 			if (this._retryCount <= MAX_RETRIES) {
@@ -113,6 +118,34 @@ export class GameClient {
 		return this._lobbyPlayers
 	}
 
+	private startQualityPolling(conn: DataConnection) {
+		this._qualityInterval = setInterval(async () => {
+			const pc = conn.peerConnection
+			if (!pc) return
+			const stats = await pc.getStats()
+			let rtt: number | undefined
+			stats.forEach((report) => {
+				if (
+					report.type === 'candidate-pair' &&
+					report.state === 'succeeded' &&
+					report.currentRoundTripTime !== undefined
+				) {
+					rtt = report.currentRoundTripTime * 1000
+				}
+			})
+			if (rtt === undefined) return
+			const quality = rtt < 100 ? 'good' : rtt < 300 ? 'warn' : 'poor'
+			this.onQualityChange?.(quality)
+		}, 3000)
+	}
+
+	private stopQualityPolling() {
+		if (this._qualityInterval !== null) {
+			clearInterval(this._qualityInterval)
+			this._qualityInterval = null
+		}
+	}
+
 	sendAction(action: Action) {
 		if (!this.conn) return
 		const msg: ClientMessage = { type: 'ACTION', action }
@@ -121,6 +154,7 @@ export class GameClient {
 
 	close() {
 		this._intentionalClose = true
+		this.stopQualityPolling()
 		this.peer.destroy()
 	}
 }
