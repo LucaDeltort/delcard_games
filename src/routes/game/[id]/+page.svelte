@@ -268,7 +268,12 @@ $effect(() => {
 			<h1 class="mt-2 font-heading text-7xl text-foreground">{winnerName}</h1>
 			<p class="mt-2 text-muted-foreground">{$t('game.wins')}</p>
 		</div>
-		<Button href="/" variant="outline">{$t('common.backHome')}</Button>
+		<div class="flex gap-3">
+			{#if isHost}
+				<Button onclick={() => get(activeHost)?.startGame()}>{$t('game.rematch')}</Button>
+			{/if}
+			<Button href="/" variant="outline">{$t('common.backHome')}</Button>
+		</div>
 	</main>
 
 	<!-- ── Game ───────────────────────────────────────────────────── -->

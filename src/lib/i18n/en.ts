@@ -46,6 +46,7 @@ export default {
 		confirmKick: 'Kick {name}?',
 		over: 'Game over',
 		wins: 'wins the game',
+		rematch: 'Rematch',
 		yourActions: 'Your actions',
 		waitingTurn: "Waiting for {name}'s turn…",
 		empty: 'empty',

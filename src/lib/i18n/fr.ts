@@ -46,6 +46,7 @@ export default {
 		confirmKick: 'Exclure {name} ?',
 		over: 'Partie terminée',
 		wins: 'remporte la partie',
+		rematch: 'Revanche',
 		yourActions: 'Tes actions',
 		waitingTurn: 'En attente du tour de {name}…',
 		empty: 'vide',
