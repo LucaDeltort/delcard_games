@@ -43,7 +43,7 @@ File names use the extension matching your `ext` field (`.svg` or `.png`).
 - `<suit>`: `clubs`, `diamonds`, `hearts`, `spades`
 - `<face>`: `02`–`10`, `J`, `Q`, `K`, `A` (digits 2–9 zero-padded: `02`…`09`)
 
-Examples: `card_hearts_A.svg`, `card_spades_10.svg`, `card_clubs_07.svg`
+Examples: `card_hearts_A.svg`, `card_spades_10.svg`, `card_clubs_07.svg`, `card_diamonds_J.svg`
 
 **Special (required)**
 

@@ -6,6 +6,7 @@ import { browser } from '$app/environment'
 import { beforeNavigate, goto } from '$app/navigation'
 import { page } from '$app/stores'
 import ConfirmDialog from '$lib/components/ConfirmDialog.svelte'
+import DeckPackPicker from '$lib/components/DeckPackPicker.svelte'
 import FightView from '$lib/components/games/FightView.svelte'
 import WarView from '$lib/components/games/WarView.svelte'
 import RulesDrawer from '$lib/components/RulesDrawer.svelte'
@@ -253,6 +254,8 @@ $effect(() => {
 				{/each}
 			</ul>
 		</div>
+
+		<DeckPackPicker />
 
 		{#if isHost}
 			<Button

@@ -7,6 +7,13 @@ export const frenchDeckPacks: CardPack[] = [
 		author: 'Alborz Heydaryan',
 		basePath: '/cards/FrenchDeck/default',
 		ext: '.svg'
+	},
+	{
+		id: 'cyberwave',
+		name: 'Cyberwave',
+		author: 'Rohit Chouhan',
+		basePath: '/cards/FrenchDeck/cyberwave',
+		ext: '.svg'
 	}
 ]
 

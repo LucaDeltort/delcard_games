@@ -52,7 +52,8 @@ export default {
 		empty: 'empty',
 		hiddenCard: 'hidden card',
 		hiddenCards: 'hidden cards',
-		rules: 'Rules'
+		rules: 'Rules',
+		cardStyle: 'Card style'
 	},
 	war: {
 		name: 'War',

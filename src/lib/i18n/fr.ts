@@ -52,7 +52,8 @@ export default {
 		empty: 'vide',
 		hiddenCard: 'carte cachée',
 		hiddenCards: 'cartes cachées',
-		rules: 'Règles'
+		rules: 'Règles',
+		cardStyle: 'Style des cartes'
 	},
 	war: {
 		name: 'La Bataille',
