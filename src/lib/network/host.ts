@@ -4,7 +4,6 @@ import type { GameStateGeneric } from '$lib/core/types'
 import type { Action, GameDefinition } from '$lib/engine'
 import { t } from '$lib/i18n'
 import type { ClientMessage, HostMessage, LobbyPlayer } from './messages'
-import { peerOptions } from './peer-config'
 
 const CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
 const PEER_PREFIX = 'delcard-'
@@ -60,7 +59,7 @@ export class GameHost {
 	}
 
 	private initPeer() {
-		this.peer = new Peer(PEER_PREFIX + this._code, peerOptions())
+		this.peer = new Peer(PEER_PREFIX + this._code)
 
 		this.peer.on('open', () => this.onReady?.())
 

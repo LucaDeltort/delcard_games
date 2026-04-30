@@ -4,7 +4,6 @@ import type { GameStateGeneric } from '$lib/core/types'
 import type { Action } from '$lib/engine'
 import { t } from '$lib/i18n'
 import type { ClientMessage, HostMessage, LobbyPlayer } from './messages'
-import { peerOptions } from './peer-config'
 
 const PEER_PREFIX = 'delcard-'
 const MAX_RETRIES = 3
@@ -32,7 +31,7 @@ export class GameClient {
 	constructor(code: string, playerName: string) {
 		this._code = code
 		this._playerName = playerName
-		this.peer = new Peer(peerOptions() ?? {})
+		this.peer = new Peer()
 
 		this.peer.on('open', () => this.openConnection())
 
