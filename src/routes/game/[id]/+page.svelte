@@ -37,6 +37,16 @@ let kickTarget = $state<{ id: string; name: string } | null>(null)
 
 const gameMeta = gameList.find((g) => g.id === gameId)
 
+let knownNames: Record<string, string> = {}
+
+$effect(() => {
+	for (const p of lobbyPlayers) knownNames[p.id] = p.name
+})
+
+const enrichedPlayers = $derived(
+	gameState ? gameState.players.map((id) => ({ id, name: knownNames[id] ?? id })) : lobbyPlayers
+)
+
 $effect(() => {
 	if (!gameState || !myPlayerId) {
 		validActions = []
@@ -99,11 +109,13 @@ onMount(() => {
 })
 
 onDestroy(() => {
-	if (!isHost) get(activeClient)?.close()
+	if (isHost) get(activeHost)?.close()
+	else get(activeClient)?.close()
 })
 
-beforeNavigate(({ cancel, to, willUnload }) => {
+beforeNavigate(({ cancel, to, willUnload, type }) => {
 	if (willUnload) return
+	if (type === 'popstate' && !gameState) return
 	if (_skipConfirm) {
 		_skipConfirm = false
 		return
@@ -281,7 +293,7 @@ $effect(() => {
 	<!-- ── Game over ──────────────────────────────────────────────── -->
 {:else if gameState.phase === 'gameover'}
 	{@const winner = games[gameState.activeGameId]?.getWinner(gameState)}
-	{@const winnerName = lobbyPlayers.find((p) => p.id === winner)?.name ?? winner ?? '?'}
+	{@const winnerName = enrichedPlayers.find((p) => p.id === winner)?.name ?? winner ?? '?'}
 	<main class="flex min-h-screen flex-col items-center justify-center gap-8 px-4 text-center">
 		<div>
 			<p class="text-sm tracking-widest text-muted-foreground uppercase">{$t('game.over')}</p>
@@ -301,7 +313,7 @@ $effect(() => {
 	<WarView
 		state={gameState}
 		{myPlayerId}
-		players={lobbyPlayers}
+		players={enrichedPlayers}
 		{validActions}
 		onAction={submitAction}
 	/>
@@ -309,14 +321,14 @@ $effect(() => {
 	<FightView
 		state={gameState}
 		{myPlayerId}
-		players={lobbyPlayers}
+		players={enrichedPlayers}
 		{validActions}
 		onAction={submitAction}
 	/>
 
 	<!-- ── Game (generic fallback) ───────────────────────────────── -->
 {:else}
-	{@const activePlayer = lobbyPlayers.find((p) => p.id === gameState?.turnPlayerId)}
+	{@const activePlayer = enrichedPlayers.find((p) => p.id === gameState?.turnPlayerId)}
 	<div class="flex min-h-screen flex-col">
 		<header
 			class="flex items-center justify-between border-b border-border bg-card px-6 py-3 text-sm"
