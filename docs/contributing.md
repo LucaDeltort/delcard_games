@@ -13,6 +13,28 @@ Flow: `<feature>` → PR → `dev` → PR → `main`
 
 ---
 
+## Code style
+
+This project uses [Biome](https://biomejs.dev/) for formatting and linting.
+
+A pre-commit hook runs automatically on every `git commit`:
+
+```bash
+npm run format   # biome format --write
+npm run lint     # biome check --write
+```
+
+Auto-fixed files are re-staged before the commit completes. If Biome reports unfixable errors, the commit is blocked — fix them first.
+
+To run manually:
+
+```bash
+npm run format
+npm run lint
+```
+
+---
+
 ## Commit convention
 
 Format: `type(scope): subject`
