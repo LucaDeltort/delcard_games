@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { createCard } from '$lib/engine/cards'
 import { createZone } from '$lib/engine/zones'
-import { fight, type FightState } from './fight'
+import { type FightState, fight } from './fight'
 
 const PLAYERS = ['p1', 'p2', 'p3']
 

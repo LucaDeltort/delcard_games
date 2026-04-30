@@ -1,21 +1,21 @@
 {
-  "name": "Delcard",
-  "short_name": "Delcard",
-  "description": "Card games with friends — no server",
-  "start_url": "/",
-  "display": "standalone",
-  "background_color": "#161616",
-  "theme_color": "#002fa7",
-  "icons": [
-    {
-      "src": "/favicon.png",
-      "sizes": "180x180",
-      "type": "image/png"
-    },
-    {
-      "src": "/favicon.svg",
-      "sizes": "any",
-      "type": "image/svg+xml"
-    }
-  ]
+	"name": "Delcard",
+	"short_name": "Delcard",
+	"description": "Card games with friends — no server",
+	"start_url": "/",
+	"display": "standalone",
+	"background_color": "#161616",
+	"theme_color": "#002fa7",
+	"icons": [
+		{
+			"src": "/favicon.png",
+			"sizes": "180x180",
+			"type": "image/png"
+		},
+		{
+			"src": "/favicon.svg",
+			"sizes": "any",
+			"type": "image/svg+xml"
+		}
+	]
 }

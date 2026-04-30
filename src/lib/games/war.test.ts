@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
+import type { GameStateGeneric } from '$lib/core/types'
 import { createCard } from '$lib/engine/cards'
 import { createZone } from '$lib/engine/zones'
-import type { GameStateGeneric } from '$lib/core/types'
 import { war } from './war'
 
 const P1 = 'p1'
@@ -15,10 +15,7 @@ function setup() {
 describe('war.setup', () => {
 	it('creates 52 cards total across both decks', () => {
 		const state = setup()
-		const total = PLAYERS.reduce(
-			(sum, p) => sum + state.zones[`deck_${p}`].cards.length,
-			0
-		)
+		const total = PLAYERS.reduce((sum, p) => sum + state.zones[`deck_${p}`].cards.length, 0)
 		expect(total).toBe(52)
 	})
 
@@ -71,7 +68,12 @@ describe('war.getValidActions', () => {
 			...state,
 			zones: {
 				...state.zones,
-				[`deck_${state.turnPlayerId}`]: createZone(`deck_${state.turnPlayerId}`, 'hidden', [], state.turnPlayerId)
+				[`deck_${state.turnPlayerId}`]: createZone(
+					`deck_${state.turnPlayerId}`,
+					'hidden',
+					[],
+					state.turnPlayerId
+				)
 			}
 		}
 		expect(war.getValidActions(emptyState, state.turnPlayerId)).toHaveLength(0)
