@@ -1,4 +1,4 @@
-# delcard_games
+# Delcard Games
 
 An online card game platform for playing with friends — fully client-side, no server required.
 
