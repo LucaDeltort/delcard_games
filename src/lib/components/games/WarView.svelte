@@ -1,4 +1,5 @@
 <script lang="ts">
+import { Settings as SettingsIcon } from 'lucide-svelte'
 import CardZone from '$lib/components/CardZone.svelte'
 import PlayerSlot from '$lib/components/PlayerSlot.svelte'
 import RulesDrawer from '$lib/components/RulesDrawer.svelte'
@@ -7,6 +8,7 @@ import type { GameStateGeneric } from '$lib/core/types'
 import type { Action } from '$lib/engine'
 import { t } from '$lib/i18n'
 import type { LobbyPlayer } from '$lib/network/messages'
+import { settingsOpen } from '$lib/stores/settings'
 
 let {
 	state,
@@ -70,7 +72,16 @@ const roundWinnerId = $derived(
 <div class="flex min-h-screen flex-col">
 	<header class="flex items-center justify-between border-b border-border bg-card px-4 py-2 text-xs text-muted-foreground">
 		<span class="font-mono">{$t('war.name')}</span>
-		<RulesDrawer gameId="war" size={12} />
+		<div class="flex items-center gap-2">
+			<button
+				onclick={() => ($settingsOpen = true)}
+				class="flex items-center rounded p-0.5 text-muted-foreground transition-colors hover:text-foreground"
+				aria-label={$t('settings.title')}
+			>
+				<SettingsIcon size={12} />
+			</button>
+			<RulesDrawer gameId="war" size={12} />
+		</div>
 	</header>
 
 	<div class="flex flex-1 flex-col items-center justify-center gap-8 px-4">

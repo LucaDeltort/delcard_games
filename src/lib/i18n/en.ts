@@ -98,6 +98,13 @@ export default {
 		flashDamage: '→ {n} dmg',
 		flashBlocked: '→ Blocked'
 	},
+	settings: {
+		title: 'Settings',
+		timeFormat: 'Time format',
+		timeFormat12: '12h',
+		timeFormat24: '24h',
+		language: 'Language'
+	},
 	network: {
 		connectionLost: 'Connection with host was lost.',
 		connectionError: 'Connection error.',

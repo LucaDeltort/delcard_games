@@ -17,6 +17,8 @@
 	},
 	"devDependencies": {
 		"@biomejs/biome": "^2.4.13",
+		"@internationalized/date": "^3.12.1",
+		"@lucide/svelte": "^1.14.0",
 		"@sveltejs/adapter-netlify": "^6.0.4",
 		"@sveltejs/kit": "^2.49.1",
 		"@sveltejs/vite-plugin-svelte": "^6.2.1",

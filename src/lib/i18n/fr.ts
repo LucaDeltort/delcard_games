@@ -98,6 +98,13 @@ export default {
 		flashDamage: '→ {n} dégâts',
 		flashBlocked: '→ Bloqué'
 	},
+	settings: {
+		title: 'Paramètres',
+		timeFormat: 'Format de l\'heure',
+		timeFormat12: '12h',
+		timeFormat24: '24h',
+		language: 'Langue'
+	},
 	network: {
 		connectionLost: 'La connexion avec le host a été perdue.',
 		connectionError: 'Erreur de connexion.',

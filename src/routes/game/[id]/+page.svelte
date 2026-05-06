@@ -1,5 +1,5 @@
 <script lang="ts">
-import { X } from 'lucide-svelte'
+import { Settings as SettingsIcon, X } from 'lucide-svelte'
 import { onDestroy, onMount } from 'svelte'
 import { get } from 'svelte/store'
 import { browser } from '$app/environment'
@@ -16,6 +16,7 @@ import type { Action } from '$lib/engine'
 import { gameList, games } from '$lib/games/index'
 import { t } from '$lib/i18n'
 import { activeClient, activeHost } from '$lib/stores/session'
+import { settingsOpen } from '$lib/stores/settings'
 
 const code = $page.params.id
 const isHost = $page.url.searchParams.get('role') === 'host'
@@ -216,6 +217,14 @@ $effect(() => {
 
 	<!-- ── Lobby ──────────────────────────────────────────────────── -->
 {:else if !gameState}
+	<button
+		onclick={() => ($settingsOpen = true)}
+		class="fixed right-4 z-50 rounded-md border border-border bg-card px-2.5 py-1 text-xs text-muted-foreground transition-colors hover:text-foreground"
+		style="top: calc(1rem + env(safe-area-inset-top))"
+		aria-label={$t('settings.title')}
+	>
+		<SettingsIcon size={14} />
+	</button>
 	<main class="flex min-h-screen flex-col items-center justify-center gap-10 px-4">
 		<header class="flex flex-col items-center text-center">
 			<div class="flex items-center gap-2">

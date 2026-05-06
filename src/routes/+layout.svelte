@@ -1,10 +1,11 @@
 <script lang="ts">
 import './layout.css'
-import { Coffee } from 'lucide-svelte'
+import { Coffee, Settings as SettingsIcon } from 'lucide-svelte'
 import { page } from '$app/stores'
 import favicon from '$lib/assets/favicon.svg'
-import LangToggle from '$lib/components/LangToggle.svelte'
+import SettingsModal from '$lib/components/SettingsModal.svelte'
 import { t } from '$lib/i18n'
+import { settingsOpen } from '$lib/stores/settings'
 
 let { children } = $props()
 
@@ -15,7 +16,17 @@ const isGamePage = $derived($page.url.pathname.startsWith('/game/'))
     <title>{$t("common.appTitle")}</title>
     <link rel="icon" href={favicon} />
 </svelte:head>
-{#if !isGamePage}<LangToggle />{/if}
+{#if !isGamePage}
+	<button
+		onclick={() => ($settingsOpen = true)}
+		class="fixed right-4 z-50 rounded-md border border-border bg-card px-2.5 py-1 text-xs text-muted-foreground transition-colors hover:text-foreground"
+		style="top: calc(1rem + env(safe-area-inset-top))"
+		aria-label={$t('settings.title')}
+	>
+		<SettingsIcon size={14} />
+	</button>
+{/if}
+<SettingsModal />
 <div class="flex min-h-dvh flex-col">
     {@render children()}
     {#if !isGamePage}
