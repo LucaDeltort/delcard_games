@@ -14,14 +14,14 @@ $effect(() => {
 
 {#if $settingsOpen}
 	<button
-		class="fixed inset-0 z-40 bg-black/20"
+		class="fixed inset-0 z-[100] bg-black/20"
 		onclick={() => ($settingsOpen = false)}
 		aria-label="Close settings"
 	></button>
-	<div class="fixed inset-y-0 right-0 z-50 flex w-72 max-w-[85vw] flex-col border-l border-border bg-card shadow-xl">
+	<div class="fixed inset-y-0 right-0 z-[110] flex w-72 max-w-[85vw] flex-col border-l border-border bg-card shadow-xl">
 		<div class="flex items-center justify-between border-b border-border px-4 py-2">
 			<span class="text-xs tracking-widest text-muted-foreground uppercase">{$t('settings.title')}</span>
-			<button onclick={() => ($settingsOpen = false)} class="text-muted-foreground transition-colors hover:text-foreground">
+			<button onclick={() => ($settingsOpen = false)} class="p-2 text-muted-foreground transition-colors hover:text-foreground">
 				<X size={16} />
 			</button>
 		</div>

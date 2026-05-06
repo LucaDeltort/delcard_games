@@ -10,7 +10,7 @@ const rules = $derived(gameRules[gameId]?.[$locale] ?? null)
 
 <button
 	onclick={() => (open = true)}
-	class="flex items-center rounded p-0.5 text-muted-foreground transition-colors hover:text-foreground"
+	class="flex items-center rounded p-2 text-muted-foreground transition-colors hover:text-foreground"
 	aria-label={$t('game.rules')}
 >
 	<Info {size} />
@@ -18,16 +18,16 @@ const rules = $derived(gameRules[gameId]?.[$locale] ?? null)
 
 {#if open}
 	<button
-		class="fixed inset-0 z-40 bg-black/20"
+		class="fixed inset-0 z-[100] bg-black/20"
 		onclick={() => (open = false)}
 		aria-label="Close rules"
 	></button>
-	<div class="fixed inset-y-0 right-0 z-50 flex w-72 max-w-[85vw] flex-col border-l border-border bg-card shadow-xl">
+	<div class="fixed inset-y-0 right-0 z-[110] flex w-72 max-w-[85vw] flex-col border-l border-border bg-card shadow-xl">
 		<div class="flex items-center justify-between border-b border-border px-4 py-2">
 			<span class="text-xs tracking-widest text-muted-foreground uppercase">{$t('game.rules')}</span>
 			<button
 				onclick={() => (open = false)}
-				class="text-muted-foreground transition-colors hover:text-foreground"
+				class="p-2 text-muted-foreground transition-colors hover:text-foreground"
 			>
 				<X size={16} />
 			</button>
