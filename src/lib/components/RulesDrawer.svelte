@@ -23,7 +23,7 @@ const rules = $derived(gameRules[gameId]?.[$locale] ?? null)
 		aria-label="Close rules"
 	></button>
 	<div class="fixed inset-y-0 right-0 z-50 flex w-72 max-w-[85vw] flex-col border-l border-border bg-card shadow-xl">
-		<div class="flex items-center justify-between border-b border-border px-4 py-3">
+		<div class="flex items-center justify-between border-b border-border px-4 py-2">
 			<span class="text-xs tracking-widest text-muted-foreground uppercase">{$t('game.rules')}</span>
 			<button
 				onclick={() => (open = false)}

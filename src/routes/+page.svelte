@@ -1,13 +1,13 @@
 <script lang="ts">
-import { Info } from 'lucide-svelte'
 import { get } from 'svelte/store'
 import { browser } from '$app/environment'
 import { goto } from '$app/navigation'
 import logo from '$lib/assets/logo.svg'
+import RulesDrawer from '$lib/components/RulesDrawer.svelte'
 import { Button } from '$lib/components/ui/button'
 import { Input } from '$lib/components/ui/input'
-import { gameList, gameRules } from '$lib/games/index'
-import { locale, t } from '$lib/i18n'
+import { gameList } from '$lib/games/index'
+import { t } from '$lib/i18n'
 import { GameHost } from '$lib/network/host'
 import { activeHost } from '$lib/stores/session'
 
@@ -15,14 +15,6 @@ let selectedGame = $state(gameList[0].id)
 let playerName = $state(browser ? (localStorage.getItem('playerName') ?? '') : '')
 let creating = $state(false)
 let error = $state('')
-let rulesDialog = $state<HTMLDialogElement | null>(null)
-let rulesGameId = $state<string | null>(null)
-
-function openRules(id: string, e: Event) {
-	e.stopPropagation()
-	rulesGameId = id
-	rulesDialog?.showModal()
-}
 
 async function createGame() {
 	if (!playerName.trim()) {
@@ -86,13 +78,7 @@ async function createGame() {
 									: `${game.minPlayers}–${game.maxPlayers}`}
 								{$t('common.players')}</span
 							>
-							<button
-								type="button"
-								onclick={(e) => openRules(game.id, e)}
-								class="ml-1 flex size-7 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground"
-								aria-label="Rules"
-							><Info size={14} /></button
-							>
+							<RulesDrawer gameId={game.id} />
 						</label>
 					{/each}
 				</div>
@@ -130,27 +116,3 @@ async function createGame() {
 		</div>
 	</div>
 </main>
-
-<dialog
-	bind:this={rulesDialog}
-	class="m-auto w-full max-w-lg rounded-xl border border-border bg-card p-0 text-foreground shadow-xl backdrop:bg-black/50"
->
-	{#if rulesGameId}
-		<div class="flex flex-col gap-4 p-6">
-			<div class="flex items-start justify-between gap-4">
-				<h2 class="text-xl font-semibold">
-					{$t(`${rulesGameId}.name`)}
-				</h2>
-				<button
-					onclick={() => rulesDialog?.close()}
-					class="shrink-0 text-muted-foreground hover:text-foreground"
-					aria-label="Close"
-				>✕</button
-				>
-			</div>
-			<p class="whitespace-pre-line text-sm leading-relaxed text-muted-foreground">
-				{gameRules[rulesGameId]?.[$locale] ?? ''}
-			</p>
-		</div>
-	{/if}
-</dialog>
