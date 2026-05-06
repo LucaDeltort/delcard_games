@@ -112,6 +112,7 @@ export default {
 		reconnecting: 'Reconnexion…',
 		hostGone: 'Le host a quitté la partie.',
 		kicked: 'Tu as été éjecté par le host.',
-		sessionFull: 'Nombre maximal de joueurs atteint dans la session.'
+		sessionFull: 'Nombre maximal de joueurs atteint dans la session.',
+		gameInProgress: 'Partie déjà en cours.'
 	}
 }

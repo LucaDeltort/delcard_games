@@ -21,6 +21,7 @@ export class GameClient {
 	private _qualityInterval: ReturnType<typeof setInterval> | null = null
 	private _lastQuality: 'good' | 'warn' | 'poor' | null = null
 	private _lastSeq = 0
+	private _actionQueue: Action[] = []
 
 	onWelcome?: (playerId: string) => void
 	onLobby?: (players: LobbyPlayer[]) => void
@@ -63,7 +64,7 @@ export class GameClient {
 			this._retryCount++
 			if (this._retryCount <= MAX_RETRIES) {
 				this.onReconnecting?.()
-				setTimeout(() => this.tryReconnect(), RETRY_DELAY_MS)
+				setTimeout(() => this.tryReconnect(), RETRY_DELAY_MS * Math.pow(2, this._retryCount - 1))
 			} else {
 				this.onDisconnected?.(get(t)('network.connectionLost'))
 			}
@@ -93,6 +94,7 @@ export class GameClient {
 				this._retryCount = 0
 				this._playerId = msg.playerId
 				this.onWelcome?.(msg.playerId)
+				this.flushActionQueue()
 				break
 			case 'LOBBY':
 				this._lobbyPlayers = msg.players
@@ -156,14 +158,25 @@ export class GameClient {
 		this._lastQuality = null
 	}
 
+	private flushActionQueue() {
+		if (!this.conn || this._actionQueue.length === 0) return
+		for (const action of this._actionQueue) {
+			this.conn.send({ type: 'ACTION', action } as ClientMessage)
+		}
+		this._actionQueue = []
+	}
+
 	sendAction(action: Action) {
-		if (!this.conn) return
-		const msg: ClientMessage = { type: 'ACTION', action }
-		this.conn.send(msg)
+		if (!this.conn) {
+			this._actionQueue.push(action)
+			return
+		}
+		this.conn.send({ type: 'ACTION', action } as ClientMessage)
 	}
 
 	close() {
 		this._intentionalClose = true
+		this._actionQueue = []
 		this.stopQualityPolling()
 		this.peer.destroy()
 	}

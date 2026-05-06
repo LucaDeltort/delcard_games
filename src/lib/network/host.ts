@@ -93,6 +93,12 @@ export class GameHost {
 					return
 				}
 
+				if (this.state !== null) {
+					conn.send({ type: 'REJECTED', message: get(t)('network.gameInProgress') } as HostMessage)
+					setTimeout(() => conn.close(), 300)
+					return
+				}
+
 				if (this.clients.size + 1 >= this.def.maxPlayers) {
 					const rejected: HostMessage = {
 						type: 'REJECTED',
@@ -155,7 +161,10 @@ export class GameHost {
 		if (!this.state) return
 		const valid = this.def.getValidActions(this.state, playerId)
 		const isValid = valid.some(
-			(a: Action) => a.type === action.type && a.playerId === action.playerId
+			(a: Action) =>
+				a.type === action.type &&
+				a.playerId === action.playerId &&
+				JSON.stringify(a.payload) === JSON.stringify(action.payload)
 		)
 		if (!isValid) return
 		const next = this.def.applyAction(this.state, action)
