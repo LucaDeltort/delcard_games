@@ -100,7 +100,7 @@ export default {
 	},
 	settings: {
 		title: 'Paramètres',
-		timeFormat: 'Format de l\'heure',
+		timeFormat: "Format de l'heure",
 		timeFormat12: '12h',
 		timeFormat24: '24h',
 		language: 'Langue'

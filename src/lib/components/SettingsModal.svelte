@@ -1,18 +1,15 @@
 <script lang="ts">
 import { X } from 'lucide-svelte'
-import { locale, t, type Locale } from '$lib/i18n'
-import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger
-} from '$lib/components/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger } from '$lib/components/ui/select'
+import { type Locale, locale, t } from '$lib/i18n'
 import { settings, settingsOpen } from '$lib/stores/settings'
 
 const langLabels: Record<Locale, string> = { fr: 'Français', en: 'English' }
 
 let lang = $state<Locale>($locale)
-$effect(() => { locale.set(lang) })
+$effect(() => {
+	locale.set(lang)
+})
 </script>
 
 {#if $settingsOpen}
