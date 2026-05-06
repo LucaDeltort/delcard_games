@@ -38,7 +38,7 @@ let kickTarget = $state<{ id: string; name: string } | null>(null)
 
 const gameMeta = gameList.find((g) => g.id === gameId)
 
-let knownNames: Record<string, string> = {}
+let knownNames: Record<string, string> = $state({})
 
 $effect(() => {
 	for (const p of lobbyPlayers) knownNames[p.id] = p.name

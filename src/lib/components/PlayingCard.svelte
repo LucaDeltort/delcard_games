@@ -23,7 +23,7 @@ const src = $derived.by(() => {
 	const ext = pack.ext ?? '.png'
 	if (!card) return null
 	if (back || card.isHidden) return `${pack.basePath}/card_back${ext}`
-	if (!card.suit) return `${pack.basePath}/card_joker_black${ext}`
+	if (card.face === 'Joker') return `${pack.basePath}/card_joker_${card.suit}${ext}`
 	const faceKey = /^\d$/.test(card.face) ? `0${card.face}` : card.face
 	return `${pack.basePath}/card_${card.suit}_${faceKey}${ext}`
 })

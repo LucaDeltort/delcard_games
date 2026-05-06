@@ -19,6 +19,7 @@ export class GameClient {
 	private _code: string
 	private _playerName: string
 	private _qualityInterval: ReturnType<typeof setInterval> | null = null
+	private _lastQuality: 'good' | 'warn' | 'poor' | null = null
 	private _lastSeq = 0
 
 	onWelcome?: (playerId: string) => void
@@ -140,7 +141,10 @@ export class GameClient {
 			})
 			if (rtt === undefined) return
 			const quality = rtt < 100 ? 'good' : rtt < 300 ? 'warn' : 'poor'
-			this.onQualityChange?.(quality)
+			if (quality !== this._lastQuality) {
+				this._lastQuality = quality
+				this.onQualityChange?.(quality)
+			}
 		}, 3000)
 	}
 
@@ -149,6 +153,7 @@ export class GameClient {
 			clearInterval(this._qualityInterval)
 			this._qualityInterval = null
 		}
+		this._lastQuality = null
 	}
 
 	sendAction(action: Action) {
