@@ -77,7 +77,7 @@ export default {
 		discard: 'Défausse',
 		youEliminated: 'Tu es éliminé. En attente de la fin…',
 		bonusAction: 'Action bonus — meurtre',
-		chargeAction: 'Charger une attaque',
+		chargeAction: 'Ajouter une charge',
 		attackBtn: 'Attaquer',
 		shieldBtn: 'Changer le bouclier',
 		historyTitle: 'Historique',

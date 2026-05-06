@@ -77,7 +77,7 @@ export default {
 		discard: 'Discard',
 		youEliminated: "You're eliminated. Waiting for the end…",
 		bonusAction: 'Bonus action — kill',
-		chargeAction: 'Charge an attack',
+		chargeAction: 'Add a charge',
 		attackBtn: 'Attack',
 		shieldBtn: 'Change shield',
 		historyTitle: 'History',
