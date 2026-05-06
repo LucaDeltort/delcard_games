@@ -1,5 +1,5 @@
 <script lang="ts">
-import { ChevronDown, ChevronUp, MessageSquare, X } from 'lucide-svelte'
+import { ChevronDown, ChevronUp, MessageSquare, Settings as SettingsIcon, X } from 'lucide-svelte'
 import { onDestroy, onMount, untrack } from 'svelte'
 import { fade } from 'svelte/transition'
 import CardZone from '$lib/components/CardZone.svelte'
@@ -11,6 +11,7 @@ import type { Action } from '$lib/engine'
 import type { FightState, HistoryEntry } from '$lib/games/fight'
 import { t } from '$lib/i18n'
 import type { LobbyPlayer } from '$lib/network/messages'
+import { settings, settingsOpen } from '$lib/stores/settings'
 
 let {
 	state: gameState,
@@ -182,6 +183,13 @@ onDestroy(() => {
 			{/if}
 		</span>
 		<div class="flex items-center gap-2">
+			<button
+				onclick={() => ($settingsOpen = true)}
+				class="flex items-center rounded p-0.5 text-muted-foreground transition-colors hover:text-foreground"
+				aria-label={$t('settings.title')}
+			>
+				<SettingsIcon size={12} />
+			</button>
 			<RulesDrawer gameId="fight" size={12} />
 			<button
 				onclick={() => (historyOpen = !historyOpen)}
@@ -221,7 +229,7 @@ onDestroy(() => {
 				</p>
 				<div class="flex gap-2">
 					<CardZone card={gs.zones[`shield_${pid}`]?.cards[0] ?? null} size="sm" label={$t('fight.shield')} />
-					<CardZone card={hasCharge ? gs.zones[`charge_${pid}`].cards[0] : null} size="sm" label={$t('fight.charge')} />
+					<CardZone card={hasCharge ? gs.zones[`charge_${pid}`].cards[0] : null} count={gs.zones[`charge_${pid}`]?.cards.length > 1 ? gs.zones[`charge_${pid}`].cards.length : undefined} size="sm" label={$t('fight.charge')} />
 				</div>
 			</div>
 		{/each}
@@ -246,7 +254,7 @@ onDestroy(() => {
 		</p>
 		<div class="flex gap-4">
 			<CardZone card={gs.zones[`shield_${myPlayerId}`]?.cards[0] ?? null} label={$t('fight.shield')} />
-			<CardZone card={gs.zones[`charge_${myPlayerId}`]?.cards[0] ?? null} label={$t('fight.charge')} />
+			<CardZone card={gs.zones[`charge_${myPlayerId}`]?.cards[0] ?? null} count={(gs.zones[`charge_${myPlayerId}`]?.cards.length ?? 0) > 1 ? gs.zones[`charge_${myPlayerId}`]?.cards.length : undefined} label={$t('fight.charge')} />
 		</div>
 	</div>
 
@@ -373,6 +381,9 @@ onDestroy(() => {
 					<p
 						class="border-b border-border/30 px-4 py-2 text-xs text-muted-foreground last:border-0"
 					>
+						<span class="mr-1.5 text-muted-foreground/50"
+							>{new Date(entry.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: $settings.timeFormat === '12' })}</span
+						>
 						{#if entry.type === 'CHARGE'}
 							{$t('fight.historyCharge', { name: playerName(entry.actorId) })}
 						{:else if entry.type === 'ATTACK'}
@@ -425,10 +436,10 @@ onDestroy(() => {
 				</p>
 				<div class="flex items-center justify-center gap-2">
 					<PlayingCard card={actionFlash.attackCard} size="md" />
-					{#if actionFlash.chargeCard}
+					{#each actionFlash.chargeCards as cc}
 						<span class="text-sm text-muted-foreground">+</span>
-						<PlayingCard card={actionFlash.chargeCard} size="md" />
-					{/if}
+						<PlayingCard card={cc} size="md" />
+					{/each}
 				</div>
 				<p class="mt-4 text-sm font-semibold {actionFlash.damage > 0 ? 'text-destructive' : 'text-muted-foreground'}">
 					{actionFlash.damage > 0

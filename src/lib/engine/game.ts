@@ -1,4 +1,4 @@
-import type { GameStateGeneric } from '$lib/core/types'
+import type { DeckType, GameStateGeneric } from '$lib/core/types'
 
 export type Action = {
 	type: string
@@ -15,7 +15,7 @@ export type Action = {
 export type GameDefinition<S extends GameStateGeneric> = {
 	id: string
 	name: string
-	deckType: string
+	deckType: DeckType
 	minPlayers: number
 	maxPlayers: number
 
@@ -33,6 +33,14 @@ export type GameDefinition<S extends GameStateGeneric> = {
 
 	/** Returns the winning player's ID, or null if the game is still running. */
 	getWinner: (state: S) => string | null
+
+	/**
+	 * Called by the host when a non-host player disconnects mid-game.
+	 * Return a new state that either continues the game (player removed/skipped)
+	 * or ends it (phase set to 'gameover'). If omitted, the host falls back to
+	 * a generic gameover when remaining players drop below minPlayers.
+	 */
+	onPlayerDisconnect?: (state: S, playerId: string) => S
 }
 
 /** Returns the ID of the player after `currentId` in a circular list. */

@@ -2,8 +2,6 @@
 
 **Players:** 3–6 · **Deck:** Standard 52 cards · **Duration:** ~10 min
 
-_Original game by Marty · Fef · Tino Chaumont — [la-bagarre.com](https://la-bagarre.com)_
-
 ---
 
 ## Rules
@@ -53,13 +51,13 @@ Discard the targeted Shield (yours or another player's) and replace it with the 
 
 #### Charge
 
-Place the drawn card **face down** in front of you without looking at it. On your next attack, reveal and discard your charge, then draw your attack card. The **charge value adds to the attack**.
+Place the drawn card **face down** in front of you without looking at it. On your next attack, reveal and discard all your charges, then draw your attack card. The **combined charge value adds to the attack**.
 
 **Charge rules:**
 
-- If you take HP damage while holding a charge, you **must discard it**.
-- You are **not forced to attack** while charged, but if you do attack, you **must** use the charge.
-- You can hold only **one charge** at a time.
+- If you take HP damage while holding charges, you **must discard them all**.
+- You are **not forced to attack** while charged, but if you do attack, you **must** use all charges.
+- You can hold up to **two charges** at a time.
 
 ---
 
@@ -93,7 +91,7 @@ Source: [`src/lib/games/fight.ts`](../../src/lib/games/fight.ts)
 
 **HP tracking.** HP is stored as a plain number in `state.hp` rather than as cards in a zone. The physical card-based HP display is a tabletop token mechanic; digitally, the number is sufficient.
 
-**Zones per player:** `shield_<pid>` (public, 1 card), `charge_<pid>` (hidden, 0–1 card).
+**Zones per player:** `shield_<pid>` (public, 1 card), `charge_<pid>` (hidden, 0–2 cards).
 
 **Global zones:** `draw` (hidden), `discard` (public).
 

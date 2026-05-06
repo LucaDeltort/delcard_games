@@ -83,6 +83,7 @@ Online card games platform for friends. P2P full client-side, no backend.
 ## Stack
 
 - SvelteKit + TypeScript + Tailwind CSS v4 + PeerJS
+- UI components: `shadcn-svelte` (bits-ui) — use shadcn components when available
 - Icons: `lucide-svelte` — always use Lucide for any icon need
 
 ## Network (PeerJS, star topology)
@@ -118,6 +119,24 @@ type GameDefinition<S> = {
 - `DeckType` = card definition (standard, tarot, uno...)
 - `DeckTheme` = visual assets, separate from type, interchangeable
 - Folders: `src/lib/decks/<type>/`
+
+## Commit Convention
+
+Format: `type(scope): subject`
+
+- **scope** = branch name — auto-enforced by the `rtk` PreToolUse hook, do not set manually
+- **subject** = lowercase, imperative, no period
+
+Types: `feat` `fix` `chore` `docs` `refactor` `test` `init`
+
+Examples:
+```
+feat(dev): Add game lobby UI
+fix(dev): Correct card shuffle distribution
+docs(main): Update deployment guide
+```
+
+No body and co-author trailers for now, to keep it simple.
 
 ## File Structure
 

@@ -46,12 +46,14 @@ export default {
 		confirmKick: 'Exclure {name} ?',
 		over: 'Partie terminée',
 		wins: 'remporte la partie',
+		rematch: 'Revanche',
 		yourActions: 'Tes actions',
 		waitingTurn: 'En attente du tour de {name}…',
 		empty: 'vide',
 		hiddenCard: 'carte cachée',
 		hiddenCards: 'cartes cachées',
-		rules: 'Règles'
+		rules: 'Règles',
+		cardStyle: 'Style des cartes'
 	},
 	war: {
 		name: 'La Bataille',
@@ -75,7 +77,7 @@ export default {
 		discard: 'Défausse',
 		youEliminated: 'Tu es éliminé. En attente de la fin…',
 		bonusAction: 'Action bonus — meurtre',
-		chargeAction: 'Charger une attaque',
+		chargeAction: 'Ajouter une charge',
 		attackBtn: 'Attaquer',
 		shieldBtn: 'Changer le bouclier',
 		historyTitle: 'Historique',
@@ -96,9 +98,18 @@ export default {
 		flashDamage: '→ {n} dégâts',
 		flashBlocked: '→ Bloqué'
 	},
+	settings: {
+		title: 'Paramètres',
+		timeFormat: "Format de l'heure",
+		timeFormat12: '12h',
+		timeFormat24: '24h',
+		language: 'Langue'
+	},
 	network: {
 		connectionLost: 'La connexion avec le host a été perdue.',
 		connectionError: 'Erreur de connexion.',
+		hostNotFound: 'Salon introuvable — vérifie le code.',
+		reconnecting: 'Reconnexion…',
 		hostGone: 'Le host a quitté la partie.',
 		kicked: 'Tu as été éjecté par le host.',
 		sessionFull: 'Nombre maximal de joueurs atteint dans la session.'

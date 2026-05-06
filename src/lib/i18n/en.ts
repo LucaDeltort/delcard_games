@@ -46,12 +46,14 @@ export default {
 		confirmKick: 'Kick {name}?',
 		over: 'Game over',
 		wins: 'wins the game',
+		rematch: 'Rematch',
 		yourActions: 'Your actions',
 		waitingTurn: "Waiting for {name}'s turn…",
 		empty: 'empty',
 		hiddenCard: 'hidden card',
 		hiddenCards: 'hidden cards',
-		rules: 'Rules'
+		rules: 'Rules',
+		cardStyle: 'Card style'
 	},
 	war: {
 		name: 'War',
@@ -75,7 +77,7 @@ export default {
 		discard: 'Discard',
 		youEliminated: "You're eliminated. Waiting for the end…",
 		bonusAction: 'Bonus action — kill',
-		chargeAction: 'Charge an attack',
+		chargeAction: 'Add a charge',
 		attackBtn: 'Attack',
 		shieldBtn: 'Change shield',
 		historyTitle: 'History',
@@ -96,9 +98,18 @@ export default {
 		flashDamage: '→ {n} dmg',
 		flashBlocked: '→ Blocked'
 	},
+	settings: {
+		title: 'Settings',
+		timeFormat: 'Time format',
+		timeFormat12: '12h',
+		timeFormat24: '24h',
+		language: 'Language'
+	},
 	network: {
 		connectionLost: 'Connection with host was lost.',
 		connectionError: 'Connection error.',
+		hostNotFound: 'Room not found — check the code.',
+		reconnecting: 'Reconnecting…',
 		hostGone: 'The host left the game.',
 		kicked: 'You were kicked by the host.',
 		sessionFull: 'Maximum number of players reached in this session.'

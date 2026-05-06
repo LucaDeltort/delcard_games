@@ -1,11 +1,12 @@
 <script lang="ts">
-import { X } from 'lucide-svelte'
+import { Settings as SettingsIcon, X } from 'lucide-svelte'
 import { onDestroy, onMount } from 'svelte'
 import { get } from 'svelte/store'
 import { browser } from '$app/environment'
 import { beforeNavigate, goto } from '$app/navigation'
 import { page } from '$app/stores'
 import ConfirmDialog from '$lib/components/ConfirmDialog.svelte'
+import DeckPackPicker from '$lib/components/DeckPackPicker.svelte'
 import FightView from '$lib/components/games/FightView.svelte'
 import WarView from '$lib/components/games/WarView.svelte'
 import RulesDrawer from '$lib/components/RulesDrawer.svelte'
@@ -15,6 +16,7 @@ import type { Action } from '$lib/engine'
 import { gameList, games } from '$lib/games/index'
 import { t } from '$lib/i18n'
 import { activeClient, activeHost } from '$lib/stores/session'
+import { settingsOpen } from '$lib/stores/settings'
 
 const code = $page.params.id
 const isHost = $page.url.searchParams.get('role') === 'host'
@@ -24,14 +26,27 @@ let gameState = $state<GameStateGeneric | null>(null)
 let lobbyPlayers = $state<{ id: string; name: string }[]>([])
 let myPlayerId = $state('')
 let disconnectedMsg = $state('')
+let reconnecting = $state(false)
+let hostError = $state('')
 let validActions = $state<Action[]>([])
 let codeCopied = $state(false)
 let confirmOpen = $state(false)
+let connectionQuality = $state<'good' | 'warn' | 'poor' | null>(null)
 let pendingDestination = ''
 let _skipConfirm = false
 let kickTarget = $state<{ id: string; name: string } | null>(null)
 
 const gameMeta = gameList.find((g) => g.id === gameId)
+
+let knownNames: Record<string, string> = $state({})
+
+$effect(() => {
+	for (const p of lobbyPlayers) knownNames[p.id] = p.name
+})
+
+const enrichedPlayers = $derived(
+	gameState ? gameState.players.map((id) => ({ id, name: knownNames[id] ?? id })) : lobbyPlayers
+)
 
 $effect(() => {
 	if (!gameState || !myPlayerId) {
@@ -59,6 +74,9 @@ onMount(() => {
 		host.onState = (state) => {
 			gameState = state
 		}
+		host.onError = (msg) => {
+			hostError = msg
+		}
 	} else {
 		const client = get(activeClient)
 		if (!client) {
@@ -72,10 +90,18 @@ onMount(() => {
 			lobbyPlayers = players
 		}
 		client.onState = (state) => {
+			reconnecting = false
 			gameState = state
 		}
 		client.onDisconnected = (msg) => {
+			reconnecting = false
 			disconnectedMsg = msg
+		}
+		client.onReconnecting = () => {
+			reconnecting = true
+		}
+		client.onQualityChange = (q) => {
+			connectionQuality = q
 		}
 		// Read state that may have arrived before onMount ran
 		myPlayerId = client.playerId ?? ''
@@ -84,11 +110,13 @@ onMount(() => {
 })
 
 onDestroy(() => {
-	if (!isHost) get(activeClient)?.close()
+	if (isHost) get(activeHost)?.close()
+	else get(activeClient)?.close()
 })
 
-beforeNavigate(({ cancel, to, willUnload }) => {
+beforeNavigate(({ cancel, to, willUnload, type }) => {
 	if (willUnload) return
+	if (type === 'popstate' && !gameState) return
 	if (_skipConfirm) {
 		_skipConfirm = false
 		return
@@ -150,6 +178,36 @@ $effect(() => {
 })
 </script>
 
+<!-- ── Reconnecting overlay ──────────────────────────────────── -->
+{#if reconnecting}
+	<div class="fixed inset-0 z-50 flex flex-col items-center justify-center gap-3 bg-background/80 backdrop-blur-sm">
+		<p class="text-sm text-muted-foreground">{$t('network.reconnecting')}</p>
+	</div>
+{/if}
+
+<!-- ── Connection quality dot ────────────────────────────────── -->
+{#if !isHost && connectionQuality && gameState && gameState.phase !== 'gameover'}
+	<div class="fixed bottom-4 right-4 z-40" title="Connection: {connectionQuality}">
+		<span
+			class="block h-2.5 w-2.5 rounded-full {connectionQuality === 'good'
+				? 'bg-green-500'
+				: connectionQuality === 'warn'
+					? 'bg-yellow-500'
+					: 'bg-red-500'}"
+		></span>
+	</div>
+{/if}
+
+<!-- ── Host error banner ─────────────────────────────────────── -->
+{#if hostError}
+	<div class="fixed top-0 right-0 left-0 z-50 flex items-center justify-between gap-4 bg-destructive/90 px-4 py-2 text-sm text-destructive-foreground">
+		<span>{hostError}</span>
+		<button onclick={() => (hostError = '')} class="shrink-0 opacity-70 hover:opacity-100">
+			<X size={16} />
+		</button>
+	</div>
+{/if}
+
 <!-- ── Disconnected ───────────────────────────────────────────── -->
 {#if disconnectedMsg}
 	<main class="flex min-h-screen flex-col items-center justify-center gap-6 px-4 text-center">
@@ -159,6 +217,14 @@ $effect(() => {
 
 	<!-- ── Lobby ──────────────────────────────────────────────────── -->
 {:else if !gameState}
+	<button
+		onclick={() => ($settingsOpen = true)}
+		class="fixed right-4 z-50 rounded-md border border-border bg-card px-2.5 py-1 text-xs text-muted-foreground transition-colors hover:text-foreground"
+		style="top: calc(1rem + env(safe-area-inset-top))"
+		aria-label={$t('settings.title')}
+	>
+		<SettingsIcon size={14} />
+	</button>
 	<main class="flex min-h-screen flex-col items-center justify-center gap-10 px-4">
 		<header class="flex flex-col items-center text-center">
 			<div class="flex items-center gap-2">
@@ -210,6 +276,8 @@ $effect(() => {
 			</ul>
 		</div>
 
+		<DeckPackPicker />
+
 		{#if isHost}
 			<Button
 				onclick={startGame}
@@ -234,14 +302,19 @@ $effect(() => {
 	<!-- ── Game over ──────────────────────────────────────────────── -->
 {:else if gameState.phase === 'gameover'}
 	{@const winner = games[gameState.activeGameId]?.getWinner(gameState)}
-	{@const winnerName = lobbyPlayers.find((p) => p.id === winner)?.name ?? winner ?? '?'}
+	{@const winnerName = enrichedPlayers.find((p) => p.id === winner)?.name ?? winner ?? '?'}
 	<main class="flex min-h-screen flex-col items-center justify-center gap-8 px-4 text-center">
 		<div>
 			<p class="text-sm tracking-widest text-muted-foreground uppercase">{$t('game.over')}</p>
 			<h1 class="mt-2 font-heading text-7xl text-foreground">{winnerName}</h1>
 			<p class="mt-2 text-muted-foreground">{$t('game.wins')}</p>
 		</div>
-		<Button href="/" variant="outline">{$t('common.backHome')}</Button>
+		<div class="flex gap-3">
+			{#if isHost}
+				<Button onclick={() => get(activeHost)?.startGame()}>{$t('game.rematch')}</Button>
+			{/if}
+			<Button href="/" variant="outline">{$t('common.backHome')}</Button>
+		</div>
 	</main>
 
 	<!-- ── Game ───────────────────────────────────────────────────── -->
@@ -249,7 +322,7 @@ $effect(() => {
 	<WarView
 		state={gameState}
 		{myPlayerId}
-		players={lobbyPlayers}
+		players={enrichedPlayers}
 		{validActions}
 		onAction={submitAction}
 	/>
@@ -257,14 +330,14 @@ $effect(() => {
 	<FightView
 		state={gameState}
 		{myPlayerId}
-		players={lobbyPlayers}
+		players={enrichedPlayers}
 		{validActions}
 		onAction={submitAction}
 	/>
 
 	<!-- ── Game (generic fallback) ───────────────────────────────── -->
 {:else}
-	{@const activePlayer = lobbyPlayers.find((p) => p.id === gameState?.turnPlayerId)}
+	{@const activePlayer = enrichedPlayers.find((p) => p.id === gameState?.turnPlayerId)}
 	<div class="flex min-h-screen flex-col">
 		<header
 			class="flex items-center justify-between border-b border-border bg-card px-6 py-3 text-sm"

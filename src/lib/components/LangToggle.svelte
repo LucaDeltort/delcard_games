@@ -4,7 +4,8 @@ import { locale } from '$lib/i18n'
 
 <button
 	onclick={() => locale.update((l) => (l === 'fr' ? 'en' : 'fr'))}
-	class="fixed top-4 right-4 z-50 rounded-md border border-border bg-card px-2.5 py-1 text-xs text-muted-foreground transition-colors hover:text-foreground"
+	class="fixed right-4 z-50 rounded-md border border-border bg-card px-2.5 py-1 text-xs text-muted-foreground transition-colors hover:text-foreground"
+	style="top: calc(1rem + env(safe-area-inset-top))"
 >
 	{$locale === 'fr' ? 'EN' : 'FR'}
 </button>
