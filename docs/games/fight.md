@@ -2,8 +2,6 @@
 
 **Players:** 3–6 · **Deck:** Standard 52 cards · **Duration:** ~10 min
 
-_Original game by Marty · Fef · Tino Chaumont — [la-bagarre.com](https://la-bagarre.com)_
-
 ---
 
 ## Rules

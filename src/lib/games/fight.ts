@@ -22,7 +22,7 @@ function cv(face: string): number {
 	return CARD_VALUES[face] ?? 0
 }
 
-export type HistoryEntry =
+type HistoryEntryInput =
 	| { type: 'CHARGE'; actorId: string; chargedCard: Card }
 	| {
 			type: 'ATTACK'
@@ -30,7 +30,7 @@ export type HistoryEntry =
 			targetId: string
 			damage: number
 			attackCard: Card
-			chargeCard: Card | null
+			chargeCards: Card[]
 	  }
 	| {
 			type: 'CHANGE_SHIELD'
@@ -41,6 +41,28 @@ export type HistoryEntry =
 	  }
 	| { type: 'ELIMINATED'; targetId: string; killedBy: string | null }
 	| { type: 'DRAGON' }
+
+export type HistoryEntry =
+	| { type: 'CHARGE'; actorId: string; chargedCard: Card; timestamp: number }
+	| {
+			type: 'ATTACK'
+			actorId: string
+			targetId: string
+			damage: number
+			attackCard: Card
+			chargeCards: Card[]
+			timestamp: number
+	  }
+	| {
+			type: 'CHANGE_SHIELD'
+			actorId: string
+			targetId: string
+			oldShield: Card | null
+			newShield: Card
+			timestamp: number
+	  }
+	| { type: 'ELIMINATED'; targetId: string; killedBy: string | null; timestamp: number }
+	| { type: 'DRAGON'; timestamp: number }
 
 export type FightState = GameStateGeneric & {
 	phase: 'playing' | 'gameover'
@@ -250,8 +272,8 @@ export const fight: GameDefinition<FightState> = {
 
 		const actions = []
 
-		// CHARGE only if no existing charge
-		if (state.zones[`charge_${playerId}`].cards.length === 0) {
+		// CHARGE only if fewer than 2 charges
+		if (state.zones[`charge_${playerId}`].cards.length < 2) {
 			actions.push({ type: 'CHARGE', playerId })
 		}
 
@@ -280,7 +302,7 @@ export const fight: GameDefinition<FightState> = {
 		// Also flag if draw became empty after the draw
 		const drawnEmptied = !needsDragon && s.zones.draw.cards.length === 0
 
-		const newEntries: HistoryEntry[] = []
+		const newEntries: HistoryEntryInput[] = []
 
 		if (action.type === 'ATTACK') {
 			const { targetId } = action.payload as { targetId: string }
@@ -288,10 +310,10 @@ export const fight: GameDefinition<FightState> = {
 
 			// Charge must be used when attacking
 			const chargeZone = s.zones[`charge_${actingPid}`]
-			let chargeCard: Card | null = null
+			let chargeCards: Card[] = []
 			if (chargeZone.cards.length > 0) {
-				chargeCard = { ...chargeZone.cards[0], isHidden: false }
-				attackValue += cv(chargeZone.cards[0].face)
+				chargeCards = chargeZone.cards.map((c) => ({ ...c, isHidden: false }))
+				attackValue += chargeZone.cards.reduce((sum, c) => sum + cv(c.face), 0)
 				s = {
 					...s,
 					zones: { ...s.zones, [`charge_${actingPid}`]: { ...chargeZone, cards: [] } }
@@ -310,7 +332,7 @@ export const fight: GameDefinition<FightState> = {
 				targetId,
 				damage,
 				attackCard: drawnCard,
-				chargeCard
+				chargeCards
 			})
 			for (const pid of state.activePlayers) {
 				if (!s.activePlayers.includes(pid)) {
@@ -335,13 +357,14 @@ export const fight: GameDefinition<FightState> = {
 				newShield: drawnCard
 			})
 		} else if (action.type === 'CHARGE') {
+			const existing = s.zones[`charge_${actingPid}`].cards
 			s = {
 				...s,
 				zones: {
 					...s.zones,
 					[`charge_${actingPid}`]: {
 						...s.zones[`charge_${actingPid}`],
-						cards: [{ ...drawnCard, isHidden: true }]
+						cards: [...existing, { ...drawnCard, isHidden: true }]
 					}
 				}
 			}
@@ -365,7 +388,8 @@ export const fight: GameDefinition<FightState> = {
 			}
 		}
 
-		s = { ...s, history: [...state.history, ...newEntries] }
+		const ts = Date.now()
+		s = { ...s, history: [...state.history, ...newEntries.map((e) => ({ ...e, timestamp: ts }))] }
 
 		if (s.phase === 'gameover') return s
 

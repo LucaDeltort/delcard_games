@@ -64,17 +64,35 @@ describe('fight.getValidActions', () => {
 		PLAYERS.forEach((p) => expect(fight.getValidActions(state, p)).toHaveLength(0))
 	})
 
-	it('cannot CHARGE if charge zone already has a card', () => {
+	it('can still CHARGE with one charge card (max is 2)', () => {
 		const base = setup()
 		const pid = base.turnPlayerId
-		const charged = makeState({
+		const oneCharge: FightState = {
+			...base,
 			zones: {
 				...base.zones,
 				[`charge_${pid}`]: createZone(`charge_${pid}`, 'hidden', [createCard('5')], pid)
 			}
-		})
-		const actions = fight.getValidActions(charged, pid)
-		expect(actions.some((a) => a.type === 'CHARGE')).toBe(false)
+		}
+		expect(fight.getValidActions(oneCharge, pid).some((a) => a.type === 'CHARGE')).toBe(true)
+	})
+
+	it('cannot CHARGE if charge zone already has 2 cards', () => {
+		const base = setup()
+		const pid = base.turnPlayerId
+		const twoCharge: FightState = {
+			...base,
+			zones: {
+				...base.zones,
+				[`charge_${pid}`]: createZone(
+					`charge_${pid}`,
+					'hidden',
+					[createCard('5'), createCard('7')],
+					pid
+				)
+			}
+		}
+		expect(fight.getValidActions(twoCharge, pid).some((a) => a.type === 'CHARGE')).toBe(false)
 	})
 
 	it('ATTACK targets only opponents', () => {
