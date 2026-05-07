@@ -1,8 +1,8 @@
 <script lang="ts">
+import { LayoutGrid } from 'lucide-svelte'
 import { get } from 'svelte/store'
 import { browser } from '$app/environment'
 import { goto } from '$app/navigation'
-import { LayoutGrid } from 'lucide-svelte'
 import logo from '$lib/assets/logo.svg'
 import RulesDrawer from '$lib/components/RulesDrawer.svelte'
 import { Button } from '$lib/components/ui/button'

@@ -1,11 +1,11 @@
 <script lang="ts">
 import { ArrowLeft, Check, Flag } from 'lucide-svelte'
 import { page } from '$app/stores'
+import type { Card } from '$lib/core/types'
 import { getDeckBySlug } from '$lib/decks/registry'
+import type { CardPack } from '$lib/decks/types'
 import { t } from '$lib/i18n'
 import { deckPacks, resolvePackFor } from '$lib/stores/deckPacks'
-import type { Card } from '$lib/core/types'
-import type { CardPack } from '$lib/decks/types'
 
 const slug = $derived($page.params.type ?? '')
 const entry = $derived(getDeckBySlug(slug))
