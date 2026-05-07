@@ -1,5 +1,5 @@
 <script lang="ts">
-import { Bug, Lightbulb, X } from 'lucide-svelte'
+import { Bug, Layers, Lightbulb, X } from 'lucide-svelte'
 import { Select, SelectContent, SelectItem, SelectTrigger } from '$lib/components/ui/select'
 import { type Locale, locale, t } from '$lib/i18n'
 import { settings, settingsOpen } from '$lib/stores/settings'
@@ -25,7 +25,7 @@ $effect(() => {
 				<X size={16} />
 			</button>
 		</div>
-		<div class="flex flex-1 flex-col gap-6 overflow-y-auto px-4 py-4">
+		<div class="flex flex-1 flex-col gap-6 px-4 py-4">
 			<div class="flex flex-col gap-2">
 				<span class="text-xs tracking-widest text-muted-foreground uppercase">{$t('settings.language')}</span>
 				<Select type="single" bind:value={lang} allowDeselect={false}>
@@ -65,6 +65,15 @@ $effect(() => {
 			>
 				<Bug size={14} />
 				{$t('settings.bugReport')}
+			</a>
+			<a
+				href="https://tally.so/r/Y5V8b5"
+				target="_blank"
+				rel="noopener noreferrer"
+				class="flex items-center gap-2 text-xs text-muted-foreground transition-colors hover:text-foreground"
+			>
+				<Layers size={14} />
+				{$t('settings.proposeCardPack')}
 			</a>
 			<a
 				href="https://tally.so/r/VLog7J"
