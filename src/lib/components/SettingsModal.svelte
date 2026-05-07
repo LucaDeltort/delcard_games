@@ -1,5 +1,5 @@
 <script lang="ts">
-import { X } from 'lucide-svelte'
+import { Bug, X } from 'lucide-svelte'
 import { Select, SelectContent, SelectItem, SelectTrigger } from '$lib/components/ui/select'
 import { type Locale, locale, t } from '$lib/i18n'
 import { settings, settingsOpen } from '$lib/stores/settings'
@@ -25,7 +25,7 @@ $effect(() => {
 				<X size={16} />
 			</button>
 		</div>
-		<div class="flex flex-col gap-6 px-4 py-4">
+		<div class="flex flex-1 flex-col gap-6 overflow-y-auto px-4 py-4">
 			<div class="flex flex-col gap-2">
 				<span class="text-xs tracking-widest text-muted-foreground uppercase">{$t('settings.language')}</span>
 				<Select type="single" bind:value={lang} allowDeselect={false}>
@@ -55,6 +55,17 @@ $effect(() => {
 					</button>
 				</div>
 			</div>
+		</div>
+		<div class="border-t border-border px-4 py-3">
+			<a
+				href="https://tally.so/r/rj27WR"
+				target="_blank"
+				rel="noopener noreferrer"
+				class="flex items-center gap-2 text-xs text-muted-foreground transition-colors hover:text-foreground"
+			>
+				<Bug size={14} />
+				{$t('settings.bugReport')}
+			</a>
 		</div>
 	</div>
 {/if}
