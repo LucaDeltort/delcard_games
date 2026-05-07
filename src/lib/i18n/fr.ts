@@ -104,7 +104,8 @@ export default {
 		timeFormat12: '12h',
 		timeFormat24: '24h',
 		language: 'Langue',
-		bugReport: 'Signaler un bug'
+		bugReport: 'Signaler un bug',
+		proposeGame: 'Proposer un jeu'
 	},
 	network: {
 		connectionLost: 'La connexion avec le host a été perdue.',
