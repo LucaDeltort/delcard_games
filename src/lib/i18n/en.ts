@@ -104,9 +104,16 @@ export default {
 		timeFormat12: '12h',
 		timeFormat24: '24h',
 		language: 'Language',
+		decks: 'Card decks',
 		bugReport: 'Report a bug',
 		proposeCardPack: 'Propose a card pack',
 		proposeGame: 'Propose a game'
+	},
+	decks: {
+		title: 'Card Decks',
+		packs: '{n} packs',
+		by: 'By {name}',
+		active: 'Active'
 	},
 	network: {
 		connectionLost: 'Connection with host was lost.',
