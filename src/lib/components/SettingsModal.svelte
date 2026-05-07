@@ -1,5 +1,5 @@
 <script lang="ts">
-import { Bug, X } from 'lucide-svelte'
+import { Bug, Lightbulb, X } from 'lucide-svelte'
 import { Select, SelectContent, SelectItem, SelectTrigger } from '$lib/components/ui/select'
 import { type Locale, locale, t } from '$lib/i18n'
 import { settings, settingsOpen } from '$lib/stores/settings'
@@ -56,7 +56,7 @@ $effect(() => {
 				</div>
 			</div>
 		</div>
-		<div class="border-t border-border px-4 py-3">
+		<div class="flex flex-col border-t border-border px-4 py-3 gap-4">
 			<a
 				href="https://tally.so/r/rj27WR"
 				target="_blank"
@@ -65,6 +65,15 @@ $effect(() => {
 			>
 				<Bug size={14} />
 				{$t('settings.bugReport')}
+			</a>
+			<a
+				href="https://tally.so/r/VLog7J"
+				target="_blank"
+				rel="noopener noreferrer"
+				class="flex items-center gap-2 text-xs text-muted-foreground transition-colors hover:text-foreground"
+			>
+				<Lightbulb size={14} />
+				{$t('settings.proposeGame')}
 			</a>
 		</div>
 	</div>

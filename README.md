@@ -58,6 +58,10 @@ docs/
 
 Found a bug? Use the in-app bug report button (Settings drawer → bottom, or the Bug button in the corner) — it opens a short [Tally form](https://tally.so/r/rj27WR).
 
+## Game proposals
+
+Want a new game added? Use the in-app proposal link (Settings drawer → bottom) — it opens a short [Tally form](https://tally.so/r/VLog7J).
+
 ## License
 
 [MIT](LICENSE) — © 2026 Luca Deltort
