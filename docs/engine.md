@@ -240,3 +240,162 @@ All utilities are exported from `$lib/engine`.
 
 - [War rules and implementation notes](games/war.md)
 - [The Fight (La Bagarre) rules and implementation notes](games/fight.md)
+
+---
+
+## Full integration flow
+
+Once your `GameDefinition` is implemented, four more steps wire it into the app.
+
+---
+
+### 1 — Register the game
+
+Edit `src/lib/games/index.ts`.
+
+**Add the import and map entry:**
+
+```typescript
+import { myGame } from './my-game'
+
+export const games = { war, fight, myGame } as unknown as Record<string, GameDefinition<GameStateGeneric>>
+```
+
+**Add the rules strings** (shown in the in-app rules drawer):
+
+```typescript
+export const gameRules: Record<string, { en: string; fr: string }> = {
+  // …existing entries…
+  myGame: {
+    en: `2–4 players · 52 cards\n\n• Rule one.\n• Rule two.`,
+    fr: `2–4 joueurs · 52 cartes\n\n• Règle un.\n• Règle deux.`
+  }
+}
+```
+
+---
+
+### 2 — Add i18n strings
+
+Edit `src/lib/i18n/en.ts` and `src/lib/i18n/fr.ts`.
+
+At minimum, add a `name` key — used in the lobby header and home screen:
+
+```typescript
+// en.ts
+myGame: {
+  name: 'My Game',
+  // add action labels, zone names, etc. as needed
+}
+```
+
+```typescript
+// fr.ts
+myGame: {
+  name: 'Mon Jeu',
+}
+```
+
+In components, read it with `$t('myGame.name')`.
+
+---
+
+### 3 — Build a view (optional)
+
+A generic fallback in `src/routes/game/[id]/+page.svelte` renders any game automatically — it shows all zones as card grids and all valid actions as buttons. You can ship and play without a custom view.
+
+When you want a polished UI, create `src/lib/components/games/MyGameView.svelte`. All game views share the same props contract:
+
+```typescript
+let {
+  state,
+  myPlayerId,
+  players,
+  validActions,
+  onAction
+}: {
+  state: GameStateGeneric          // cast to your state type inside
+  myPlayerId: string
+  players: LobbyPlayer[]           // { id, name } — use name for display
+  validActions: Action[]
+  onAction: (action: Action) => void
+} = $props()
+```
+
+See `WarView.svelte` for a minimal example, `FightView.svelte` for a complex one.
+
+---
+
+### 4 — Wire the view in the route
+
+Once you have a view component, add a branch in `src/routes/game/[id]/+page.svelte` — right before the generic fallback block (the `{:else}` near the bottom):
+
+```svelte
+<!-- at top of <script> -->
+import MyGameView from '$lib/components/games/MyGameView.svelte'
+
+<!-- in the template, before the generic {:else} -->
+{:else if gameState.activeGameId === 'myGame'}
+  <MyGameView
+    state={gameState}
+    {myPlayerId}
+    players={enrichedPlayers}
+    {validActions}
+    onAction={submitAction}
+  />
+```
+
+The `activeGameId` string must match the `id` field on your `GameDefinition`.
+
+---
+
+### 5 — Write tests
+
+Create `src/lib/games/my-game.test.ts`. Use vitest — see `war.test.ts` and `fight.test.ts` for patterns.
+
+Minimum coverage:
+
+```typescript
+import { describe, expect, it } from 'vitest'
+import { myGame } from './my-game'
+
+const PLAYERS = ['p1', 'p2']
+
+describe('myGame.setup', () => {
+  it('creates the right number of cards', () => { /* … */ })
+  it('starts in the correct phase', () => { /* … */ })
+})
+
+describe('myGame.getValidActions', () => {
+  it('returns actions only for the active player', () => { /* … */ })
+  it('returns empty array when game is over', () => { /* … */ })
+})
+
+describe('myGame.applyAction', () => {
+  it('transitions state correctly on valid action', () => { /* … */ })
+})
+
+describe('myGame.isOver / getWinner', () => {
+  it('detects end condition', () => { /* … */ })
+  it('returns the correct winner', () => { /* … */ })
+})
+```
+
+Run tests with:
+
+```bash
+npm run test
+```
+
+---
+
+## Checklist
+
+```
+[ ] GameDefinition implemented (setup, getValidActions, applyAction, isOver, getWinner)
+[ ] Registered in src/lib/games/index.ts  (games map + gameRules)
+[ ] i18n name key added to en.ts and fr.ts
+[ ] View component created (optional — generic fallback works without it)
+[ ] View wired in +page.svelte  (if custom view was built)
+[ ] Tests written and passing
+```
