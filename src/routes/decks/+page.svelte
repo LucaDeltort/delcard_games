@@ -5,7 +5,7 @@ import { t } from '$lib/i18n'
 import { deckPacks, resolvePackFor } from '$lib/stores/deckPacks'
 </script>
 
-<div class="mx-auto max-w-2xl px-4 py-8">
+<div class="mx-auto max-w-2xl flex-1 px-4 py-8">
 	<div class="mb-6 flex items-center gap-3">
 		<a
 			href="/"

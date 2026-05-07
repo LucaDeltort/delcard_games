@@ -2,6 +2,7 @@
 import { get } from 'svelte/store'
 import { browser } from '$app/environment'
 import { goto } from '$app/navigation'
+import { LayoutGrid } from 'lucide-svelte'
 import logo from '$lib/assets/logo.svg'
 import RulesDrawer from '$lib/components/RulesDrawer.svelte'
 import { Button } from '$lib/components/ui/button'
@@ -115,4 +116,12 @@ async function createGame() {
 			<Button href="/join" variant="outline" class="w-full">{$t('home.joinBtn')}</Button>
 		</div>
 	</div>
+
+	<a
+		href="/decks"
+		class="flex items-center gap-1.5 rounded-lg border border-border px-4 py-2 text-sm text-muted-foreground transition-colors hover:border-foreground/40 hover:text-foreground"
+	>
+		<LayoutGrid size={15} />
+		{$t('decks.title')}
+	</a>
 </main>

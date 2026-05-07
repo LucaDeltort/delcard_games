@@ -1,5 +1,5 @@
 <script lang="ts">
-import { Bug, LayoutGrid, Layers, Lightbulb, X } from 'lucide-svelte'
+import { Bug, Layers, Lightbulb, X } from 'lucide-svelte'
 import { Select, SelectContent, SelectItem, SelectTrigger } from '$lib/components/ui/select'
 import { type Locale, locale, t } from '$lib/i18n'
 import { settings, settingsOpen } from '$lib/stores/settings'
@@ -57,14 +57,6 @@ $effect(() => {
 			</div>
 		</div>
 		<div class="flex flex-col border-t border-border px-4 py-3 gap-4">
-			<a
-				href="/decks"
-				onclick={() => ($settingsOpen = false)}
-				class="flex items-center gap-2 text-xs text-muted-foreground transition-colors hover:text-foreground"
-			>
-				<LayoutGrid size={14} />
-				{$t('settings.decks')}
-			</a>
 			<a
 				href="https://tally.so/r/rj27WR"
 				target="_blank"

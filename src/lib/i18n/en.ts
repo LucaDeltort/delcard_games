@@ -113,7 +113,8 @@ export default {
 		title: 'Card Decks',
 		packs: '{n} packs',
 		by: 'By {name}',
-		active: 'Active'
+		active: 'Active',
+		setDefault: 'Set as default'
 	},
 	network: {
 		connectionLost: 'Connection with host was lost.',

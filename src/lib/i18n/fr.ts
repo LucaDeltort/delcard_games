@@ -113,7 +113,8 @@ export default {
 		title: 'Jeux de cartes',
 		packs: '{n} jeux',
 		by: 'Par {name}',
-		active: 'Actif'
+		active: 'Actif',
+		setDefault: 'Définir par défaut'
 	},
 	network: {
 		connectionLost: 'La connexion avec le host a été perdue.',
