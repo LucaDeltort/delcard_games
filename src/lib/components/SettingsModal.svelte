@@ -25,7 +25,7 @@ $effect(() => {
 				<X size={16} />
 			</button>
 		</div>
-		<div class="flex flex-1 flex-col gap-6 overflow-y-auto px-4 py-4">
+		<div class="flex flex-1 flex-col gap-6 px-4 py-4">
 			<div class="flex flex-col gap-2">
 				<span class="text-xs tracking-widest text-muted-foreground uppercase">{$t('settings.language')}</span>
 				<Select type="single" bind:value={lang} allowDeselect={false}>
