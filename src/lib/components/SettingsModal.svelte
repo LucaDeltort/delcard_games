@@ -56,7 +56,7 @@ $effect(() => {
 				</div>
 			</div>
 		</div>
-		<div class="flex flex-col border-t border-border px-4 py-3 gap-2">
+		<div class="flex flex-col border-t border-border px-4 py-3 gap-4">
 			<a
 				href="https://tally.so/r/rj27WR"
 				target="_blank"
