@@ -103,7 +103,8 @@ export default {
 		timeFormat: 'Time format',
 		timeFormat12: '12h',
 		timeFormat24: '24h',
-		language: 'Language'
+		language: 'Language',
+		bugReport: 'Report a bug'
 	},
 	network: {
 		connectionLost: 'Connection with host was lost.',

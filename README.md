@@ -54,6 +54,10 @@ docs/
   games/            # rules for each included game
 ```
 
+## Bug reports
+
+Found a bug? Use the in-app bug report button (Settings drawer → bottom, or the Bug button in the corner) — it opens a short [Tally form](https://tally.so/r/rj27WR).
+
 ## License
 
 [MIT](LICENSE) — © 2026 Luca Deltort
