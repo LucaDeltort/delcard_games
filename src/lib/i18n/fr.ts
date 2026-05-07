@@ -105,6 +105,7 @@ export default {
 		timeFormat24: '24h',
 		language: 'Langue',
 		bugReport: 'Signaler un bug',
+		proposeCardPack: 'Proposer un jeu de cartes',
 		proposeGame: 'Proposer un jeu'
 	},
 	network: {

@@ -58,6 +58,10 @@ docs/
 
 Found a bug? Use the in-app bug report button (Settings drawer → bottom, or the Bug button in the corner) — it opens a short [Tally form](https://tally.so/r/rj27WR).
 
+## Card pack proposals
+
+Want a new card pack added? Use the in-app proposal link (Settings drawer → bottom) — it opens a short [Tally form](https://tally.so/r/Y5V8b5).
+
 ## Game proposals
 
 Want a new game added? Use the in-app proposal link (Settings drawer → bottom) — it opens a short [Tally form](https://tally.so/r/VLog7J).
