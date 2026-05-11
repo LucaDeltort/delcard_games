@@ -4,13 +4,14 @@ import type { GameStateGeneric } from '$lib/core/types'
 import type { Action } from '$lib/engine'
 import { t } from '$lib/i18n'
 import type { ClientMessage, HostMessage, LobbyPlayer } from './messages'
+import { getTurnIceServers } from './turn'
 
 const PEER_PREFIX = 'delcard-'
 const MAX_RETRIES = 3
 const RETRY_DELAY_MS = 2000
 
 export class GameClient {
-	private peer: Peer
+	private peer!: Peer
 	private conn: DataConnection | null = null
 	private _playerId: string | null = null
 	private _lobbyPlayers: LobbyPlayer[] = []
@@ -33,7 +34,13 @@ export class GameClient {
 	constructor(code: string, playerName: string) {
 		this._code = code
 		this._playerName = playerName
-		this.peer = new Peer()
+		this.initPeer()
+	}
+
+	private async initPeer() {
+		const iceServers = await getTurnIceServers()
+		const config = iceServers.length ? { config: { iceServers } } : {}
+		this.peer = new Peer(config)
 
 		this.peer.on('open', () => this.openConnection())
 
@@ -178,6 +185,6 @@ export class GameClient {
 		this._intentionalClose = true
 		this._actionQueue = []
 		this.stopQualityPolling()
-		this.peer.destroy()
+		this.peer?.destroy()
 	}
 }

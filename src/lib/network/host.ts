@@ -4,6 +4,7 @@ import type { GameStateGeneric } from '$lib/core/types'
 import type { Action, GameDefinition } from '$lib/engine'
 import { t } from '$lib/i18n'
 import type { ClientMessage, HostMessage, LobbyPlayer } from './messages'
+import { getTurnIceServers } from './turn'
 
 const CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
 const PEER_PREFIX = 'delcard-'
@@ -58,8 +59,10 @@ export class GameHost {
 		return [hostEntry, ...clientEntries]
 	}
 
-	private initPeer() {
-		this.peer = new Peer(PEER_PREFIX + this._code)
+	private async initPeer() {
+		const iceServers = await getTurnIceServers()
+		const config = iceServers.length ? { config: { iceServers } } : {}
+		this.peer = new Peer(PEER_PREFIX + this._code, config)
 
 		this.peer.on('open', () => this.onReady?.())
 
@@ -221,6 +224,6 @@ export class GameHost {
 		for (const timer of this.pendingDisconnects.values()) clearTimeout(timer)
 		this.pendingDisconnects.clear()
 		this.broadcast({ type: 'HOST_GONE', message: message ?? get(t)('network.hostGone') })
-		this.peer.destroy()
+		this.peer?.destroy()
 	}
 }

@@ -1,0 +1,7 @@
+name = "delcard-turn-creds"
+main = "index.js"
+compatibility_date = "2025-05-01"
+
+# Secrets (set via wrangler CLI, never commit values):
+# wrangler secret put TURN_KEY_ID
+# wrangler secret put TURN_API_TOKEN
