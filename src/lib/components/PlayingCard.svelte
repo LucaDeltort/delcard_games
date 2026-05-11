@@ -1,15 +1,17 @@
 <script lang="ts">
 import type { Card } from '$lib/core/types'
-import { deckPack } from '$lib/stores/deckPack'
+import { deckPacks, resolvePackFor } from '$lib/stores/deckPacks'
 
 let {
 	card = null,
 	back = false,
-	size = 'md'
+	size = 'md',
+	deckSlug = 'french-deck'
 }: {
 	card?: Card | null
 	back?: boolean
 	size?: 'sm' | 'md' | 'lg'
+	deckSlug?: string
 } = $props()
 
 const sizes = {
@@ -19,7 +21,7 @@ const sizes = {
 }
 
 const src = $derived.by(() => {
-	const pack = $deckPack
+	const pack = resolvePackFor($deckPacks, deckSlug)
 	const ext = pack.ext ?? '.png'
 	if (!card) return null
 	if (back || card.isHidden) return `${pack.basePath}/card_back${ext}`

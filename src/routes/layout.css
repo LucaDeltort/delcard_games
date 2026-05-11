@@ -81,6 +81,7 @@
 	html {
 		background: oklch(0.13 0 0);
 		border: none;
+		scrollbar-gutter: stable;
 	}
 	body {
 		@apply bg-background font-sans text-foreground antialiased;

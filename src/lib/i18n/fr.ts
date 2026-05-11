@@ -104,9 +104,18 @@ export default {
 		timeFormat12: '12h',
 		timeFormat24: '24h',
 		language: 'Langue',
+		decks: 'Jeux de cartes',
 		bugReport: 'Signaler un bug',
 		proposeCardPack: 'Proposer un jeu de cartes',
 		proposeGame: 'Proposer un jeu'
+	},
+	decks: {
+		title: 'Jeux de cartes',
+		browse: 'Parcourir',
+		packs: '{n} jeux',
+		by: 'Par {name}',
+		active: 'Actif',
+		setDefault: 'Définir par défaut'
 	},
 	network: {
 		connectionLost: 'La connexion avec le host a été perdue.',
