@@ -36,96 +36,98 @@ const cardsBySuit = $derived.by(() => {
 const jokers = $derived(entry ? entry.createCards().filter((c) => c.face === 'Joker') : [])
 </script>
 
-<div class="flex-1">
-	{#if entry}
-		<div class="mx-auto max-w-3xl px-4 py-8">
-			<div class="mb-6 flex items-center gap-3">
-				<a
-					href="/decks"
-					class="flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
-				>
-					<ArrowLeft size={14} />
-					{$t('decks.title')}
-				</a>
-			</div>
+{#if entry}
+    <div class="mx-auto w-3xl flex-1 px-4 py-8">
+        <div class="mb-6 flex items-center gap-3">
+            <a
+                href="/decks"
+                class="flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
+            >
+                <ArrowLeft size={14} />
+                {$t("decks.title")}
+            </a>
+        </div>
 
-			<div class="mb-6 flex flex-wrap items-end justify-between gap-4">
-				<h1 class="text-2xl font-bold tracking-tight">{entry.name}</h1>
+        <div class="mb-6 flex flex-wrap items-end justify-between gap-4">
+            <h1 class="text-2xl font-bold tracking-tight">{entry.name}</h1>
 
-				<div class="flex flex-wrap items-center gap-2">
-					{#each entry.packs as pack}
-						<button
-							onclick={() => {
-								previewPackId = pack.id
-							}}
-							class="flex items-center gap-1.5 rounded-full border px-3 py-1 text-sm transition-colors {previewPack.id === pack.id
-								? 'border-primary bg-primary text-primary-foreground'
-								: 'border-border text-muted-foreground hover:border-foreground hover:text-foreground'}"
-						>
-							{pack.name}
-							{#if pack.id === defaultPack.id}
-								<Check size={12} />
-							{/if}
-						</button>
-					{/each}
-					<button
-						onclick={() => deckPacks.select(slug, previewPack)}
-						disabled={previewPack.id === defaultPack.id}
-						class="flex items-center gap-1.5 rounded-full border px-3 py-1 text-sm transition-colors {previewPack.id === defaultPack.id
-							? 'cursor-default border-border text-muted-foreground opacity-40'
-							: 'border-border text-muted-foreground hover:border-foreground hover:text-foreground'}"
-					>
-						<Flag size={12} />
-						{$t('decks.setDefault')}
-					</button>
-				</div>
-			</div>
+            <div class="flex flex-wrap items-center gap-2">
+                {#each entry.packs as pack}
+                    <button
+                        onclick={() => {
+                            previewPackId = pack.id;
+                        }}
+                        class="flex items-center gap-1.5 rounded-full border px-3 py-1 text-sm transition-colors {previewPack.id ===
+                        pack.id
+                            ? 'border-primary bg-primary text-primary-foreground'
+                            : 'border-border text-muted-foreground hover:border-foreground hover:text-foreground'}"
+                    >
+                        {pack.name}
+                        {#if pack.id === defaultPack.id}
+                            <Check size={12} />
+                        {/if}
+                    </button>
+                {/each}
+                <button
+                    onclick={() => deckPacks.select(slug, previewPack)}
+                    disabled={previewPack.id === defaultPack.id}
+                    class="flex items-center gap-1.5 rounded-full border px-3 py-1 text-sm transition-colors {previewPack.id ===
+                    defaultPack.id
+                        ? 'cursor-default border-border text-muted-foreground opacity-40'
+                        : 'border-border text-muted-foreground hover:border-foreground hover:text-foreground'}"
+                >
+                    <Flag size={12} />
+                    {$t("decks.setDefault")}
+                </button>
+            </div>
+        </div>
 
-			<p class="mb-8 text-xs text-muted-foreground">
-				{$t('decks.by', { name: previewPack.author })}
-				{#if previewPack.license}· {previewPack.license}{/if}
-			</p>
+        {#if previewPack.author || previewPack.license}
+        <p class="mb-8 text-xs text-muted-foreground">
+            {#if previewPack.author}{$t("decks.by", { name: previewPack.author })}{/if}
+            {#if previewPack.license}· {previewPack.license}{/if}
+        </p>
+        {/if}
 
-			<div class="flex flex-col gap-6">
-				{#each cardsBySuit as { suit, cards }}
-					<div>
-						<p class="mb-2 text-xs capitalize tracking-widest text-muted-foreground uppercase">
-							{suit}
-						</p>
-						<div class="flex flex-wrap gap-1.5">
-							{#each cards as card (card.id)}
-								<img
-									src={cardSrc(card, previewPack)}
-									alt="{card.face}{card.suit ? ' ' + card.suit : ''}"
-									class="h-[73px] w-[52px] rounded-lg object-contain shadow-md"
-									draggable="false"
-								/>
-							{/each}
-						</div>
-					</div>
-				{/each}
+        <div class="flex flex-col gap-6">
+            {#each cardsBySuit as { suit, cards }}
+                <div>
+                    <p class="mb-2 text-xs capitalize tracking-widest text-muted-foreground">
+                        {suit}
+                    </p>
+                    <div class="flex flex-wrap gap-1.5">
+                        {#each cards as card (card.id)}
+                            <img
+                                src={cardSrc(card, previewPack)}
+                                alt="{card.face}{card.suit ? ' ' + card.suit : ''}"
+                                class="h-18.25 w-13 rounded-lg object-contain shadow-md"
+                                draggable="false"
+                            />
+                        {/each}
+                    </div>
+                </div>
+            {/each}
 
-				{#if jokers.length > 0}
-					<div>
-						<p class="mb-2 text-xs tracking-widest text-muted-foreground uppercase">Jokers</p>
-						<div class="flex flex-wrap gap-1.5">
-							{#each jokers as card (card.id)}
-								<img
-									src={cardSrc(card, previewPack)}
-									alt="{card.face}{card.suit ? ' ' + card.suit : ''}"
-									class="h-[73px] w-[52px] rounded-lg object-contain shadow-md"
-									draggable="false"
-								/>
-							{/each}
-						</div>
-					</div>
-				{/if}
-			</div>
-		</div>
-	{:else}
-		<div class="flex min-h-[40vh] flex-col items-center justify-center gap-4">
-			<p class="text-muted-foreground">Unknown deck type.</p>
-			<a href="/decks" class="text-sm text-primary hover:underline">{$t('decks.title')}</a>
-		</div>
-	{/if}
-</div>
+            {#if jokers.length > 0}
+                <div>
+                    <p class="mb-2 text-xs tracking-widest text-muted-foreground uppercase">Jokers</p>
+                    <div class="flex flex-wrap gap-1.5">
+                        {#each jokers as card (card.id)}
+                            <img
+                                src={cardSrc(card, previewPack)}
+                                alt="{card.face}{card.suit ? ' ' + card.suit : ''}"
+                                class="h-18.25 w-13 rounded-lg object-contain shadow-md"
+                                draggable="false"
+                            />
+                        {/each}
+                    </div>
+                </div>
+            {/if}
+        </div>
+    </div>
+{:else}
+    <div class="flex min-h-[40vh] flex-col items-center justify-center gap-4">
+        <p class="text-muted-foreground">Unknown deck type.</p>
+        <a href="/decks" class="text-sm text-primary hover:underline">{$t("decks.title")}</a>
+    </div>
+{/if}

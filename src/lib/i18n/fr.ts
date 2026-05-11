@@ -111,6 +111,7 @@ export default {
 	},
 	decks: {
 		title: 'Jeux de cartes',
+		browse: 'Parcourir',
 		packs: '{n} jeux',
 		by: 'Par {name}',
 		active: 'Actif',

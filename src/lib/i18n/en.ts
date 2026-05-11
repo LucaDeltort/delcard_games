@@ -111,6 +111,7 @@ export default {
 	},
 	decks: {
 		title: 'Card Decks',
+		browse: 'Browse',
 		packs: '{n} packs',
 		by: 'By {name}',
 		active: 'Active',
