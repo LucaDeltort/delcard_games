@@ -115,7 +115,8 @@ export default {
 		packs: '{n} packs',
 		by: 'By {name}',
 		active: 'Active',
-		setDefault: 'Set as default'
+		setDefault: 'Set as default',
+		frenchDeck: 'French Deck'
 	},
 	network: {
 		connectionLost: 'Connection with host was lost.',

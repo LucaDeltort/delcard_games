@@ -37,7 +37,7 @@ const jokers = $derived(entry ? entry.createCards().filter((c) => c.face === 'Jo
 </script>
 
 {#if entry}
-    <div class="mx-auto w-3xl flex-1 px-4 py-8">
+    <div class="mx-auto w-full max-w-3xl flex-1 px-4 py-8">
         <div class="mb-6 flex items-center gap-3">
             <a
                 href="/decks"
@@ -48,8 +48,8 @@ const jokers = $derived(entry ? entry.createCards().filter((c) => c.face === 'Jo
             </a>
         </div>
 
-        <div class="mb-6 flex flex-wrap items-end justify-between gap-4">
-            <h1 class="text-2xl font-bold tracking-tight">{entry.name}</h1>
+        <div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between sm:gap-4">
+            <h1 class="text-2xl font-bold tracking-tight">{$t(entry.nameKey)}</h1>
 
             <div class="flex flex-wrap items-center gap-2">
                 {#each entry.packs as pack}
@@ -57,7 +57,7 @@ const jokers = $derived(entry ? entry.createCards().filter((c) => c.face === 'Jo
                         onclick={() => {
                             previewPackId = pack.id;
                         }}
-                        class="flex items-center gap-1.5 rounded-full border px-3 py-1 text-sm transition-colors {previewPack.id ===
+                        class="flex items-center gap-1.5 rounded-full border px-3 py-2 text-sm transition-colors sm:py-1 {previewPack.id ===
                         pack.id
                             ? 'border-primary bg-primary text-primary-foreground'
                             : 'border-border text-muted-foreground hover:border-foreground hover:text-foreground'}"
@@ -71,7 +71,7 @@ const jokers = $derived(entry ? entry.createCards().filter((c) => c.face === 'Jo
                 <button
                     onclick={() => deckPacks.select(slug, previewPack)}
                     disabled={previewPack.id === defaultPack.id}
-                    class="flex items-center gap-1.5 rounded-full border px-3 py-1 text-sm transition-colors {previewPack.id ===
+                    class="flex items-center gap-1.5 rounded-full border px-3 py-2 text-sm transition-colors sm:py-1 {previewPack.id ===
                     defaultPack.id
                         ? 'cursor-default border-border text-muted-foreground opacity-40'
                         : 'border-border text-muted-foreground hover:border-foreground hover:text-foreground'}"
@@ -100,7 +100,7 @@ const jokers = $derived(entry ? entry.createCards().filter((c) => c.face === 'Jo
                             <img
                                 src={cardSrc(card, previewPack)}
                                 alt="{card.face}{card.suit ? ' ' + card.suit : ''}"
-                                class="h-18.25 w-13 rounded-lg object-contain shadow-md"
+                                class="h-16 w-11 rounded-lg object-contain shadow-md sm:h-18.25 sm:w-13"
                                 draggable="false"
                             />
                         {/each}
@@ -116,7 +116,7 @@ const jokers = $derived(entry ? entry.createCards().filter((c) => c.face === 'Jo
                             <img
                                 src={cardSrc(card, previewPack)}
                                 alt="{card.face}{card.suit ? ' ' + card.suit : ''}"
-                                class="h-18.25 w-13 rounded-lg object-contain shadow-md"
+                                class="h-16 w-11 rounded-lg object-contain shadow-md sm:h-18.25 sm:w-13"
                                 draggable="false"
                             />
                         {/each}

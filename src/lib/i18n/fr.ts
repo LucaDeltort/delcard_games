@@ -115,7 +115,8 @@ export default {
 		packs: '{n} jeux',
 		by: 'Par {name}',
 		active: 'Actif',
-		setDefault: 'Définir par défaut'
+		setDefault: 'Définir par défaut',
+		frenchDeck: 'Jeu de cartes français'
 	},
 	network: {
 		connectionLost: 'La connexion avec le host a été perdue.',

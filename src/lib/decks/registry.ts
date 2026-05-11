@@ -6,6 +6,7 @@ import type { CardPack } from '$lib/decks/types'
 export type DeckTypeEntry = {
 	slug: string
 	name: string
+	nameKey: string
 	packs: CardPack[]
 	defaultPackId: string
 	createCards: () => Card[]
@@ -15,6 +16,7 @@ export const deckRegistry: DeckTypeEntry[] = [
 	{
 		slug: 'french-deck',
 		name: 'French Deck',
+		nameKey: 'decks.frenchDeck',
 		packs: frenchDeckPacks,
 		defaultPackId: defaultFrenchDeckPack.id,
 		createCards: () => createFrenchDeck(true)
