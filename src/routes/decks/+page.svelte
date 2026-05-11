@@ -1,8 +1,8 @@
 <script lang="ts">
-    import { ArrowLeft } from "lucide-svelte";
-    import { deckRegistry } from "$lib/decks/registry";
-    import { t } from "$lib/i18n";
-    import { deckPacks, resolvePackFor } from "$lib/stores/deckPacks";
+import { ArrowLeft } from 'lucide-svelte'
+import { deckRegistry } from '$lib/decks/registry'
+import { t } from '$lib/i18n'
+import { deckPacks, resolvePackFor } from '$lib/stores/deckPacks'
 </script>
 
 <div class="mx-auto w-3xl flex-1 px-4 py-8">
