@@ -1,6 +1,6 @@
 const CORS_HEADERS = {
 	'Access-Control-Allow-Origin': '*',
-	'Access-Control-Allow-Methods': 'GET',
+	'Access-Control-Allow-Methods': 'GET'
 }
 
 export default {
@@ -15,16 +15,16 @@ export default {
 				method: 'POST',
 				headers: {
 					Authorization: `Bearer ${env.TURN_API_TOKEN}`,
-					'Content-Type': 'application/json',
+					'Content-Type': 'application/json'
 				},
-				body: JSON.stringify({ ttl: 86400 }),
+				body: JSON.stringify({ ttl: 86400 })
 			}
 		)
 
 		const data = await res.json()
 
 		return new Response(JSON.stringify(data), {
-			headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' },
+			headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' }
 		})
-	},
+	}
 }

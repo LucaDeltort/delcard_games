@@ -224,6 +224,6 @@ export class GameHost {
 		for (const timer of this.pendingDisconnects.values()) clearTimeout(timer)
 		this.pendingDisconnects.clear()
 		this.broadcast({ type: 'HOST_GONE', message: message ?? get(t)('network.hostGone') })
-		this.peer.destroy()
+		this.peer?.destroy()
 	}
 }

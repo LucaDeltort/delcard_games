@@ -185,6 +185,6 @@ export class GameClient {
 		this._intentionalClose = true
 		this._actionQueue = []
 		this.stopQualityPolling()
-		this.peer.destroy()
+		this.peer?.destroy()
 	}
 }
