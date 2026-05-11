@@ -103,7 +103,20 @@ export default {
 		timeFormat: "Format de l'heure",
 		timeFormat12: '12h',
 		timeFormat24: '24h',
-		language: 'Langue'
+		language: 'Langue',
+		decks: 'Jeux de cartes',
+		bugReport: 'Signaler un bug',
+		proposeCardPack: 'Proposer un jeu de cartes',
+		proposeGame: 'Proposer un jeu'
+	},
+	decks: {
+		title: 'Jeux de cartes',
+		browse: 'Parcourir',
+		packs: '{n} jeux',
+		by: 'Par {name}',
+		active: 'Actif',
+		setDefault: 'Définir par défaut',
+		frenchDeck: 'Jeu de cartes français'
 	},
 	network: {
 		connectionLost: 'La connexion avec le host a été perdue.',
@@ -112,6 +125,7 @@ export default {
 		reconnecting: 'Reconnexion…',
 		hostGone: 'Le host a quitté la partie.',
 		kicked: 'Tu as été éjecté par le host.',
-		sessionFull: 'Nombre maximal de joueurs atteint dans la session.'
+		sessionFull: 'Nombre maximal de joueurs atteint dans la session.',
+		gameInProgress: 'Partie déjà en cours.'
 	}
 }

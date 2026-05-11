@@ -1,4 +1,4 @@
-# delcard_games
+# Delcard Games
 
 An online card game platform for playing with friends — fully client-side, no server required.
 
@@ -53,6 +53,18 @@ docs/
   engine.md         # how to build a game
   games/            # rules for each included game
 ```
+
+## Bug reports
+
+Found a bug? Use the in-app bug report button (Settings drawer → bottom, or the Bug button in the corner) — it opens a short [Tally form](https://tally.so/r/rj27WR).
+
+## Card pack proposals
+
+Want a new card pack added? Use the in-app proposal link (Settings drawer → bottom) — it opens a short [Tally form](https://tally.so/r/Y5V8b5).
+
+## Game proposals
+
+Want a new game added? Use the in-app proposal link (Settings drawer → bottom) — it opens a short [Tally form](https://tally.so/r/VLog7J).
 
 ## License
 

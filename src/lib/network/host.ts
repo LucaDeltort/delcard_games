@@ -4,6 +4,7 @@ import type { GameStateGeneric } from '$lib/core/types'
 import type { Action, GameDefinition } from '$lib/engine'
 import { t } from '$lib/i18n'
 import type { ClientMessage, HostMessage, LobbyPlayer } from './messages'
+import { getTurnIceServers } from './turn'
 
 const CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
 const PEER_PREFIX = 'delcard-'
@@ -58,8 +59,10 @@ export class GameHost {
 		return [hostEntry, ...clientEntries]
 	}
 
-	private initPeer() {
-		this.peer = new Peer(PEER_PREFIX + this._code)
+	private async initPeer() {
+		const iceServers = await getTurnIceServers()
+		const config = iceServers.length ? { config: { iceServers } } : {}
+		this.peer = new Peer(PEER_PREFIX + this._code, config)
 
 		this.peer.on('open', () => this.onReady?.())
 
@@ -90,6 +93,12 @@ export class GameHost {
 					conn.send({ type: 'WELCOME', playerId: conn.peer } as HostMessage)
 					this.broadcastLobby()
 					if (this.state) this.sendStateTo(conn, this.state)
+					return
+				}
+
+				if (this.state !== null) {
+					conn.send({ type: 'REJECTED', message: get(t)('network.gameInProgress') } as HostMessage)
+					setTimeout(() => conn.close(), 300)
 					return
 				}
 
@@ -155,7 +164,10 @@ export class GameHost {
 		if (!this.state) return
 		const valid = this.def.getValidActions(this.state, playerId)
 		const isValid = valid.some(
-			(a: Action) => a.type === action.type && a.playerId === action.playerId
+			(a: Action) =>
+				a.type === action.type &&
+				a.playerId === action.playerId &&
+				JSON.stringify(a.payload) === JSON.stringify(action.payload)
 		)
 		if (!isValid) return
 		const next = this.def.applyAction(this.state, action)
@@ -212,6 +224,6 @@ export class GameHost {
 		for (const timer of this.pendingDisconnects.values()) clearTimeout(timer)
 		this.pendingDisconnects.clear()
 		this.broadcast({ type: 'HOST_GONE', message: message ?? get(t)('network.hostGone') })
-		this.peer.destroy()
+		this.peer?.destroy()
 	}
 }

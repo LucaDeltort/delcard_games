@@ -127,3 +127,25 @@ export const yourDeckPacks: CardPack[] = [
 ```
 
 File naming is free-form — just be consistent within a pack so the UI can resolve card paths.
+
+### 5 — Register in the deck viewer
+
+Open `src/lib/decks/registry.ts` and add one entry to `deckRegistry`:
+
+```typescript
+import { createYourDeck } from '$lib/decks/YourDeckType/cards'
+import { yourDeckPacks, defaultYourDeckPack } from '$lib/decks/YourDeckType/packs'
+
+export const deckRegistry: DeckTypeEntry[] = [
+  // ...existing entries...
+  {
+    slug: 'your-deck',          // URL slug: /decks/your-deck
+    name: 'Your Deck',          // display name
+    packs: yourDeckPacks,
+    defaultPackId: defaultYourDeckPack.id,
+    createCards: () => createYourDeck(),
+  },
+]
+```
+
+This is the only UI change required. The `/decks` listing, `/decks/your-deck` card grid, pack switcher, and default-pack persistence all update automatically.

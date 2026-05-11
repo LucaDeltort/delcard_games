@@ -182,22 +182,22 @@ onDestroy(() => {
 				{$t('common.turnOf', { name: playerName(actingPlayerId) })}
 			{/if}
 		</span>
-		<div class="flex items-center gap-2">
+		<div class="flex items-center">
 			<button
 				onclick={() => ($settingsOpen = true)}
-				class="flex items-center rounded p-0.5 text-muted-foreground transition-colors hover:text-foreground"
+				class="flex items-center rounded p-2 text-muted-foreground transition-colors hover:text-foreground"
 				aria-label={$t('settings.title')}
 			>
-				<SettingsIcon size={12} />
+				<SettingsIcon size={16} />
 			</button>
-			<RulesDrawer gameId="fight" size={12} />
+			<RulesDrawer gameId="fight" size={16} />
 			<button
 				onclick={() => (historyOpen = !historyOpen)}
-				class="flex items-center gap-1 rounded px-2 py-0.5 transition-colors hover:text-foreground {historyOpen
+				class="flex items-center gap-1 rounded px-2 py-2 transition-colors hover:text-foreground {historyOpen
 					? 'text-foreground'
 					: ''}"
 			>
-				<MessageSquare size={12} />
+				<MessageSquare size={16} />
 				{$t('fight.inPlay', { n: gs.activePlayers.length })}
 			</button>
 		</div>
@@ -354,21 +354,21 @@ onDestroy(() => {
 {#if historyOpen}
 	<!-- Backdrop -->
 	<button
-		class="fixed inset-0 z-40 bg-black/20"
+		class="fixed inset-0 z-[100] bg-black/20"
 		onclick={() => (historyOpen = false)}
 		aria-label="Close history"
 	></button>
 	<!-- Drawer -->
 	<div
-		class="fixed inset-y-0 right-0 z-50 flex w-72 max-w-[85vw] flex-col border-l border-border bg-card shadow-xl"
+		class="fixed inset-y-0 right-0 z-[110] flex w-72 max-w-[85vw] flex-col border-l border-border bg-card shadow-xl"
 	>
-		<div class="flex items-center justify-between border-b border-border px-4 py-3">
+		<div class="flex items-center justify-between border-b border-border px-4 py-2">
 			<span class="text-xs tracking-widest text-muted-foreground uppercase"
 				>{$t('fight.historyTitle')}</span
 			>
 			<button
 				onclick={() => (historyOpen = false)}
-				class="text-muted-foreground transition-colors hover:text-foreground"
+				class="p-2 text-muted-foreground transition-colors hover:text-foreground"
 			>
 				<X size={16} />
 			</button>

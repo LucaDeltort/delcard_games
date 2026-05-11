@@ -103,7 +103,20 @@ export default {
 		timeFormat: 'Time format',
 		timeFormat12: '12h',
 		timeFormat24: '24h',
-		language: 'Language'
+		language: 'Language',
+		decks: 'Card decks',
+		bugReport: 'Report a bug',
+		proposeCardPack: 'Propose a card pack',
+		proposeGame: 'Propose a game'
+	},
+	decks: {
+		title: 'Card Decks',
+		browse: 'Browse',
+		packs: '{n} packs',
+		by: 'By {name}',
+		active: 'Active',
+		setDefault: 'Set as default',
+		frenchDeck: 'French Deck'
 	},
 	network: {
 		connectionLost: 'Connection with host was lost.',
@@ -112,6 +125,7 @@ export default {
 		reconnecting: 'Reconnecting…',
 		hostGone: 'The host left the game.',
 		kicked: 'You were kicked by the host.',
-		sessionFull: 'Maximum number of players reached in this session.'
+		sessionFull: 'Maximum number of players reached in this session.',
+		gameInProgress: 'Game already in progress.'
 	}
 }

@@ -72,15 +72,15 @@ const roundWinnerId = $derived(
 <div class="flex min-h-screen flex-col">
 	<header class="flex items-center justify-between border-b border-border bg-card px-4 py-2 text-xs text-muted-foreground">
 		<span class="font-mono">{$t('war.name')}</span>
-		<div class="flex items-center gap-2">
+		<div class="flex items-center">
 			<button
 				onclick={() => ($settingsOpen = true)}
-				class="flex items-center rounded p-0.5 text-muted-foreground transition-colors hover:text-foreground"
+				class="flex items-center rounded p-2 text-muted-foreground transition-colors hover:text-foreground"
 				aria-label={$t('settings.title')}
 			>
-				<SettingsIcon size={12} />
+				<SettingsIcon size={16} />
 			</button>
-			<RulesDrawer gameId="war" size={12} />
+			<RulesDrawer gameId="war" size={16} />
 		</div>
 	</header>
 
