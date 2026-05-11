@@ -14,6 +14,12 @@ export const frenchDeckPacks: CardPack[] = [
 		author: 'Rohit Chouhan',
 		basePath: '/cards/FrenchDeck/cyberwave',
 		ext: '.svg'
+	},
+	{
+		id: 'korean',
+		name: 'Korean',
+		basePath: '/cards/FrenchDeck/korean',
+		ext: '.svg'
 	}
 ]
 
