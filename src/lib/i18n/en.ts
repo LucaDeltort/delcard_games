@@ -10,7 +10,8 @@ export default {
 		turnOf: "{name}'s turn",
 		players: 'players',
 		cancel: 'Cancel',
-		confirm: 'Confirm'
+		confirm: 'Confirm',
+		close: 'Close'
 	},
 	home: {
 		subtitle: 'Card games with friends — no server',

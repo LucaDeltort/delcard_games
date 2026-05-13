@@ -10,7 +10,8 @@ export default {
 		turnOf: 'Tour de {name}',
 		players: 'joueurs',
 		cancel: 'Annuler',
-		confirm: 'Confirmer'
+		confirm: 'Confirmer',
+		close: 'Fermer'
 	},
 	home: {
 		subtitle: 'Jeux de cartes entre amis — sans serveur',
