@@ -2,6 +2,7 @@
 import { Loader2, Settings as SettingsIcon, X } from 'lucide-svelte'
 import { onDestroy, onMount } from 'svelte'
 import { get } from 'svelte/store'
+import { fade } from 'svelte/transition'
 import { browser } from '$app/environment'
 import { beforeNavigate, goto } from '$app/navigation'
 import { page } from '$app/stores'
@@ -174,7 +175,7 @@ function submitAction(action: Action) {
 async function copyShareLink() {
 	await navigator.clipboard.writeText(`${window.location.origin}/join?code=${code}`)
 	codeCopied = true
-	setTimeout(() => (codeCopied = false), 2000)
+	setTimeout(() => (codeCopied = false), 3000)
 }
 
 function actionLabel(action: Action): string {
@@ -212,14 +213,16 @@ $effect(() => {
 
 <!-- ── Connection quality dot ────────────────────────────────── -->
 {#if !isHost && connectionQuality && gameState && gameState.phase !== 'gameover'}
-	<div class="fixed bottom-4 right-4 z-40" title="Connection: {connectionQuality}">
+	<div class="fixed bottom-4 right-4 z-40">
 		<span
 			class="block h-2.5 w-2.5 rounded-full {connectionQuality === 'good'
 				? 'bg-green-500'
 				: connectionQuality === 'warn'
 					? 'bg-yellow-500'
 					: 'bg-red-500'}"
+			aria-hidden="true"
 		></span>
+		<span class="sr-only">{$t('network.connection')}: {$t(`network.quality.${connectionQuality}`)}</span>
 	</div>
 {/if}
 
@@ -267,7 +270,11 @@ $effect(() => {
 			onclick={copyShareLink}
 			class="rounded-lg border border-border bg-card px-4 py-2 text-sm text-muted-foreground transition-colors hover:border-primary hover:text-foreground"
 		>
-			{codeCopied ? $t('game.linkCopied') : $t('game.copyLink')}
+			{#key codeCopied}
+				<span class="inline-block" in:fade={{ duration: 200 }}>
+					{codeCopied ? $t('game.linkCopied') : $t('game.copyLink')}
+				</span>
+			{/key}
 		</button>
 
 		<div class="w-full max-w-xs">

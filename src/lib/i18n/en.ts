@@ -116,6 +116,7 @@ export default {
 		timeFormat: 'Time format',
 		timeFormat12: '12h',
 		timeFormat24: '24h',
+		timeFormatHint: 'Used in match history.',
 		language: 'Language',
 		decks: 'Card decks',
 		bugReport: 'Report a bug',
@@ -138,6 +139,12 @@ export default {
 		hostNotFound: 'Room not found — check the code.',
 		reconnecting: 'Reconnecting…',
 		reconnectFailed: 'Could not reconnect.',
+		connection: 'Connection',
+		quality: {
+			good: 'good',
+			warn: 'unstable',
+			poor: 'poor'
+		},
 		hostGone: 'The host left the game.',
 		kicked: 'You were kicked by the host.',
 		sessionFull: 'Maximum number of players reached in this session.',

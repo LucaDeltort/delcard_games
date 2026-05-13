@@ -57,6 +57,7 @@ $effect(() => {
 							{$t('settings.timeFormat12')}
 						</button>
 					</div>
+					<p class="text-xs text-muted-foreground">{$t('settings.timeFormatHint')}</p>
 				</div>
 			</div>
 			<div class="flex flex-col border-t border-border px-4 py-3 gap-4">

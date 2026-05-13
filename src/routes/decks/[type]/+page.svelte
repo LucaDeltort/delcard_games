@@ -50,7 +50,7 @@ const jokers = $derived(entry ? entry.createCards().filter((c) => c.face === 'Jo
 {#if entry}
 
         <div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between sm:gap-4">
-            <h1 class="text-2xl font-bold tracking-tight">{$t(entry.nameKey)}</h1>
+            <h1 class="text-2xl tracking-tight">{$t(entry.nameKey)}</h1>
 
             <div class="flex flex-wrap items-center gap-2">
                 {#each entry.packs as pack}
