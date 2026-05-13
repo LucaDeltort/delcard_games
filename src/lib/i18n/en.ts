@@ -56,6 +56,17 @@ export default {
 		rules: 'Rules',
 		cardStyle: 'Card style'
 	},
+	card: {
+		hidden: 'Hidden card',
+		joker: 'Joker',
+		label: '{face} of {suit}',
+		suit: {
+			hearts: 'hearts',
+			diamonds: 'diamonds',
+			clubs: 'clubs',
+			spades: 'spades'
+		}
+	},
 	war: {
 		name: 'War',
 		deck: 'Deck',
@@ -118,7 +129,8 @@ export default {
 		by: 'By {name}',
 		active: 'Active',
 		setDefault: 'Set as default',
-		frenchDeck: 'French Deck'
+		frenchDeck: 'French Deck',
+		errorUnknownType: 'Unknown deck type.'
 	},
 	network: {
 		connectionLost: 'Connection with host was lost.',

@@ -37,14 +37,14 @@ const isGamePage = $derived($page.url.pathname.startsWith('/game/'))
 </div>
 {#if !isGamePage}
     <div
-        class="fixed right-4 flex items-center gap-2"
+        class="pointer-events-none fixed right-4 flex items-center gap-2"
         style="bottom: calc(1rem + env(safe-area-inset-bottom))"
     >
         <a
             href="https://github.com/LucaDeltort/delcard_games"
             target="_blank"
             rel="noopener noreferrer"
-            class="group flex items-center gap-2 rounded-full bg-card border border-border px-3 py-2 text-sm font-bold text-foreground shadow-lg transition-all duration-200 hover:scale-105 hover:brightness-110 active:scale-95 sm:px-4"
+            class="group pointer-events-auto flex items-center gap-2 rounded-full bg-card border border-border px-3 py-2 text-sm font-bold text-foreground shadow-lg transition-all duration-200 hover:scale-105 hover:brightness-110 active:scale-95 sm:px-4"
             aria-label="GitHub"
         >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" class="group-hover:animate-[kofi-rock_1s_ease-in-out_infinite]">
@@ -56,7 +56,7 @@ const isGamePage = $derived($page.url.pathname.startsWith('/game/'))
             href="https://ko-fi.com/lucadeltort"
             target="_blank"
             rel="noopener noreferrer"
-            class="group flex items-center gap-2 rounded-full bg-linear-to-r from-blue to-pink px-3 py-2 text-sm font-bold text-white shadow-lg transition-all duration-200 hover:scale-105 hover:brightness-110 active:scale-95 sm:px-4"
+            class="group pointer-events-auto flex items-center gap-2 rounded-full bg-linear-to-r from-blue to-pink px-3 py-2 text-sm font-bold text-white shadow-lg transition-all duration-200 hover:scale-105 hover:brightness-110 active:scale-95 sm:px-4"
         >
             <Coffee size={16} class="group-hover:animate-[kofi-rock_1s_ease-in-out_infinite]" />
             <span class="hidden sm:inline">Support</span>

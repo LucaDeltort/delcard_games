@@ -36,17 +36,18 @@ const cardsBySuit = $derived.by(() => {
 const jokers = $derived(entry ? entry.createCards().filter((c) => c.face === 'Joker') : [])
 </script>
 
+<div class="mx-auto w-full max-w-3xl flex-1 px-4 py-8">
+    <div class="mb-6 flex items-center gap-3">
+        <a
+            href="/decks"
+            class="flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
+        >
+            <ArrowLeft size={14} />
+            {$t("decks.title")}
+        </a>
+    </div>
+
 {#if entry}
-    <div class="mx-auto w-full max-w-3xl flex-1 px-4 py-8">
-        <div class="mb-6 flex items-center gap-3">
-            <a
-                href="/decks"
-                class="flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
-            >
-                <ArrowLeft size={14} />
-                {$t("decks.title")}
-            </a>
-        </div>
 
         <div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between sm:gap-4">
             <h1 class="text-2xl font-bold tracking-tight">{$t(entry.nameKey)}</h1>
@@ -124,10 +125,9 @@ const jokers = $derived(entry ? entry.createCards().filter((c) => c.face === 'Jo
                 </div>
             {/if}
         </div>
-    </div>
 {:else}
     <div class="flex min-h-[40vh] flex-col items-center justify-center gap-4">
-        <p class="text-muted-foreground">Unknown deck type.</p>
-        <a href="/decks" class="text-sm text-primary hover:underline">{$t("decks.title")}</a>
+        <p class="text-muted-foreground">{$t("decks.errorUnknownType")}</p>
     </div>
 {/if}
+</div>

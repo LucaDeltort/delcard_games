@@ -304,6 +304,11 @@ $effect(() => {
 		<DeckPackPicker />
 
 		{#if isHost}
+			{#if gameMeta && lobbyPlayers.length < gameMeta.minPlayers}
+				<p class="text-xs text-muted-foreground">
+					{$t('game.minPlayersRequired', { n: gameMeta.minPlayers })}
+				</p>
+			{/if}
 			<Button
 				onclick={startGame}
 				disabled={!gameMeta || lobbyPlayers.length < (gameMeta?.minPlayers ?? 2)}
@@ -311,11 +316,6 @@ $effect(() => {
 			>
 				{$t('game.start')}
 			</Button>
-			{#if gameMeta && lobbyPlayers.length < gameMeta.minPlayers}
-				<p class="text-xs text-muted-foreground">
-					{$t('game.minPlayersRequired', { n: gameMeta.minPlayers })}
-				</p>
-			{/if}
 		{:else}
 			<p class="text-sm text-muted-foreground">{$t('game.waitingStart')}</p>
 			<Button onclick={() => goto('/')} variant="outline" class="w-full max-w-xs">
@@ -380,7 +380,7 @@ $effect(() => {
 					{@const canSee = zone.type === 'public' || zone.ownerId === myPlayerId}
 					<div class="rounded-lg border border-border bg-card p-4">
 						<p class="mb-2 text-xs tracking-widest text-muted-foreground uppercase">
-							{zoneId}
+							{import.meta.env.DEV ? zoneId : ''}
 							<span class="ml-1 text-muted-foreground">({zone.cards.length})</span>
 						</p>
 						<div class="flex flex-wrap gap-1">
