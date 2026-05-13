@@ -16,7 +16,7 @@ import { deckPacks, resolvePackFor } from '$lib/stores/deckPacks'
         </a>
     </div>
 
-    <h1 class="mb-8 text-2xl font-bold tracking-tight">{$t("decks.title")}</h1>
+    <h1 class="mb-8 text-2xl tracking-tight">{$t("decks.title")}</h1>
 
     <div class="grid grid-cols-2 gap-4 sm:grid-cols-3">
         {#each deckRegistry as deck}

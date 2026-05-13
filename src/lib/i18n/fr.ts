@@ -116,6 +116,7 @@ export default {
 		timeFormat: "Format de l'heure",
 		timeFormat12: '12h',
 		timeFormat24: '24h',
+		timeFormatHint: "Utilisé dans l'historique des parties.",
 		language: 'Langue',
 		decks: 'Jeux de cartes',
 		bugReport: 'Signaler un bug',
@@ -138,6 +139,12 @@ export default {
 		hostNotFound: 'Salon introuvable — vérifie le code.',
 		reconnecting: 'Reconnexion…',
 		reconnectFailed: 'Reconnexion impossible.',
+		connection: 'Connexion',
+		quality: {
+			good: 'bonne',
+			warn: 'instable',
+			poor: 'faible'
+		},
 		hostGone: 'Le host a quitté la partie.',
 		kicked: 'Tu as été éjecté par le host.',
 		sessionFull: 'Nombre maximal de joueurs atteint dans la session.',
