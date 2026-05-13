@@ -19,11 +19,11 @@ const isGamePage = $derived($page.url.pathname.startsWith('/game/'))
 {#if !isGamePage}
 	<button
 		onclick={() => ($settingsOpen = true)}
-		class="fixed right-4 z-50 rounded-md border border-border bg-card px-2.5 py-1 text-xs text-muted-foreground transition-colors hover:text-foreground"
+		class="fixed right-4 z-50 rounded-md border border-border bg-card px-3 py-2 text-muted-foreground transition-colors hover:text-foreground"
 		style="top: calc(1rem + env(safe-area-inset-top))"
 		aria-label={$t('settings.title')}
 	>
-		<SettingsIcon size={14} />
+		<SettingsIcon size={16} />
 	</button>
 {/if}
 <SettingsModal />

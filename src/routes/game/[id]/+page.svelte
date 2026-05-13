@@ -1,5 +1,5 @@
 <script lang="ts">
-import { Settings as SettingsIcon, X } from 'lucide-svelte'
+import { Loader2, Settings as SettingsIcon, X } from 'lucide-svelte'
 import { onDestroy, onMount } from 'svelte'
 import { get } from 'svelte/store'
 import { browser } from '$app/environment'
@@ -32,6 +32,8 @@ let validActions = $state<Action[]>([])
 let codeCopied = $state(false)
 let confirmOpen = $state(false)
 let connectionQuality = $state<'good' | 'warn' | 'poor' | null>(null)
+let reconnectFailed = $state(false)
+let _reconnectTimeout: ReturnType<typeof setTimeout> | null = null
 let pendingDestination = ''
 let _skipConfirm = false
 let kickTarget = $state<{ id: string; name: string } | null>(null)
@@ -55,6 +57,22 @@ $effect(() => {
 	}
 	const def = games[gameState.activeGameId]
 	validActions = def ? def.getValidActions(gameState, myPlayerId) : []
+})
+
+$effect(() => {
+	if (reconnecting) {
+		reconnectFailed = false
+		_reconnectTimeout = setTimeout(() => {
+			reconnectFailed = true
+		}, 10000)
+		return () => {
+			if (_reconnectTimeout) {
+				clearTimeout(_reconnectTimeout)
+				_reconnectTimeout = null
+			}
+		}
+	}
+	reconnectFailed = false
 })
 
 onMount(() => {
@@ -122,6 +140,7 @@ beforeNavigate(({ cancel, to, willUnload, type }) => {
 		return
 	}
 	if (disconnectedMsg) return
+	if (reconnectFailed) return
 	if (gameState?.phase === 'gameover') return
 	cancel()
 	pendingDestination = to?.url.href ?? '/'
@@ -180,8 +199,14 @@ $effect(() => {
 
 <!-- ── Reconnecting overlay ──────────────────────────────────── -->
 {#if reconnecting}
-	<div class="fixed inset-0 z-50 flex flex-col items-center justify-center gap-3 bg-background/80 backdrop-blur-sm">
-		<p class="text-sm text-muted-foreground">{$t('network.reconnecting')}</p>
+	<div class="fixed inset-0 z-50 flex flex-col items-center justify-center gap-4 bg-background/80 backdrop-blur-sm">
+		{#if reconnectFailed}
+			<p class="text-sm text-foreground">{$t('network.reconnectFailed')}</p>
+			<Button href="/" variant="outline">{$t('common.backHome')}</Button>
+		{:else}
+			<Loader2 class="size-6 animate-spin text-muted-foreground" aria-hidden="true" />
+			<p class="text-sm text-muted-foreground">{$t('network.reconnecting')}</p>
+		{/if}
 	</div>
 {/if}
 
@@ -219,11 +244,11 @@ $effect(() => {
 {:else if !gameState}
 	<button
 		onclick={() => ($settingsOpen = true)}
-		class="fixed right-4 z-50 rounded-md border border-border bg-card px-2.5 py-1 text-xs text-muted-foreground transition-colors hover:text-foreground"
+		class="fixed right-4 z-50 rounded-md border border-border bg-card px-3 py-2 text-muted-foreground transition-colors hover:text-foreground"
 		style="top: calc(1rem + env(safe-area-inset-top))"
 		aria-label={$t('settings.title')}
 	>
-		<SettingsIcon size={14} />
+		<SettingsIcon size={16} />
 	</button>
 	<main class="flex min-h-dvh flex-col items-center justify-center gap-10 px-4">
 		<header class="flex flex-col items-center text-center">
@@ -265,10 +290,10 @@ $effect(() => {
 						{:else if isHost}
 							<button
 								onclick={() => (kickTarget = player)}
-								class="text-muted-foreground transition-colors hover:text-destructive"
+								class="p-2 text-muted-foreground transition-colors hover:text-destructive"
 								aria-label="Kick {player.name}"
 							>
-								<X size={14} />
+								<X size={16} />
 							</button>
 						{/if}
 					</li>
@@ -356,11 +381,11 @@ $effect(() => {
 					<div class="rounded-lg border border-border bg-card p-4">
 						<p class="mb-2 text-xs tracking-widest text-muted-foreground uppercase">
 							{zoneId}
-							<span class="ml-1 text-muted-foreground/50">({zone.cards.length})</span>
+							<span class="ml-1 text-muted-foreground">({zone.cards.length})</span>
 						</p>
 						<div class="flex flex-wrap gap-1">
 							{#if zone.cards.length === 0}
-								<span class="text-xs text-muted-foreground/40">{$t('game.empty')}</span>
+								<span class="text-xs text-muted-foreground">{$t('game.empty')}</span>
 							{:else if canSee}
 								{#each zone.cards as card}
 									<span

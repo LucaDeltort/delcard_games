@@ -130,7 +130,7 @@ const roundWinnerId = $derived(
 					<Button onclick={() => onAction(myAction)} size="lg">{$t('war.continue')}</Button>
 				{:else}
 					<p class="text-sm text-muted-foreground">
-						{$t('common.waitingFor', { name: playerName(state.players[0]) })}
+						{$t('common.waitingFor', { name: playerName(opponent) })}
 					</p>
 				{/if}
 			{:else if isMyTurn && myAction}
