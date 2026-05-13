@@ -56,7 +56,7 @@ async function joinGame() {
 }
 </script>
 
-<main class="flex min-h-screen flex-col items-center justify-center gap-12 px-4">
+<main class="flex min-h-dvh flex-col items-center justify-center gap-12 px-4">
 	<header class="text-center">
 		<h1 class="text-8xl tracking-wide text-foreground">DELCARD</h1>
 	</header>
@@ -69,7 +69,7 @@ async function joinGame() {
 			</div>
 
 			<div class="flex flex-col gap-4">
-				<div class="flex flex-col gap-2">
+				<label class="flex flex-col gap-2">
 					<span class="text-xs tracking-widest text-muted-foreground uppercase"
 						>{$t('join.labelCode')}</span
 					>
@@ -79,9 +79,9 @@ async function joinGame() {
 						class="font-mono tracking-widest uppercase"
 						onkeydown={(e) => e.key === 'Enter' && joinGame()}
 					/>
-				</div>
+				</label>
 
-				<div class="flex flex-col gap-2">
+				<label class="flex flex-col gap-2">
 					<span class="text-xs tracking-widest text-muted-foreground uppercase"
 						>{$t('common.nickname')}</span
 					>
@@ -90,7 +90,7 @@ async function joinGame() {
 						placeholder={$t('common.nicknamePlaceholder')}
 						onkeydown={(e) => e.key === 'Enter' && joinGame()}
 					/>
-				</div>
+				</label>
 			</div>
 
 			{#if error}

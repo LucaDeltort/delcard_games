@@ -210,7 +210,7 @@ $effect(() => {
 
 <!-- ── Disconnected ───────────────────────────────────────────── -->
 {#if disconnectedMsg}
-	<main class="flex min-h-screen flex-col items-center justify-center gap-6 px-4 text-center">
+	<main class="flex min-h-dvh flex-col items-center justify-center gap-6 px-4 text-center">
 		<p class="text-2xl text-foreground">{disconnectedMsg}</p>
 		<Button href="/" variant="outline">{$t('common.backHome')}</Button>
 	</main>
@@ -225,7 +225,7 @@ $effect(() => {
 	>
 		<SettingsIcon size={14} />
 	</button>
-	<main class="flex min-h-screen flex-col items-center justify-center gap-10 px-4">
+	<main class="flex min-h-dvh flex-col items-center justify-center gap-10 px-4">
 		<header class="flex flex-col items-center text-center">
 			<div class="flex items-center gap-2">
 				<p class="text-sm tracking-widest text-muted-foreground uppercase">
@@ -303,7 +303,7 @@ $effect(() => {
 {:else if gameState.phase === 'gameover'}
 	{@const winner = games[gameState.activeGameId]?.getWinner(gameState)}
 	{@const winnerName = enrichedPlayers.find((p) => p.id === winner)?.name ?? winner ?? '?'}
-	<main class="flex min-h-screen flex-col items-center justify-center gap-8 px-4 text-center">
+	<main class="flex min-h-dvh flex-col items-center justify-center gap-8 px-4 text-center">
 		<div>
 			<p class="text-sm tracking-widest text-muted-foreground uppercase">{$t('game.over')}</p>
 			<h1 class="mt-2 font-heading text-7xl text-foreground">{winnerName}</h1>
@@ -338,7 +338,7 @@ $effect(() => {
 	<!-- ── Game (generic fallback) ───────────────────────────────── -->
 {:else}
 	{@const activePlayer = enrichedPlayers.find((p) => p.id === gameState?.turnPlayerId)}
-	<div class="flex min-h-screen flex-col">
+	<div class="flex min-h-dvh flex-col">
 		<header
 			class="flex items-center justify-between border-b border-border bg-card px-6 py-3 text-sm"
 		>

@@ -53,38 +53,40 @@ async function createGame() {
         <div class="flex flex-col gap-4 rounded-xl border border-border bg-card p-6">
             <h2 class="text-2xl text-foreground">{$t("home.newGame")}</h2>
 
-            <div class="flex flex-col gap-2">
-                <span class="text-xs tracking-widest text-muted-foreground uppercase">{$t("home.labelGame")}</span>
+            <fieldset class="m-0 flex flex-col gap-2 border-0 p-0">
+                <legend class="mb-2 text-xs tracking-widest text-muted-foreground uppercase">{$t("home.labelGame")}</legend>
                 <div class="flex flex-col gap-2">
                     {#each gameList as game}
-                        <label
-                            class="flex cursor-pointer items-center gap-3 rounded-lg border px-4 py-3 transition-colors {selectedGame ===
-                            game.id
-                                ? 'border-primary bg-primary/10 text-foreground'
-                                : 'border-border text-muted-foreground hover:border-border/60'}"
-                        >
-                            <input type="radio" name="game" value={game.id} bind:group={selectedGame} class="hidden" />
-                            <span class="flex-1 font-medium">{$t(`${game.id}.name`)}</span>
-                            <span class="text-xs"
-                                >{game.minPlayers === game.maxPlayers
-                                    ? game.minPlayers
-                                    : `${game.minPlayers}–${game.maxPlayers}`}
-                                {$t("common.players")}</span
+                        <div class="flex items-center gap-2">
+                            <label
+                                class="flex flex-1 cursor-pointer items-center gap-3 rounded-lg border px-4 py-3 transition-colors {selectedGame ===
+                                game.id
+                                    ? 'border-primary bg-primary/10 text-foreground'
+                                    : 'border-border text-muted-foreground hover:border-border/60'}"
                             >
+                                <input type="radio" name="game" value={game.id} bind:group={selectedGame} class="hidden" />
+                                <span class="flex-1 font-medium">{$t(`${game.id}.name`)}</span>
+                                <span class="text-xs"
+                                    >{game.minPlayers === game.maxPlayers
+                                        ? game.minPlayers
+                                        : `${game.minPlayers}–${game.maxPlayers}`}
+                                    {$t("common.players")}</span
+                                >
+                            </label>
                             <RulesDrawer gameId={game.id} />
-                        </label>
+                        </div>
                     {/each}
                 </div>
-            </div>
+            </fieldset>
 
-            <div class="flex flex-col gap-2">
+            <label class="flex flex-col gap-2">
                 <span class="text-xs tracking-widest text-muted-foreground uppercase">{$t("common.nickname")}</span>
                 <Input
                     bind:value={playerName}
                     placeholder={$t("common.nicknamePlaceholder")}
                     onkeydown={(e) => e.key === "Enter" && createGame()}
                 />
-            </div>
+            </label>
 
             {#if error}
                 <p class="text-sm text-destructive">{error}</p>
