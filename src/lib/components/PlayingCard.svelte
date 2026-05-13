@@ -1,5 +1,6 @@
 <script lang="ts">
 import type { Card } from '$lib/core/types'
+import { t } from '$lib/i18n'
 import { deckPacks, resolvePackFor } from '$lib/stores/deckPacks'
 
 let {
@@ -29,6 +30,17 @@ const src = $derived.by(() => {
 	const faceKey = /^\d$/.test(card.face) ? `0${card.face}` : card.face
 	return `${pack.basePath}/card_${card.suit}_${faceKey}${ext}`
 })
+
+const alt = $derived.by(() => {
+	if (!card) return ''
+	if (card.isHidden || back) return $t('card.hidden')
+	if (card.face === 'Joker') return $t('card.joker')
+	const suitKey = `card.suit.${card.suit}`
+	const suitLabel = card.suit ? $t(suitKey) : ''
+	return suitLabel && suitLabel !== suitKey
+		? $t('card.label', { face: card.face, suit: suitLabel })
+		: card.face
+})
 </script>
 
 {#if !card}
@@ -36,9 +48,7 @@ const src = $derived.by(() => {
 {:else}
 	<img
 		{src}
-		alt={card.isHidden || back
-			? 'Carte cachée'
-			: `${card.face}${card.suit ? ' de ' + card.suit : ''}`}
+		{alt}
 		class="{sizes[size]} rounded-lg object-contain shadow-md"
 		draggable="false"
 	/>

@@ -51,6 +51,28 @@ function targetId(action: Action): string {
 let attackOpen = $state(false)
 let shieldOpen = $state(false)
 let historyOpen = $state(false)
+let attackContainerEl = $state<HTMLDivElement | null>(null)
+let shieldContainerEl = $state<HTMLDivElement | null>(null)
+let attackDir = $state<'up' | 'down'>('up')
+let shieldDir = $state<'up' | 'down'>('up')
+
+function pickDirection(el: HTMLElement | null): 'up' | 'down' {
+	if (!el) return 'up'
+	const rect = el.getBoundingClientRect()
+	return rect.top >= window.innerHeight - rect.bottom ? 'up' : 'down'
+}
+
+function toggleAttack() {
+	if (!attackOpen) attackDir = pickDirection(attackContainerEl)
+	attackOpen = !attackOpen
+	shieldOpen = false
+}
+
+function toggleShield() {
+	if (!shieldOpen) shieldDir = pickDirection(shieldContainerEl)
+	shieldOpen = !shieldOpen
+	attackOpen = false
+}
 
 type ActionFlash = Extract<HistoryEntry, { type: 'ATTACK' | 'CHANGE_SHIELD' | 'CHARGE' }>
 
@@ -298,10 +320,10 @@ onDestroy(() => {
 						</Button>
 					{/if}
 					{#if attackActions.length > 0}
-						<div class="relative w-full">
+						<div class="relative w-full" bind:this={attackContainerEl}>
 							{#if attackOpen}
 								<div
-									class="absolute right-0 bottom-full left-0 mb-2 flex flex-col overflow-hidden rounded-lg border border-border bg-card shadow-lg"
+									class="absolute right-0 left-0 flex flex-col overflow-hidden rounded-lg border border-border bg-card shadow-lg {attackDir === 'up' ? 'bottom-full mb-2' : 'top-full mt-2'}"
 								>
 									{#each attackActions as action (targetId(action))}
 										<button
@@ -316,23 +338,17 @@ onDestroy(() => {
 									{/each}
 								</div>
 							{/if}
-							<Button
-								onclick={() => {
-									attackOpen = !attackOpen;
-									shieldOpen = false;
-								}}
-								class="h-auto w-full py-3"
-							>
+							<Button onclick={toggleAttack} class="h-auto w-full py-3">
 								<span class="flex-1 text-left">{$t('fight.attackBtn')}</span>
 								{#if attackOpen}<ChevronUp size={16} />{:else}<ChevronDown size={16} />{/if}
 							</Button>
 						</div>
 					{/if}
 					{#if shieldActions.length > 0}
-						<div class="relative w-full">
+						<div class="relative w-full" bind:this={shieldContainerEl}>
 							{#if shieldOpen}
 								<div
-									class="absolute right-0 bottom-full left-0 mb-2 flex flex-col overflow-hidden rounded-lg border border-border bg-card shadow-lg"
+									class="absolute right-0 left-0 flex flex-col overflow-hidden rounded-lg border border-border bg-card shadow-lg {shieldDir === 'up' ? 'bottom-full mb-2' : 'top-full mt-2'}"
 								>
 									{#each shieldActions as action (targetId(action))}
 										<button
@@ -348,14 +364,7 @@ onDestroy(() => {
 									{/each}
 								</div>
 							{/if}
-							<Button
-								onclick={() => {
-									shieldOpen = !shieldOpen;
-									attackOpen = false;
-								}}
-								variant="outline"
-								class="h-auto w-full py-3"
-							>
+							<Button onclick={toggleShield} variant="outline" class="h-auto w-full py-3">
 								<span class="flex-1 text-left">{$t('fight.shieldBtn')}</span>
 								{#if shieldOpen}<ChevronUp size={16} />{:else}<ChevronDown size={16} />{/if}
 							</Button>

@@ -56,6 +56,17 @@ export default {
 		rules: 'Règles',
 		cardStyle: 'Style des cartes'
 	},
+	card: {
+		hidden: 'Carte cachée',
+		joker: 'Joker',
+		label: '{face} de {suit}',
+		suit: {
+			hearts: 'cœur',
+			diamonds: 'carreau',
+			clubs: 'trèfle',
+			spades: 'pique'
+		}
+	},
 	war: {
 		name: 'La Bataille',
 		deck: 'Deck',
@@ -118,7 +129,8 @@ export default {
 		by: 'Par {name}',
 		active: 'Actif',
 		setDefault: 'Définir par défaut',
-		frenchDeck: 'Jeu de cartes français'
+		frenchDeck: 'Jeu de cartes français',
+		errorUnknownType: 'Type de jeu inconnu.'
 	},
 	network: {
 		connectionLost: 'La connexion avec le host a été perdue.',
