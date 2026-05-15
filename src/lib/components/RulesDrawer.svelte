@@ -4,7 +4,11 @@ import { Info, X } from 'lucide-svelte'
 import { gameRules } from '$lib/games/index'
 import { locale, t } from '$lib/i18n'
 
-let { gameId, size = 14 }: { gameId: string; size?: number } = $props()
+let {
+	gameId,
+	size = 14,
+	children
+}: { gameId: string; size?: number; children?: import('svelte').Snippet } = $props()
 let open = $state(false)
 const rules = $derived(gameRules[gameId]?.[$locale] ?? null)
 </script>
@@ -32,11 +36,14 @@ const rules = $derived(gameRules[gameId]?.[$locale] ?? null)
 					<X size={16} />
 				</Dialog.Close>
 			</div>
-			{#if rules}
-				<div class="flex-1 overflow-y-auto px-4 py-3">
+			<div class="flex-1 overflow-y-auto px-4 py-3 flex flex-col gap-4">
+				{#if children}
+					{@render children()}
+				{/if}
+				{#if rules}
 					<div class="whitespace-pre-wrap font-sans text-xs leading-relaxed text-muted-foreground">{rules}</div>
-				</div>
-			{/if}
+				{/if}
+			</div>
 		</Dialog.Content>
 	</Dialog.Portal>
 </Dialog.Root>

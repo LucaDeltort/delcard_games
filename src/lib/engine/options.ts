@@ -8,7 +8,15 @@ export type OptionSchema =
 			default: string
 			choices: { value: string; label: string }[]
 	  }
-	| { key: string; label: string; description?: string; type: 'number'; default: number; min: number; max: number }
+	| {
+			key: string
+			label: string
+			description?: string
+			type: 'number'
+			default: number
+			min: number
+			max: number
+	  }
 
 export function defaultOptions(schema: OptionSchema[]): Record<string, unknown> {
 	return Object.fromEntries(schema.map((s) => [s.key, s.default]))

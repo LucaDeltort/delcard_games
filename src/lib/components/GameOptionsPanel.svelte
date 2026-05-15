@@ -16,10 +16,7 @@ let {
 </script>
 
 {#if schema.length > 0}
-	<div class="w-full max-w-xs">
-		<p class="mb-3 text-xs tracking-widest text-muted-foreground uppercase">
-			{$t('game.rules')}
-		</p>
+	<div class="w-full">
 		<div class="flex flex-col gap-2">
 			{#each schema as opt}
 				{#if opt.type === 'boolean'}

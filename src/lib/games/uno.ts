@@ -296,7 +296,7 @@ export const uno: GameDefinition<UnoState> = {
 		// ACCEPT_PENALTY: challenge target accepts +4
 		if (action.type === 'ACCEPT_PENALTY') {
 			if (!state.pendingChallenge) return state
-			let zones = drawCards(state.zones, action.playerId, 4)
+			const zones = drawCards(state.zones, action.playerId, 4)
 			const nextTurn = nextInDir(state.players, action.playerId, state.direction)
 			if (options.playAfterPenalty) {
 				const top = zones['discard'].cards[zones['discard'].cards.length - 1]
@@ -583,8 +583,7 @@ export const uno: GameDefinition<UnoState> = {
 			players,
 			turnPlayerId: nextTurn,
 			pendingChallenge: null,
-			lastSkippedPlayer:
-				state.lastSkippedPlayer === playerId ? null : state.lastSkippedPlayer
+			lastSkippedPlayer: state.lastSkippedPlayer === playerId ? null : state.lastSkippedPlayer
 		}
 	},
 

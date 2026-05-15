@@ -1,5 +1,6 @@
 <script lang="ts">
-import { Loader2, Settings as SettingsIcon, X } from 'lucide-svelte'
+import { Dialog } from 'bits-ui'
+import { Loader2, Settings as SettingsIcon, SlidersHorizontal, X } from 'lucide-svelte'
 import { onDestroy, onMount } from 'svelte'
 import { get } from 'svelte/store'
 import { fade } from 'svelte/transition'
@@ -342,16 +343,44 @@ $effect(() => {
 			</ul>
 		</div>
 
-		<DeckPackPicker {deckSlug} />
-
 		{#if gameDef?.optionsSchema?.length}
-			<GameOptionsPanel
-				schema={gameDef.optionsSchema}
-				options={lobbyOptions}
-				{isHost}
-				onChange={updateOption}
-			/>
+			<Dialog.Root>
+				<Dialog.Trigger
+					class="flex w-full max-w-xs items-center justify-center gap-2 rounded-lg border border-border bg-card px-4 py-3 text-sm text-foreground transition-colors hover:border-primary"
+				>
+					<SlidersHorizontal size={14} />
+					{$t('game.rules')}
+				</Dialog.Trigger>
+				<Dialog.Portal>
+					<Dialog.Overlay class="fixed inset-0 z-[100] bg-black/20" />
+					<Dialog.Content
+						class="fixed inset-y-0 right-0 z-[110] flex w-72 max-w-[85vw] flex-col border-l border-border bg-card shadow-xl focus:outline-none"
+					>
+						<div class="flex items-center justify-between border-b border-border px-4 py-2">
+							<Dialog.Title class="text-xs tracking-widest text-muted-foreground uppercase">
+								{$t('game.rules')}
+							</Dialog.Title>
+							<Dialog.Close
+								class="p-2 text-muted-foreground transition-colors hover:text-foreground"
+								aria-label={$t('common.close')}
+							>
+								<X size={16} />
+							</Dialog.Close>
+						</div>
+						<div class="flex-1 overflow-y-auto px-4 py-4">
+							<GameOptionsPanel
+								schema={gameDef.optionsSchema}
+								options={lobbyOptions}
+								{isHost}
+								onChange={updateOption}
+							/>
+						</div>
+					</Dialog.Content>
+				</Dialog.Portal>
+			</Dialog.Root>
 		{/if}
+
+		<DeckPackPicker {deckSlug} />
 
 		{#if isHost}
 			{#if gameMeta && lobbyPlayers.length < gameMeta.minPlayers}

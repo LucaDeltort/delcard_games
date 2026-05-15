@@ -442,9 +442,18 @@ describe('uno options: accumulation', () => {
 		const draw2b = createCard('DrawTwo', 'red')
 		const state = makeState(
 			[P1, P2, P3],
-			{ p1: [draw2a, createCard('9', 'red')], p2: [draw2b, createCard('1', 'blue')], p3: [createCard('2', 'blue')] },
+			{
+				p1: [draw2a, createCard('9', 'red')],
+				p2: [draw2b, createCard('1', 'blue')],
+				p3: [createCard('2', 'blue')]
+			},
 			createCard('5', 'red'),
-			[createCard('3', 'green'), createCard('4', 'green'), createCard('6', 'green'), createCard('7', 'green')],
+			[
+				createCard('3', 'green'),
+				createCard('4', 'green'),
+				createCard('6', 'green'),
+				createCard('7', 'green')
+			],
 			'red',
 			1,
 			P1,
@@ -480,7 +489,11 @@ describe('uno options: cut', () => {
 		const cutCard = createCard('5', 'red')
 		const state = makeState(
 			[P1, P2, P3],
-			{ p1: [createCard('3', 'blue')], p2: [cutCard, createCard('9', 'red')], p3: [createCard('2', 'blue')] },
+			{
+				p1: [createCard('3', 'blue')],
+				p2: [cutCard, createCard('9', 'red')],
+				p3: [createCard('2', 'blue')]
+			},
 			topCard,
 			[],
 			'red',
@@ -606,7 +619,12 @@ describe('uno options: challengePlusFour', () => {
 			[P1, P2],
 			{ p1: [wdf, createCard('9', 'red')], p2: [createCard('1', 'blue')] },
 			createCard('5', 'red'),
-			[createCard('7', 'green'), createCard('8', 'green'), createCard('9', 'green'), createCard('6', 'green')],
+			[
+				createCard('7', 'green'),
+				createCard('8', 'green'),
+				createCard('9', 'green'),
+				createCard('6', 'green')
+			],
 			'red',
 			1,
 			P1,
