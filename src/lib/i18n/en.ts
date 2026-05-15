@@ -72,7 +72,29 @@ export default {
 		draw: 'Draw',
 		yourTurn: 'Your turn',
 		chooseColor: 'Choose a color',
-		wins: '{name} wins!'
+		wins: '{name} wins!',
+		endTurn: 'End turn',
+		acceptPenalty: 'Accept',
+		challenge: 'Challenge',
+		challengeWon: 'Challenge won! {name} draws 4.',
+		challengeLost: 'Challenge failed — you draw 6.',
+		swapWith: 'Swap hands with…',
+		options: {
+			accumulation: 'Accumulation',
+			accumulationDesc: 'Stack +2 on +2, or +4 on +4.',
+			cut: 'Cut',
+			cutDesc: 'Play the identical card to cut in out of turn.',
+			playAfterDraw: 'Play after drawing',
+			playAfterDrawDesc: 'If the drawn card is playable, you may play it immediately.',
+			drawUntilPlay: 'Draw until playable',
+			drawUntilPlayDesc: 'Keep drawing until you find a playable card.',
+			playAfterPenalty: 'Play after penalty',
+			playAfterPenaltyDesc: 'After drawing from +2/+4, you may still play a card.',
+			challengePlusFour: 'Challenge +4',
+			challengePlusFourDesc: 'The targeted player may challenge a Wild Draw Four.',
+			noWildFinish: 'No Wild finish',
+			noWildFinishDesc: 'Cannot play a Wild or Wild Draw Four as your last card.'
+		}
 	},
 	war: {
 		name: 'War',

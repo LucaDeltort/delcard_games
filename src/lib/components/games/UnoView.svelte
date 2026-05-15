@@ -13,6 +13,8 @@ import { settingsOpen } from '$lib/stores/settings'
 type UnoState = GameStateGeneric & {
 	direction: 1 | -1
 	currentColor: UnoColor
+	drewCardId: string | null
+	pendingChallenge: { by: string; hadBluff: boolean } | null
 }
 
 let {
@@ -58,6 +60,10 @@ const playableCardIds = $derived(
 const canDraw = $derived(validActions.some((a) => a.type === 'DRAW_CARD'))
 const isMyTurn = $derived(validActions.length > 0)
 const drawAction = $derived(validActions.find((a) => a.type === 'DRAW_CARD') ?? null)
+const canEndTurn = $derived(validActions.some((a) => a.type === 'END_TURN'))
+const acceptAction = $derived(validActions.find((a) => a.type === 'ACCEPT_PENALTY') ?? null)
+const challengeAction = $derived(validActions.find((a) => a.type === 'CHALLENGE_DRAW_FOUR') ?? null)
+const showChallengeOverlay = $derived(acceptAction !== null || challengeAction !== null)
 
 const opponents = $derived(gs.players.filter((p) => p !== myPlayerId))
 
@@ -202,13 +208,16 @@ function handleColorPick(color: UnoColor) {
 		<div class="flex flex-wrap justify-center gap-2">
 			{#each myHand as card (card.id)}
 				{@const playable = playableCardIds.has(card.id)}
+				{@const isDrawn = card.id === gs.drewCardId}
 				<button
 					onclick={() => handleCardClick(card)}
 					disabled={!playable}
 					class="rounded-lg transition-all
-						{playable
+						{playable && !isDrawn
 							? 'cursor-pointer ring-2 ring-primary hover:-translate-y-1'
-							: 'cursor-default opacity-40'}"
+							: playable && isDrawn
+								? 'cursor-pointer ring-2 ring-yellow-400 hover:-translate-y-1'
+								: 'cursor-default opacity-40'}"
 					aria-label="{card.face}{card.suit ? ' ' + card.suit : ''}"
 				>
 					<img
@@ -220,10 +229,51 @@ function handleColorPick(color: UnoColor) {
 				</button>
 			{/each}
 		</div>
+		{#if canEndTurn}
+			<div class="mt-3 flex justify-center">
+				<button
+					onclick={() => onAction({ type: 'END_TURN', playerId: myPlayerId })}
+					class="rounded-full bg-secondary px-6 py-2 text-sm font-medium text-foreground transition-colors hover:bg-secondary/80"
+				>
+					{$t('uno.endTurn')}
+				</button>
+			</div>
+		{/if}
 	</div>
 
 	<RulesDrawer gameId="uno" />
 </div>
+
+<!-- Challenge +4 overlay -->
+{#if showChallengeOverlay}
+	<div
+		class="fixed inset-0 z-50 flex items-center justify-center bg-black/60"
+		role="dialog"
+		aria-modal="true"
+	>
+		<div class="flex flex-col items-center gap-4 rounded-2xl bg-card p-6 shadow-2xl">
+			<p class="text-sm font-medium text-foreground">{$t('uno.challenge')}</p>
+			<div class="flex gap-3">
+				{#if acceptAction}
+					<button
+						onclick={() => onAction(acceptAction)}
+						class="rounded-xl bg-secondary px-6 py-3 text-sm font-medium text-foreground transition-colors hover:bg-secondary/80"
+					>
+						{$t('uno.acceptPenalty')}
+					</button>
+				{/if}
+				{#if challengeAction}
+					<button
+						onclick={() => onAction(challengeAction)}
+						class="rounded-xl bg-primary px-6 py-3 text-sm font-medium text-primary-foreground transition-colors hover:opacity-90"
+					>
+						{$t('uno.challenge')}
+					</button>
+				{/if}
+			</div>
+		</div>
+	</div>
+{/if}
 
 <!-- Color picker overlay -->
 {#if pendingCardId}

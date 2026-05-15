@@ -18,6 +18,7 @@ export class GameClient {
 	private _playerId: string | null = null
 	private _gameId: string | null = null
 	private _lobbyPlayers: LobbyPlayer[] = []
+	private _options: Record<string, unknown> = {}
 	private _intentionalClose = false
 	private _retryCount = 0
 	private _code: string
@@ -213,6 +214,7 @@ export class GameClient {
 				break
 			case 'LOBBY':
 				this._lobbyPlayers = msg.players
+				this._options = msg.options
 				this.onLobby?.(msg.players)
 				break
 			case 'STATE':
@@ -255,6 +257,10 @@ export class GameClient {
 
 	get gameId(): string | null {
 		return this._gameId
+	}
+
+	get options(): Record<string, unknown> {
+		return this._options
 	}
 
 	get lobbyPlayers(): LobbyPlayer[] {

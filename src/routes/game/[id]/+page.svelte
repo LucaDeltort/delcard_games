@@ -8,6 +8,7 @@ import { beforeNavigate, goto } from '$app/navigation'
 import { page } from '$app/stores'
 import ConfirmDialog from '$lib/components/ConfirmDialog.svelte'
 import DeckPackPicker from '$lib/components/DeckPackPicker.svelte'
+import GameOptionsPanel from '$lib/components/GameOptionsPanel.svelte'
 import FightView from '$lib/components/games/FightView.svelte'
 import UnoView from '$lib/components/games/UnoView.svelte'
 import WarView from '$lib/components/games/WarView.svelte'
@@ -42,9 +43,12 @@ let _skipConfirm = false
 let kickTarget = $state<{ id: string; name: string } | null>(null)
 
 const gameMeta = $derived(gameList.find((g) => g.id === resolvedGameId))
+const gameDef = $derived(games[resolvedGameId])
 const deckSlug = $derived(
 	getDeckSlugForType(games[resolvedGameId]?.deckType ?? 'FrenchDeckWithoutJoker')
 )
+
+let lobbyOptions = $state<Record<string, unknown>>({})
 
 let knownNames: Record<string, string> = $state({})
 
@@ -95,8 +99,10 @@ onMount(() => {
 		}
 		myPlayerId = host.playerId
 		lobbyPlayers = host.lobbyPlayers
+		lobbyOptions = host.options
 		host.onLobbyChange = (players) => {
 			lobbyPlayers = players
+			lobbyOptions = get(activeHost)?.options ?? {}
 		}
 		host.onState = (state) => {
 			gameState = state
@@ -122,6 +128,7 @@ onMount(() => {
 		}
 		client.onLobby = (players) => {
 			lobbyPlayers = players
+			lobbyOptions = client.options
 		}
 		client.onState = (state) => {
 			reconnecting = false
@@ -140,6 +147,7 @@ onMount(() => {
 		// Read state that may have arrived before onMount ran
 		myPlayerId = client.playerId ?? ''
 		if (client.gameId) resolvedGameId = client.gameId
+		lobbyOptions = client.options
 		if (client.lobbyPlayers.length > 0) lobbyPlayers = client.lobbyPlayers
 	}
 })
@@ -186,6 +194,11 @@ function confirmKick() {
 
 function startGame() {
 	get(activeHost)?.startGame()
+}
+
+function updateOption(key: string, value: unknown) {
+	get(activeHost)?.updateOption(key, value)
+	lobbyOptions = get(activeHost)?.options ?? {}
 }
 
 function submitAction(action: Action) {
@@ -330,6 +343,15 @@ $effect(() => {
 		</div>
 
 		<DeckPackPicker {deckSlug} />
+
+		{#if gameDef?.optionsSchema?.length}
+			<GameOptionsPanel
+				schema={gameDef.optionsSchema}
+				options={lobbyOptions}
+				{isHost}
+				onChange={updateOption}
+			/>
+		{/if}
 
 		{#if isHost}
 			{#if gameMeta && lobbyPlayers.length < gameMeta.minPlayers}

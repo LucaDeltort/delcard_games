@@ -72,7 +72,29 @@ export default {
 		draw: 'Piocher',
 		yourTurn: 'Ton tour',
 		chooseColor: 'Choisis une couleur',
-		wins: '{name} gagne !'
+		wins: '{name} gagne !',
+		endTurn: 'Passer',
+		acceptPenalty: 'Accepter',
+		challenge: 'Contester',
+		challengeWon: 'Contestation réussie ! {name} pioche 4.',
+		challengeLost: 'Contestation échouée — tu pioches 6.',
+		swapWith: 'Échanger avec…',
+		options: {
+			accumulation: 'Accumulation',
+			accumulationDesc: 'Empile les +2 sur +2, ou les +4 sur +4.',
+			cut: 'Coupe',
+			cutDesc: 'Joue la carte identique pour couper le tour de quelqu\'un.',
+			playAfterDraw: 'Jouer après piocher',
+			playAfterDrawDesc: 'Si la carte piochée est jouable, tu peux la jouer immédiatement.',
+			drawUntilPlay: 'Piocher jusqu\'à pouvoir jouer',
+			drawUntilPlayDesc: 'Continue de piocher jusqu\'à trouver une carte jouable.',
+			playAfterPenalty: 'Jouer après pénalité',
+			playAfterPenaltyDesc: 'Après avoir pioché suite à un +2/+4, tu peux quand même jouer une carte.',
+			challengePlusFour: 'Contester le +4',
+			challengePlusFourDesc: 'Le joueur ciblé peut contester un Wild Draw Four.',
+			noWildFinish: 'Pas de Wild pour finir',
+			noWildFinishDesc: 'Tu ne peux pas jouer un Wild ou un Wild Draw Four comme dernière carte.'
+		}
 	},
 	war: {
 		name: 'La Bataille',
