@@ -28,6 +28,7 @@ const renderedPack = $derived(entry?.packs.find((p) => p.id === renderedPackId) 
 
 function cardSrc(card: Card, pack: CardPack): string {
 	const ext = pack.ext ?? '.png'
+	if (pack.cardSrc) return pack.cardSrc(card, pack.basePath, ext)
 	if (card.face === 'Joker') return `${pack.basePath}/card_joker_${card.suit}${ext}`
 	if (!card.suit) return `${pack.basePath}/card_${card.face.toLowerCase()}${ext}`
 	const faceKey = /^\d$/.test(card.face) ? `0${card.face}` : card.face
@@ -40,7 +41,9 @@ const cardsBySuit = $derived.by(() => {
 	const suits = [...new Set(cards.filter((c) => c.suit).map((c) => c.suit!))]
 	return suits.map((suit) => ({ suit, cards: cards.filter((c) => c.suit === suit) }))
 })
-const jokers = $derived(allCards.filter((c) => c.face === 'Joker' || !c.suit))
+const jokers = $derived(
+	allCards.filter((c) => c.face === 'Joker' || !c.suit).sort((a, b) => a.face.localeCompare(b.face))
+)
 
 async function switchPack(packId: string) {
 	previewPackId = packId
