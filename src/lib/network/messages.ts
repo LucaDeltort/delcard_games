@@ -11,7 +11,7 @@ export type ClientMessage =
 	| { type: 'PONG'; t: number }
 
 export type HostMessage =
-	| { type: 'WELCOME'; playerId: string }
+	| { type: 'WELCOME'; playerId: string; gameId: string }
 	| { type: 'LOBBY'; players: LobbyPlayer[] }
 	| { type: 'STATE'; state: GameStateGeneric; seq: number }
 	| { type: 'HOST_GONE'; message: string }

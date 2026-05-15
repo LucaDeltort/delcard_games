@@ -1,9 +1,9 @@
-import type { Card } from '$lib/core/types'
+import type { Card, DeckType } from '$lib/core/types'
 import { createFrenchDeck } from '$lib/decks/FrenchDeck/cards'
 import { defaultFrenchDeckPack, frenchDeckPacks } from '$lib/decks/FrenchDeck/packs'
+import type { CardPack } from '$lib/decks/types'
 import { createUnoDeck } from '$lib/decks/UnoDeck/cards'
 import { defaultUnoDeckPack, unoDeckPacks } from '$lib/decks/UnoDeck/packs'
-import type { CardPack } from '$lib/decks/types'
 
 export type DeckTypeEntry = {
 	slug: string
@@ -12,6 +12,16 @@ export type DeckTypeEntry = {
 	packs: CardPack[]
 	defaultPackId: string
 	createCards: () => Card[]
+}
+
+const DECK_TYPE_SLUGS: Record<DeckType, string> = {
+	FrenchDeckWithJoker: 'french-deck',
+	FrenchDeckWithoutJoker: 'french-deck',
+	UnoDeck: 'uno-deck'
+}
+
+export function getDeckSlugForType(deckType: DeckType): string {
+	return DECK_TYPE_SLUGS[deckType] ?? 'french-deck'
 }
 
 export const deckRegistry: DeckTypeEntry[] = [

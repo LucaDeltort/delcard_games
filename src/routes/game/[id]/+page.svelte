@@ -14,6 +14,7 @@ import WarView from '$lib/components/games/WarView.svelte'
 import RulesDrawer from '$lib/components/RulesDrawer.svelte'
 import { Button } from '$lib/components/ui/button'
 import type { GameStateGeneric } from '$lib/core/types'
+import { getDeckSlugForType } from '$lib/decks/registry'
 import type { Action } from '$lib/engine'
 import { gameList, games } from '$lib/games/index'
 import { t } from '$lib/i18n'
@@ -22,7 +23,7 @@ import { settingsOpen } from '$lib/stores/settings'
 
 const code = $page.params.id
 const isHost = $page.url.searchParams.get('role') === 'host'
-const gameId = $page.url.searchParams.get('game') ?? ''
+let resolvedGameId = $state($page.url.searchParams.get('game') ?? '')
 
 let gameState = $state<GameStateGeneric | null>(null)
 let lobbyPlayers = $state<{ id: string; name: string }[]>([])
@@ -40,7 +41,10 @@ let pendingDestination = ''
 let _skipConfirm = false
 let kickTarget = $state<{ id: string; name: string } | null>(null)
 
-const gameMeta = gameList.find((g) => g.id === gameId)
+const gameMeta = $derived(gameList.find((g) => g.id === resolvedGameId))
+const deckSlug = $derived(
+	getDeckSlugForType(games[resolvedGameId]?.deckType ?? 'FrenchDeckWithoutJoker')
+)
 
 let knownNames: Record<string, string> = $state({})
 
@@ -114,6 +118,7 @@ onMount(() => {
 		}
 		client.onWelcome = (id) => {
 			myPlayerId = id
+			if (client.gameId) resolvedGameId = client.gameId
 		}
 		client.onLobby = (players) => {
 			lobbyPlayers = players
@@ -134,6 +139,7 @@ onMount(() => {
 		}
 		// Read state that may have arrived before onMount ran
 		myPlayerId = client.playerId ?? ''
+		if (client.gameId) resolvedGameId = client.gameId
 		if (client.lobbyPlayers.length > 0) lobbyPlayers = client.lobbyPlayers
 	}
 })
@@ -323,7 +329,7 @@ $effect(() => {
 			</ul>
 		</div>
 
-		<DeckPackPicker />
+		<DeckPackPicker {deckSlug} />
 
 		{#if isHost}
 			{#if gameMeta && lobbyPlayers.length < gameMeta.minPlayers}

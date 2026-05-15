@@ -90,7 +90,7 @@ export class GameHost {
 					clearTimeout(pendingTimer)
 					this.pendingDisconnects.delete(conn.peer)
 					this.clients.set(conn.peer, { conn, name: msg.playerName })
-					conn.send({ type: 'WELCOME', playerId: conn.peer } as HostMessage)
+					conn.send({ type: 'WELCOME', playerId: conn.peer, gameId: this.def.id } as HostMessage)
 					this.broadcastLobby()
 					if (this.state) this.sendStateTo(conn, this.state)
 					return
@@ -112,7 +112,7 @@ export class GameHost {
 					return
 				}
 				this.clients.set(conn.peer, { conn, name: msg.playerName })
-				conn.send({ type: 'WELCOME', playerId: conn.peer } as HostMessage)
+				conn.send({ type: 'WELCOME', playerId: conn.peer, gameId: this.def.id } as HostMessage)
 				this.broadcastLobby()
 			} else if (msg.type === 'ACTION') {
 				this.handleAction(conn.peer, msg.action)
