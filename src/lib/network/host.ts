@@ -8,7 +8,7 @@ import { getTurnIceServers } from './turn'
 
 const CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
 const PEER_PREFIX = 'delcard-'
-const RECONNECT_WINDOW_MS = 20_000
+const RECONNECT_WINDOW_MS = 60_000
 
 function generateCode(): string {
 	return Array.from(
@@ -118,6 +118,8 @@ export class GameHost {
 				this.handleAction(conn.peer, msg.action)
 			} else if (msg.type === 'RESYNC') {
 				if (this.state) this.sendStateTo(conn, this.state)
+			} else if (msg.type === 'PING') {
+				conn.send({ type: 'PONG', t: msg.t } as HostMessage)
 			}
 		})
 
@@ -151,7 +153,14 @@ export class GameHost {
 					players: this.state.players.filter((p) => p !== playerId)
 				}
 			} else {
-				return
+				const filtered = this.state.players.filter((p) => p !== playerId)
+				let nextTurn = this.state.turnPlayerId
+				if (nextTurn === playerId) {
+					const idx = this.state.players.indexOf(playerId)
+					nextTurn = this.state.players[(idx + 1) % this.state.players.length]
+					if (nextTurn === playerId) nextTurn = filtered[0] ?? playerId
+				}
+				next = { ...this.state, players: filtered, turnPlayerId: nextTurn }
 			}
 		}
 
@@ -218,6 +227,13 @@ export class GameHost {
 		this.state = initial
 		this.onState?.(initial)
 		this.broadcastState(initial)
+	}
+
+	/** Re-open the PeerJS signaling socket if mobile suspend killed it. */
+	reconnectSignaling() {
+		if (this.peer && !this.peer.destroyed && this.peer.disconnected) {
+			this.peer.reconnect()
+		}
 	}
 
 	close(message?: string) {

@@ -76,6 +76,9 @@ $effect(() => {
 	reconnectFailed = false
 })
 
+let _hostVisibilityHandler: (() => void) | null = null
+let _hostOnlineHandler: (() => void) | null = null
+
 onMount(() => {
 	if (!browser) return
 
@@ -96,6 +99,12 @@ onMount(() => {
 		host.onError = (msg) => {
 			hostError = msg
 		}
+		_hostVisibilityHandler = () => {
+			if (document.visibilityState === 'visible') host.reconnectSignaling()
+		}
+		_hostOnlineHandler = () => host.reconnectSignaling()
+		document.addEventListener('visibilitychange', _hostVisibilityHandler)
+		window.addEventListener('online', _hostOnlineHandler)
 	} else {
 		const client = get(activeClient)
 		if (!client) {
@@ -129,6 +138,11 @@ onMount(() => {
 })
 
 onDestroy(() => {
+	if (browser) {
+		if (_hostVisibilityHandler)
+			document.removeEventListener('visibilitychange', _hostVisibilityHandler)
+		if (_hostOnlineHandler) window.removeEventListener('online', _hostOnlineHandler)
+	}
 	if (isHost) get(activeHost)?.close()
 	else get(activeClient)?.close()
 })
