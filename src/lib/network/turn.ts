@@ -25,7 +25,11 @@ export async function getTurnIceServers(): Promise<RTCIceServer[]> {
 		if (!res.ok) throw new Error(`HTTP ${res.status}`)
 		const data: unknown = await res.json()
 		const raw = (data as { iceServers?: unknown })?.iceServers
-		const servers = Array.isArray(raw) ? raw.filter(isValidIceServer) : []
+		const servers = Array.isArray(raw)
+			? raw.filter(isValidIceServer)
+			: isValidIceServer(raw)
+				? [raw]
+				: []
 		cache = { value: servers, expiresAt: Date.now() + CACHE_TTL_MS }
 		return servers
 	} catch (err) {
