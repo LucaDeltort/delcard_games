@@ -1,6 +1,8 @@
 import type { Card } from '$lib/core/types'
 import { createFrenchDeck } from '$lib/decks/FrenchDeck/cards'
 import { defaultFrenchDeckPack, frenchDeckPacks } from '$lib/decks/FrenchDeck/packs'
+import { createUnoDeck } from '$lib/decks/UnoDeck/cards'
+import { defaultUnoDeckPack, unoDeckPacks } from '$lib/decks/UnoDeck/packs'
 import type { CardPack } from '$lib/decks/types'
 
 export type DeckTypeEntry = {
@@ -20,6 +22,14 @@ export const deckRegistry: DeckTypeEntry[] = [
 		packs: frenchDeckPacks,
 		defaultPackId: defaultFrenchDeckPack.id,
 		createCards: () => createFrenchDeck(true)
+	},
+	{
+		slug: 'uno-deck',
+		name: 'Uno Deck',
+		nameKey: 'decks.unoDeck',
+		packs: unoDeckPacks,
+		defaultPackId: defaultUnoDeckPack.id,
+		createCards: () => createUnoDeck()
 	}
 ]
 

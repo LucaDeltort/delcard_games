@@ -67,6 +67,13 @@ export default {
 			spades: 'pique'
 		}
 	},
+	uno: {
+		name: 'Uno',
+		draw: 'Piocher',
+		yourTurn: 'Ton tour',
+		chooseColor: 'Choisis une couleur',
+		wins: '{name} gagne !'
+	},
 	war: {
 		name: 'La Bataille',
 		deck: 'Deck',
@@ -131,6 +138,7 @@ export default {
 		active: 'Actif',
 		setDefault: 'Définir par défaut',
 		frenchDeck: 'Jeu de cartes français',
+		unoDeck: 'Jeu de cartes Uno',
 		errorUnknownType: 'Type de jeu inconnu.'
 	},
 	network: {

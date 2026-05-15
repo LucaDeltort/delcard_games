@@ -67,6 +67,13 @@ export default {
 			spades: 'spades'
 		}
 	},
+	uno: {
+		name: 'Uno',
+		draw: 'Draw',
+		yourTurn: 'Your turn',
+		chooseColor: 'Choose a color',
+		wins: '{name} wins!'
+	},
 	war: {
 		name: 'War',
 		deck: 'Deck',
@@ -131,6 +138,7 @@ export default {
 		active: 'Active',
 		setDefault: 'Set as default',
 		frenchDeck: 'French Deck',
+		unoDeck: 'Uno Deck',
 		errorUnknownType: 'Unknown deck type.'
 	},
 	network: {

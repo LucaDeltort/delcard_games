@@ -1,9 +1,10 @@
 import type { GameStateGeneric } from '$lib/core/types'
 import type { GameDefinition } from '$lib/engine'
 import { fight } from './fight'
+import { uno } from './uno'
 import { war } from './war'
 
-export const games = { war, fight } as unknown as Record<string, GameDefinition<GameStateGeneric>>
+export const games = { war, fight, uno } as unknown as Record<string, GameDefinition<GameStateGeneric>>
 
 export const gameList: { id: string; minPlayers: number; maxPlayers: number }[] = Object.values(
 	games as Record<string, GameDefinition<GameStateGeneric>>
@@ -14,6 +15,30 @@ export const gameList: { id: string; minPlayers: number; maxPlayers: number }[] 
 }))
 
 export const gameRules: Record<string, { en: string; fr: string }> = {
+	uno: {
+		en: `2–8 players · 108 cards
+
+• Deal 7 cards each. Flip one card face-up to start the discard pile.
+• On your turn: play a card matching the color or number of the top discard, OR draw a card.
+• Action cards:
+  – Skip: next player loses their turn.
+  – Reverse: play direction reverses (2 players: acts as Skip).
+  – Draw Two: next player draws 2 cards and loses their turn.
+  – Wild: play on any card, choose the new color.
+  – Wild Draw Four: next player draws 4 and loses their turn, you choose color.
+• When your hand is empty, you win!`,
+		fr: `2–8 joueurs · 108 cartes
+
+• Distribuer 7 cartes. Retourner une carte face visible pour démarrer la défausse.
+• À ton tour : joue une carte de même couleur ou même valeur, OU pioche une carte.
+• Cartes action :
+  – Passe ton tour : le joueur suivant passe son tour.
+  – Inverse : le sens de jeu s'inverse (2 joueurs : agit comme Passe ton tour).
+  – +2 : le joueur suivant pioche 2 cartes et passe son tour.
+  – Joker : jouable sur n'importe quelle carte, tu choisis la nouvelle couleur.
+  – Joker +4 : le joueur suivant pioche 4 cartes et passe son tour, tu choisis la couleur.
+• Quand ta main est vide, tu gagnes !`
+	},
 	war: {
 		en: `2 players · 52 cards
 

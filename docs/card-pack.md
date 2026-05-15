@@ -55,6 +55,60 @@ Examples: `card_hearts_A.svg`, `card_spades_10.svg`, `card_clubs_07.svg`, `card_
 
 ---
 
+## Creating a pack for the Uno deck
+
+1. Create a folder: `static/cards/UnoDeck/<your-pack>/`
+2. Provide the 55 files listed below (SVG preferred; PNG accepted at 500×700 px)
+3. Register your pack in `src/lib/decks/UnoDeck/packs.ts`
+
+```ts
+{
+  id: 'your-pack',
+  name: 'Display name',
+  author: 'Your name',
+  basePath: '/cards/UnoDeck/your-pack',
+  ext: '.svg'  // or '.png'
+}
+```
+
+## File list (Uno)
+
+Total: **55 files** (52 colored cards + 2 wilds + 1 back)
+
+### Colored cards — `card_<color>_<face>.<ext>`
+
+- `<color>`: `red`, `yellow`, `green`, `blue`
+- `<face>`: `0`–`9`, `skip`, `reverse`, `drawtwo`
+
+Examples: `card_red_0.png`, `card_blue_7.png`, `card_green_skip.png`, `card_yellow_drawtwo.png`
+
+Full list per color (13 files × 4 colors = 52):
+
+```
+card_<color>_0.<ext>
+card_<color>_1.<ext>   card_<color>_2.<ext>   card_<color>_3.<ext>
+card_<color>_4.<ext>   card_<color>_5.<ext>   card_<color>_6.<ext>
+card_<color>_7.<ext>   card_<color>_8.<ext>   card_<color>_9.<ext>
+card_<color>_skip.<ext>
+card_<color>_reverse.<ext>
+card_<color>_drawtwo.<ext>
+```
+
+### Wild cards (2 files — each used 4× in-game)
+
+| File | Description |
+| ---- | ----------- |
+| `card_wild.<ext>` | Wild (choose color) |
+| `card_wilddrawfour.<ext>` | Wild Draw Four |
+
+### Special (required)
+
+| File | Description |
+| ---- | ----------- |
+| `card_back.<ext>` | Card back (used for draw pile and opponent hands) |
+
+---
+
 ## Creating a new deck type
 
 A deck type defines which cards exist. Adding one requires four steps.
@@ -64,7 +118,7 @@ A deck type defines which cards exist. Adding one requires four steps.
 Add your type to the `DeckType` union in `src/lib/core/types.ts`:
 
 ```typescript
-export type DeckType = 'FrenchDeckWithJoker' | 'FrenchDeckWithoutJoker' | 'YourDeckType'
+export type DeckType = 'FrenchDeckWithJoker' | 'FrenchDeckWithoutJoker' | 'UnoDeck' | 'YourDeckType'
 ```
 
 ### 2 — Define the cards
@@ -95,6 +149,7 @@ import { createYourDeck } from '$lib/decks/YourDeckType/cards'
 const registry: Record<DeckType, () => Card[]> = {
   FrenchDeckWithJoker:    () => createFrenchDeck(true),
   FrenchDeckWithoutJoker: () => createFrenchDeck(false),
+  UnoDeck:                () => createUnoDeck(),
   YourDeckType:           () => createYourDeck(),   // ← add this
 }
 ```

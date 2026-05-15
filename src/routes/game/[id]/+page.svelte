@@ -9,6 +9,7 @@ import { page } from '$app/stores'
 import ConfirmDialog from '$lib/components/ConfirmDialog.svelte'
 import DeckPackPicker from '$lib/components/DeckPackPicker.svelte'
 import FightView from '$lib/components/games/FightView.svelte'
+import UnoView from '$lib/components/games/UnoView.svelte'
 import WarView from '$lib/components/games/WarView.svelte'
 import RulesDrawer from '$lib/components/RulesDrawer.svelte'
 import { Button } from '$lib/components/ui/button'
@@ -374,6 +375,14 @@ $effect(() => {
 	/>
 {:else if gameState.activeGameId === 'fight'}
 	<FightView
+		state={gameState}
+		{myPlayerId}
+		players={enrichedPlayers}
+		{validActions}
+		onAction={submitAction}
+	/>
+{:else if gameState.activeGameId === 'uno'}
+	<UnoView
 		state={gameState}
 		{myPlayerId}
 		players={enrichedPlayers}
