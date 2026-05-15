@@ -129,7 +129,12 @@ describe('uno.applyAction PLAY_CARD number', () => {
 	it('moves card from hand to discard', () => {
 		const playCard = createCard('3', 'red')
 		const discard = createCard('5', 'red')
-		const state = makeState([P1, P2], { p1: [playCard], p2: [createCard('2', 'blue')] }, discard, [])
+		const state = makeState(
+			[P1, P2],
+			{ p1: [playCard], p2: [createCard('2', 'blue')] },
+			discard,
+			[]
+		)
 		const next = uno.applyAction(state, {
 			type: 'PLAY_CARD',
 			playerId: P1,
@@ -161,7 +166,12 @@ describe('uno.applyAction PLAY_CARD number', () => {
 
 	it('empty hand → gameover', () => {
 		const playCard = createCard('3', 'red')
-		const state = makeState([P1, P2], { p1: [playCard], p2: [createCard('1', 'blue')] }, createCard('5', 'red'), [])
+		const state = makeState(
+			[P1, P2],
+			{ p1: [playCard], p2: [createCard('1', 'blue')] },
+			createCard('5', 'red'),
+			[]
+		)
 		const next = uno.applyAction(state, {
 			type: 'PLAY_CARD',
 			playerId: P1,
@@ -261,7 +271,12 @@ describe('uno.applyAction PLAY_CARD DrawTwo', () => {
 describe('uno.applyAction PLAY_CARD Wild', () => {
 	it('requires chosenColor — no-ops without it', () => {
 		const wild = createCard('Wild')
-		const state = makeState([P1, P2], { p1: [wild], p2: [createCard('1', 'blue')] }, createCard('5', 'red'), [])
+		const state = makeState(
+			[P1, P2],
+			{ p1: [wild], p2: [createCard('1', 'blue')] },
+			createCard('5', 'red'),
+			[]
+		)
 		const next = uno.applyAction(state, {
 			type: 'PLAY_CARD',
 			playerId: P1,
@@ -272,7 +287,12 @@ describe('uno.applyAction PLAY_CARD Wild', () => {
 
 	it('updates currentColor to chosen color', () => {
 		const wild = createCard('Wild')
-		const state = makeState([P1, P2], { p1: [wild], p2: [createCard('1', 'blue')] }, createCard('5', 'red'), [])
+		const state = makeState(
+			[P1, P2],
+			{ p1: [wild], p2: [createCard('1', 'blue')] },
+			createCard('5', 'red'),
+			[]
+		)
 		const next = uno.applyAction(state, {
 			type: 'PLAY_CARD',
 			playerId: P1,
@@ -310,7 +330,12 @@ describe('uno.applyAction PLAY_CARD WildDrawFour', () => {
 describe('uno.applyAction DRAW_CARD', () => {
 	it('adds a card to player hand and advances turn', () => {
 		const drawPile = [createCard('7', 'blue')]
-		const state = makeState([P1, P2], { p1: [createCard('3', 'yellow')], p2: [] }, createCard('5', 'red'), drawPile)
+		const state = makeState(
+			[P1, P2],
+			{ p1: [createCard('3', 'yellow')], p2: [] },
+			createCard('5', 'red'),
+			drawPile
+		)
 		const next = uno.applyAction(state, { type: 'DRAW_CARD', playerId: P1 })
 		expect(next.zones[`hand_${P1}`].cards).toHaveLength(2)
 		expect(next.turnPlayerId).toBe(P2)

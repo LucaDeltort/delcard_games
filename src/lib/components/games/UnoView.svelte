@@ -4,11 +4,11 @@ import RulesDrawer from '$lib/components/RulesDrawer.svelte'
 import { Button } from '$lib/components/ui/button'
 import type { Card, GameStateGeneric } from '$lib/core/types'
 import type { Action } from '$lib/engine'
+import type { UnoColor } from '$lib/games/uno'
 import { t } from '$lib/i18n'
 import type { LobbyPlayer } from '$lib/network/messages'
 import { deckPacks, resolvePackFor } from '$lib/stores/deckPacks'
 import { settingsOpen } from '$lib/stores/settings'
-import type { UnoColor } from '$lib/games/uno'
 
 type UnoState = GameStateGeneric & {
 	direction: 1 | -1

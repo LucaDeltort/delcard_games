@@ -4,7 +4,10 @@ import { fight } from './fight'
 import { uno } from './uno'
 import { war } from './war'
 
-export const games = { war, fight, uno } as unknown as Record<string, GameDefinition<GameStateGeneric>>
+export const games = { war, fight, uno } as unknown as Record<
+	string,
+	GameDefinition<GameStateGeneric>
+>
 
 export const gameList: { id: string; minPlayers: number; maxPlayers: number }[] = Object.values(
 	games as Record<string, GameDefinition<GameStateGeneric>>

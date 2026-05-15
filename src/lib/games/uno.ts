@@ -14,7 +14,7 @@ const NUMBER_FACES = new Set(['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'])
 
 function nextInDir(players: string[], current: string, direction: 1 | -1): string {
 	const idx = players.indexOf(current)
-	return players[((idx + direction) % players.length + players.length) % players.length]
+	return players[(((idx + direction) % players.length) + players.length) % players.length]
 }
 
 function canPlay(card: Card, topDiscard: Card, currentColor: UnoColor): boolean {
