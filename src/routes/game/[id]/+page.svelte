@@ -1,5 +1,6 @@
 <script lang="ts">
-import { Loader2, Settings as SettingsIcon, X } from 'lucide-svelte'
+import { Dialog } from 'bits-ui'
+import { Loader2, Settings as SettingsIcon, SlidersHorizontal, X } from 'lucide-svelte'
 import { onDestroy, onMount } from 'svelte'
 import { get } from 'svelte/store'
 import { fade } from 'svelte/transition'
@@ -8,11 +9,14 @@ import { beforeNavigate, goto } from '$app/navigation'
 import { page } from '$app/stores'
 import ConfirmDialog from '$lib/components/ConfirmDialog.svelte'
 import DeckPackPicker from '$lib/components/DeckPackPicker.svelte'
+import GameOptionsPanel from '$lib/components/GameOptionsPanel.svelte'
 import FightView from '$lib/components/games/FightView.svelte'
+import UnoView from '$lib/components/games/UnoView.svelte'
 import WarView from '$lib/components/games/WarView.svelte'
 import RulesDrawer from '$lib/components/RulesDrawer.svelte'
 import { Button } from '$lib/components/ui/button'
 import type { GameStateGeneric } from '$lib/core/types'
+import { getDeckSlugForType } from '$lib/decks/registry'
 import type { Action } from '$lib/engine'
 import { gameList, games } from '$lib/games/index'
 import { t } from '$lib/i18n'
@@ -21,7 +25,7 @@ import { settingsOpen } from '$lib/stores/settings'
 
 const code = $page.params.id
 const isHost = $page.url.searchParams.get('role') === 'host'
-const gameId = $page.url.searchParams.get('game') ?? ''
+let resolvedGameId = $state($page.url.searchParams.get('game') ?? '')
 
 let gameState = $state<GameStateGeneric | null>(null)
 let lobbyPlayers = $state<{ id: string; name: string }[]>([])
@@ -39,7 +43,13 @@ let pendingDestination = ''
 let _skipConfirm = false
 let kickTarget = $state<{ id: string; name: string } | null>(null)
 
-const gameMeta = gameList.find((g) => g.id === gameId)
+const gameMeta = $derived(gameList.find((g) => g.id === resolvedGameId))
+const gameDef = $derived(games[resolvedGameId])
+const deckSlug = $derived(
+	getDeckSlugForType(games[resolvedGameId]?.deckType ?? 'FrenchDeckWithoutJoker')
+)
+
+let lobbyOptions = $state<Record<string, unknown>>({})
 
 let knownNames: Record<string, string> = $state({})
 
@@ -90,8 +100,10 @@ onMount(() => {
 		}
 		myPlayerId = host.playerId
 		lobbyPlayers = host.lobbyPlayers
+		lobbyOptions = host.options
 		host.onLobbyChange = (players) => {
 			lobbyPlayers = players
+			lobbyOptions = get(activeHost)?.options ?? {}
 		}
 		host.onState = (state) => {
 			gameState = state
@@ -113,9 +125,11 @@ onMount(() => {
 		}
 		client.onWelcome = (id) => {
 			myPlayerId = id
+			if (client.gameId) resolvedGameId = client.gameId
 		}
 		client.onLobby = (players) => {
 			lobbyPlayers = players
+			lobbyOptions = client.options
 		}
 		client.onState = (state) => {
 			reconnecting = false
@@ -133,6 +147,8 @@ onMount(() => {
 		}
 		// Read state that may have arrived before onMount ran
 		myPlayerId = client.playerId ?? ''
+		if (client.gameId) resolvedGameId = client.gameId
+		lobbyOptions = client.options
 		if (client.lobbyPlayers.length > 0) lobbyPlayers = client.lobbyPlayers
 	}
 })
@@ -179,6 +195,11 @@ function confirmKick() {
 
 function startGame() {
 	get(activeHost)?.startGame()
+}
+
+function updateOption(key: string, value: unknown) {
+	get(activeHost)?.updateOption(key, value)
+	lobbyOptions = get(activeHost)?.options ?? {}
 }
 
 function submitAction(action: Action) {
@@ -322,7 +343,44 @@ $effect(() => {
 			</ul>
 		</div>
 
-		<DeckPackPicker />
+		{#if gameDef?.optionsSchema?.length}
+			<Dialog.Root>
+				<Dialog.Trigger
+					class="flex w-full max-w-xs items-center justify-center gap-2 rounded-lg border border-border bg-card px-4 py-3 text-sm text-foreground transition-colors hover:border-primary"
+				>
+					<SlidersHorizontal size={14} />
+					{$t('game.rules')}
+				</Dialog.Trigger>
+				<Dialog.Portal>
+					<Dialog.Overlay class="fixed inset-0 z-[100] bg-black/20" />
+					<Dialog.Content
+						class="fixed inset-y-0 right-0 z-[110] flex w-72 max-w-[85vw] flex-col border-l border-border bg-card shadow-xl focus:outline-none"
+					>
+						<div class="flex items-center justify-between border-b border-border px-4 py-2">
+							<Dialog.Title class="text-xs tracking-widest text-muted-foreground uppercase">
+								{$t('game.rules')}
+							</Dialog.Title>
+							<Dialog.Close
+								class="p-2 text-muted-foreground transition-colors hover:text-foreground"
+								aria-label={$t('common.close')}
+							>
+								<X size={16} />
+							</Dialog.Close>
+						</div>
+						<div class="flex-1 overflow-y-auto px-4 py-4">
+							<GameOptionsPanel
+								schema={gameDef.optionsSchema}
+								options={lobbyOptions}
+								{isHost}
+								onChange={updateOption}
+							/>
+						</div>
+					</Dialog.Content>
+				</Dialog.Portal>
+			</Dialog.Root>
+		{/if}
+
+		<DeckPackPicker {deckSlug} />
 
 		{#if isHost}
 			{#if gameMeta && lobbyPlayers.length < gameMeta.minPlayers}
@@ -374,6 +432,14 @@ $effect(() => {
 	/>
 {:else if gameState.activeGameId === 'fight'}
 	<FightView
+		state={gameState}
+		{myPlayerId}
+		players={enrichedPlayers}
+		{validActions}
+		onAction={submitAction}
+	/>
+{:else if gameState.activeGameId === 'uno'}
+	<UnoView
 		state={gameState}
 		{myPlayerId}
 		players={enrichedPlayers}

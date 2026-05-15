@@ -1,4 +1,4 @@
-export type DeckType = 'FrenchDeckWithJoker' | 'FrenchDeckWithoutJoker'
+export type DeckType = 'FrenchDeckWithJoker' | 'FrenchDeckWithoutJoker' | 'UnoDeck'
 
 export interface Card {
 	id: string

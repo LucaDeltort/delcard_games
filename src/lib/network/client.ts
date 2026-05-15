@@ -16,7 +16,9 @@ export class GameClient {
 	private peer!: Peer
 	private conn: DataConnection | null = null
 	private _playerId: string | null = null
+	private _gameId: string | null = null
 	private _lobbyPlayers: LobbyPlayer[] = []
+	private _options: Record<string, unknown> = {}
 	private _intentionalClose = false
 	private _retryCount = 0
 	private _code: string
@@ -206,11 +208,13 @@ export class GameClient {
 			case 'WELCOME':
 				this._retryCount = 0
 				this._playerId = msg.playerId
+				this._gameId = msg.gameId
 				this.onWelcome?.(msg.playerId)
 				this.flushActionQueue()
 				break
 			case 'LOBBY':
 				this._lobbyPlayers = msg.players
+				this._options = msg.options
 				this.onLobby?.(msg.players)
 				break
 			case 'STATE':
@@ -249,6 +253,14 @@ export class GameClient {
 
 	get playerId(): string | null {
 		return this._playerId
+	}
+
+	get gameId(): string | null {
+		return this._gameId
+	}
+
+	get options(): Record<string, unknown> {
+		return this._options
 	}
 
 	get lobbyPlayers(): LobbyPlayer[] {
