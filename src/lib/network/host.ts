@@ -176,7 +176,10 @@ export class GameHost {
 			(a: Action) =>
 				a.type === action.type &&
 				a.playerId === action.playerId &&
-				JSON.stringify(a.payload) === JSON.stringify(action.payload)
+				Object.entries(a.payload ?? {}).every(
+					([k, v]) =>
+						JSON.stringify((action.payload as Record<string, unknown>)?.[k]) === JSON.stringify(v)
+				)
 		)
 		if (!isValid) return
 		const next = this.def.applyAction(this.state, action)
