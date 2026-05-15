@@ -3,7 +3,7 @@ import { Dialog } from 'bits-ui'
 import { Loader2, Settings as SettingsIcon, SlidersHorizontal, X } from 'lucide-svelte'
 import { onDestroy, onMount } from 'svelte'
 import { get } from 'svelte/store'
-import { fade } from 'svelte/transition'
+import { fade, fly } from 'svelte/transition'
 import { browser } from '$app/environment'
 import { beforeNavigate, goto } from '$app/navigation'
 import { page } from '$app/stores'
@@ -403,24 +403,6 @@ $effect(() => {
 		{/if}
 	</main>
 
-	<!-- ── Game over ──────────────────────────────────────────────── -->
-{:else if gameState.phase === 'gameover'}
-	{@const winner = games[gameState.activeGameId]?.getWinner(gameState)}
-	{@const winnerName = enrichedPlayers.find((p) => p.id === winner)?.name ?? winner ?? '?'}
-	<main class="flex min-h-dvh flex-col items-center justify-center gap-8 px-4 text-center">
-		<div>
-			<p class="text-sm tracking-widest text-muted-foreground uppercase">{$t('game.over')}</p>
-			<h1 class="mt-2 font-heading text-7xl text-foreground">{winnerName}</h1>
-			<p class="mt-2 text-muted-foreground">{$t('game.wins')}</p>
-		</div>
-		<div class="flex gap-3">
-			{#if isHost}
-				<Button onclick={() => get(activeHost)?.startGame()}>{$t('game.rematch')}</Button>
-			{/if}
-			<Button href="/" variant="outline">{$t('common.backHome')}</Button>
-		</div>
-	</main>
-
 	<!-- ── Game ───────────────────────────────────────────────────── -->
 {:else if gameState.activeGameId === 'war'}
 	<WarView
@@ -511,6 +493,29 @@ $effect(() => {
 				</p>
 			{/if}
 		</footer>
+	</div>
+{/if}
+
+<!-- ── Game over banner ───────────────────────────────────────── -->
+{#if gameState?.phase === 'gameover'}
+	{@const winner = games[gameState.activeGameId]?.getWinner(gameState)}
+	{@const winnerName = enrichedPlayers.find((p) => p.id === winner)?.name ?? winner ?? '?'}
+	<div
+		in:fly={{ y: -80, duration: 400 }}
+		class="fixed inset-x-0 top-0 z-50 flex items-center justify-between border-b border-border bg-card/95 px-6 py-4 shadow-lg backdrop-blur-sm"
+	>
+		<div>
+			<p class="text-xs uppercase tracking-widest text-muted-foreground">{$t('game.over')}</p>
+			<p class="font-heading text-xl text-foreground">{winnerName} — {$t('game.wins')}</p>
+		</div>
+		<div class="flex gap-2">
+			{#if isHost}
+				<Button onclick={() => get(activeHost)?.startGame()} size="sm">
+					{$t('game.rematch')}
+				</Button>
+			{/if}
+			<Button href="/" variant="outline" size="sm">{$t('common.backHome')}</Button>
+		</div>
 	</div>
 {/if}
 

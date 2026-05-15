@@ -353,6 +353,8 @@ import MyGameView from '$lib/components/games/MyGameView.svelte'
 
 The `activeGameId` string must match the `id` field on your `GameDefinition`.
 
+**Game over state:** When `state.phase === 'gameover'`, the game room container renders a fixed top banner (slide-in from top) showing the winner's name via `getWinner` and action buttons (rematch for host, back home). The game view stays mounted underneath, frozen with empty `validActions`. Game views do **not** need to handle the gameover phase themselves.
+
 ---
 
 ### 5 — Write tests
