@@ -1,5 +1,6 @@
 <script lang="ts">
 import { Settings as SettingsIcon } from 'lucide-svelte'
+import { fly } from 'svelte/transition'
 import RulesDrawer from '$lib/components/RulesDrawer.svelte'
 import { Button } from '$lib/components/ui/button'
 import type { Card, GameStateGeneric } from '$lib/core/types'
@@ -9,6 +10,9 @@ import { t } from '$lib/i18n'
 import type { LobbyPlayer } from '$lib/network/messages'
 import { deckPacks, resolvePackFor } from '$lib/stores/deckPacks'
 import { settingsOpen } from '$lib/stores/settings'
+
+const DRAW_STAGGER_MS = 250
+const DRAW_DURATION_MS = 350
 
 type UnoState = GameStateGeneric & {
 	direction: 1 | -1
@@ -84,6 +88,19 @@ const COLOR_LABELS: Record<UnoColor, string> = {
 const UNO_COLORS: UnoColor[] = ['red', 'yellow', 'green', 'blue']
 
 let pendingCardId = $state<string | null>(null)
+
+const drawDelays = new Map<string, number>()
+const prevHandIds = new Set<string>()
+
+$effect.pre(() => {
+	const currentIds = myHand.map((c) => c.id)
+	if (prevHandIds.size > 0) {
+		const newIds = currentIds.filter((id) => !prevHandIds.has(id))
+		newIds.forEach((id, i) => drawDelays.set(id, i * DRAW_STAGGER_MS))
+	}
+	prevHandIds.clear()
+	currentIds.forEach((id) => prevHandIds.add(id))
+})
 
 function handleCardClick(card: Card) {
 	if (!playableCardIds.has(card.id)) return
@@ -210,6 +227,11 @@ function handleColorPick(color: UnoColor) {
 				{@const playable = playableCardIds.has(card.id)}
 				{@const isDrawn = card.id === gs.drewCardId}
 				<button
+					in:fly={{
+						y: -160,
+						duration: DRAW_DURATION_MS,
+						delay: drawDelays.get(card.id) ?? 0
+					}}
 					onclick={() => handleCardClick(card)}
 					disabled={!playable}
 					class="rounded-lg transition-all
