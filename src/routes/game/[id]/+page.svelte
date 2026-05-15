@@ -20,9 +20,9 @@ import { getDeckSlugForType } from '$lib/decks/registry'
 import type { Action } from '$lib/engine'
 import { gameList, games } from '$lib/games/index'
 import { t } from '$lib/i18n'
+import { loadGameOptions, saveGameOptions } from '$lib/stores/gameOptions'
 import { activeClient, activeHost } from '$lib/stores/session'
 import { settingsOpen } from '$lib/stores/settings'
-import { loadGameOptions, saveGameOptions } from '$lib/stores/gameOptions'
 
 const code = $page.params.id
 const isHost = $page.url.searchParams.get('role') === 'host'
