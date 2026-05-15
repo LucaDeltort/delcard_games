@@ -11,13 +11,20 @@ const slug = $derived($page.params.type ?? '')
 const entry = $derived(getDeckBySlug(slug))
 const defaultPack = $derived(resolvePackFor($deckPacks, slug))
 
-let previewPackId = $state<string | null>(null)
+let previewPackId = $state<string | null>(null) // button highlight (instant)
+let renderedPackId = $state<string | null>(null) // grid (post-preload)
+let loading = $state(false)
+let loadGen = 0
+
 $effect(() => {
 	slug
 	previewPackId = null
+	renderedPackId = null
+	loading = false
 })
 
 const previewPack = $derived(entry?.packs.find((p) => p.id === previewPackId) ?? defaultPack)
+const renderedPack = $derived(entry?.packs.find((p) => p.id === renderedPackId) ?? defaultPack)
 
 function cardSrc(card: Card, pack: CardPack): string {
 	const ext = pack.ext ?? '.png'
@@ -26,14 +33,37 @@ function cardSrc(card: Card, pack: CardPack): string {
 	return `${pack.basePath}/card_${card.suit}_${faceKey}${ext}`
 }
 
+const allCards = $derived(entry ? entry.createCards() : [])
 const cardsBySuit = $derived.by(() => {
-	if (!entry) return []
-	const cards = entry.createCards().filter((c) => c.face !== 'Joker')
+	const cards = allCards.filter((c) => c.face !== 'Joker')
 	const suits = [...new Set(cards.filter((c) => c.suit).map((c) => c.suit!))]
 	return suits.map((suit) => ({ suit, cards: cards.filter((c) => c.suit === suit) }))
 })
+const jokers = $derived(allCards.filter((c) => c.face === 'Joker'))
 
-const jokers = $derived(entry ? entry.createCards().filter((c) => c.face === 'Joker') : [])
+async function switchPack(packId: string) {
+	previewPackId = packId
+	const pack = entry?.packs.find((p) => p.id === packId) ?? defaultPack
+	if (!entry || !pack) return
+
+	const gen = ++loadGen
+	loading = true
+
+	await Promise.all(
+		allCards.map(
+			(card) =>
+				new Promise<void>((resolve) => {
+					const img = new Image()
+					img.onload = img.onerror = () => resolve()
+					img.src = cardSrc(card, pack)
+				})
+		)
+	)
+
+	if (gen !== loadGen) return
+	renderedPackId = packId
+	loading = false
+}
 </script>
 
 <div class="mx-auto w-full max-w-3xl flex-1 px-4 py-8">
@@ -55,9 +85,7 @@ const jokers = $derived(entry ? entry.createCards().filter((c) => c.face === 'Jo
             <div class="flex flex-wrap items-center gap-2">
                 {#each entry.packs as pack}
                     <button
-                        onclick={() => {
-                            previewPackId = pack.id;
-                        }}
+                        onclick={() => switchPack(pack.id)}
                         class="flex items-center gap-1.5 rounded-full border px-3 py-2 text-sm transition-colors sm:py-1 {previewPack.id ===
                         pack.id
                             ? 'border-primary bg-primary text-primary-foreground'
@@ -90,40 +118,42 @@ const jokers = $derived(entry ? entry.createCards().filter((c) => c.face === 'Jo
         </p>
         {/if}
 
-        <div class="flex flex-col gap-6">
-            {#each cardsBySuit as { suit, cards }}
-                <div>
-                    <p class="mb-2 text-xs capitalize tracking-widest text-muted-foreground">
-                        {suit}
-                    </p>
-                    <div class="flex flex-wrap gap-1.5">
-                        {#each cards as card (card.id)}
-                            <img
-                                src={cardSrc(card, previewPack)}
-                                alt="{card.face}{card.suit ? ' ' + card.suit : ''}"
-                                class="h-16 w-11 rounded-lg object-contain shadow-md sm:h-18.25 sm:w-13"
-                                draggable="false"
-                            />
-                        {/each}
-                    </div>
-                </div>
-            {/each}
+        <div class="relative transition-opacity duration-200 {loading ? 'opacity-40 pointer-events-none' : ''}">
+            <div class="flex flex-col gap-6">
+                    {#each cardsBySuit as { suit, cards }}
+                        <div>
+                            <p class="mb-2 text-xs capitalize tracking-widest text-muted-foreground">
+                                {suit}
+                            </p>
+                            <div class="flex flex-wrap gap-1.5">
+                                {#each cards as card (card.id)}
+                                    <img
+                                        src={cardSrc(card, renderedPack)}
+                                        alt="{card.face}{card.suit ? ' ' + card.suit : ''}"
+                                        class="h-16 w-11 rounded-lg object-contain shadow-md sm:h-18.25 sm:w-13"
+                                        draggable="false"
+                                    />
+                                {/each}
+                            </div>
+                        </div>
+                    {/each}
 
-            {#if jokers.length > 0}
-                <div>
-                    <p class="mb-2 text-xs tracking-widest text-muted-foreground uppercase">Jokers</p>
-                    <div class="flex flex-wrap gap-1.5">
-                        {#each jokers as card (card.id)}
-                            <img
-                                src={cardSrc(card, previewPack)}
-                                alt="{card.face}{card.suit ? ' ' + card.suit : ''}"
-                                class="h-16 w-11 rounded-lg object-contain shadow-md sm:h-18.25 sm:w-13"
-                                draggable="false"
-                            />
-                        {/each}
-                    </div>
-                </div>
-            {/if}
+                    {#if jokers.length > 0}
+                        <div>
+                            <p class="mb-2 text-xs tracking-widest text-muted-foreground uppercase">Jokers</p>
+                            <div class="flex flex-wrap gap-1.5">
+                                {#each jokers as card (card.id)}
+                                    <img
+                                        src={cardSrc(card, renderedPack)}
+                                        alt="{card.face}{card.suit ? ' ' + card.suit : ''}"
+                                        class="h-16 w-11 rounded-lg object-contain shadow-md sm:h-18.25 sm:w-13"
+                                        draggable="false"
+                                    />
+                                {/each}
+                            </div>
+                        </div>
+                    {/if}
+            </div>
         </div>
 {:else}
     <div class="flex min-h-[40vh] flex-col items-center justify-center gap-4">
