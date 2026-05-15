@@ -51,6 +51,28 @@ function targetId(action: Action): string {
 let attackOpen = $state(false)
 let shieldOpen = $state(false)
 let historyOpen = $state(false)
+let attackContainerEl = $state<HTMLDivElement | null>(null)
+let shieldContainerEl = $state<HTMLDivElement | null>(null)
+let attackDir = $state<'up' | 'down'>('up')
+let shieldDir = $state<'up' | 'down'>('up')
+
+function pickDirection(el: HTMLElement | null): 'up' | 'down' {
+	if (!el) return 'up'
+	const rect = el.getBoundingClientRect()
+	return rect.top >= window.innerHeight - rect.bottom ? 'up' : 'down'
+}
+
+function toggleAttack() {
+	if (!attackOpen) attackDir = pickDirection(attackContainerEl)
+	attackOpen = !attackOpen
+	shieldOpen = false
+}
+
+function toggleShield() {
+	if (!shieldOpen) shieldDir = pickDirection(shieldContainerEl)
+	shieldOpen = !shieldOpen
+	attackOpen = false
+}
 
 type ActionFlash = Extract<HistoryEntry, { type: 'ATTACK' | 'CHANGE_SHIELD' | 'CHARGE' }>
 
@@ -87,8 +109,21 @@ let introPhase = $state<'dealing' | 'hp' | 'starter' | 'done'>(_shouldIntro ? 'd
 let dealStep = $state(0)
 const _introTimeouts: ReturnType<typeof setTimeout>[] = []
 
+function skipIntro() {
+	_introTimeouts.forEach(clearTimeout)
+	_introTimeouts.length = 0
+	introPhase = 'done'
+}
+
 onMount(() => {
 	if (introPhase !== 'dealing') return
+	if (
+		typeof window !== 'undefined' &&
+		window.matchMedia('(prefers-reduced-motion: reduce)').matches
+	) {
+		skipIntro()
+		return
+	}
 	const total = gs.players.length * 3
 	let t = CARD_DELAY
 	for (let i = 1; i <= total; i++) {
@@ -126,7 +161,14 @@ onDestroy(() => {
 </script>
 
 {#if introPhase !== 'done'}
-<div class="flex min-h-screen flex-col items-center justify-center gap-8 px-4 py-8">
+<div class="relative flex min-h-screen flex-col items-center justify-center gap-8 px-4 py-8">
+	<button
+		onclick={skipIntro}
+		class="absolute right-4 rounded-md border border-border bg-card px-3 py-2 text-xs text-muted-foreground transition-colors hover:text-foreground"
+		style="top: calc(1rem + env(safe-area-inset-top))"
+	>
+		{$t('fight.skipIntro')}
+	</button>
 	<div class="text-center">
 		<p class="text-xs tracking-widest text-muted-foreground uppercase">{$t('fight.name')}</p>
 		<h2 class="mt-1 text-xl font-semibold text-foreground">
@@ -212,7 +254,7 @@ onDestroy(() => {
 			<div
 				class="flex min-w-27.5 flex-col items-center gap-2 rounded-lg border px-3 py-3 transition-colors
 					{eliminated
-					? 'border-border opacity-40'
+					? 'border-border'
 					: isActing
 						? 'border-accent bg-accent/5'
 						: 'border-border bg-card'}"
@@ -278,10 +320,10 @@ onDestroy(() => {
 						</Button>
 					{/if}
 					{#if attackActions.length > 0}
-						<div class="relative w-full">
+						<div class="relative w-full" bind:this={attackContainerEl}>
 							{#if attackOpen}
 								<div
-									class="absolute right-0 bottom-full left-0 mb-2 flex flex-col overflow-hidden rounded-lg border border-border bg-card shadow-lg"
+									class="absolute right-0 left-0 flex flex-col overflow-hidden rounded-lg border border-border bg-card shadow-lg {attackDir === 'up' ? 'bottom-full mb-2' : 'top-full mt-2'}"
 								>
 									{#each attackActions as action (targetId(action))}
 										<button
@@ -296,23 +338,17 @@ onDestroy(() => {
 									{/each}
 								</div>
 							{/if}
-							<Button
-								onclick={() => {
-									attackOpen = !attackOpen;
-									shieldOpen = false;
-								}}
-								class="h-auto w-full py-3"
-							>
+							<Button onclick={toggleAttack} class="h-auto w-full py-3">
 								<span class="flex-1 text-left">{$t('fight.attackBtn')}</span>
 								{#if attackOpen}<ChevronUp size={16} />{:else}<ChevronDown size={16} />{/if}
 							</Button>
 						</div>
 					{/if}
 					{#if shieldActions.length > 0}
-						<div class="relative w-full">
+						<div class="relative w-full" bind:this={shieldContainerEl}>
 							{#if shieldOpen}
 								<div
-									class="absolute right-0 bottom-full left-0 mb-2 flex flex-col overflow-hidden rounded-lg border border-border bg-card shadow-lg"
+									class="absolute right-0 left-0 flex flex-col overflow-hidden rounded-lg border border-border bg-card shadow-lg {shieldDir === 'up' ? 'bottom-full mb-2' : 'top-full mt-2'}"
 								>
 									{#each shieldActions as action (targetId(action))}
 										<button
@@ -328,14 +364,7 @@ onDestroy(() => {
 									{/each}
 								</div>
 							{/if}
-							<Button
-								onclick={() => {
-									shieldOpen = !shieldOpen;
-									attackOpen = false;
-								}}
-								variant="outline"
-								class="h-auto w-full py-3"
-							>
+							<Button onclick={toggleShield} variant="outline" class="h-auto w-full py-3">
 								<span class="flex-1 text-left">{$t('fight.shieldBtn')}</span>
 								{#if shieldOpen}<ChevronUp size={16} />{:else}<ChevronDown size={16} />{/if}
 							</Button>
@@ -375,13 +404,13 @@ onDestroy(() => {
 		</div>
 		<div class="flex-1 overflow-y-auto">
 			{#if gs.history.length === 0}
-				<p class="px-4 py-3 text-xs text-muted-foreground/50">—</p>
+				<p class="px-4 py-3 text-xs text-muted-foreground" aria-hidden="true">—</p>
 			{:else}
 				{#each [...gs.history].reverse() as entry, i (i)}
 					<p
 						class="border-b border-border/30 px-4 py-2 text-xs text-muted-foreground last:border-0"
 					>
-						<span class="mr-1.5 text-muted-foreground/50"
+						<span class="mr-1.5 text-muted-foreground"
 							>{new Date(entry.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: $settings.timeFormat === '12' })}</span
 						>
 						{#if entry.type === 'CHARGE'}

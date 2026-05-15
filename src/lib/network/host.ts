@@ -2,13 +2,14 @@ import Peer, { type DataConnection } from 'peerjs'
 import { get } from 'svelte/store'
 import type { GameStateGeneric } from '$lib/core/types'
 import type { Action, GameDefinition } from '$lib/engine'
+import { defaultOptions } from '$lib/engine'
 import { t } from '$lib/i18n'
 import type { ClientMessage, HostMessage, LobbyPlayer } from './messages'
 import { getTurnIceServers } from './turn'
 
 const CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
 const PEER_PREFIX = 'delcard-'
-const RECONNECT_WINDOW_MS = 20_000
+const RECONNECT_WINDOW_MS = 60_000
 
 function generateCode(): string {
 	return Array.from(
@@ -28,6 +29,7 @@ export class GameHost {
 	private _code: string
 	private hostName: string
 	private _stateSeq = 0
+	private _options: Record<string, unknown> = {}
 
 	onReady?: () => void
 	onLobbyChange?: (players: LobbyPlayer[]) => void
@@ -38,6 +40,7 @@ export class GameHost {
 		this.def = def
 		this.hostName = hostName
 		this._code = generateCode()
+		this._options = defaultOptions(def.optionsSchema ?? [])
 		this.initPeer()
 	}
 
@@ -48,6 +51,15 @@ export class GameHost {
 	/** The host's own player ID — available after onReady fires. */
 	get playerId(): string {
 		return this.peer?.id ?? ''
+	}
+
+	get options(): Record<string, unknown> {
+		return this._options
+	}
+
+	updateOption(key: string, value: unknown) {
+		this._options = { ...this._options, [key]: value }
+		this.broadcastLobby()
 	}
 
 	get lobbyPlayers(): LobbyPlayer[] {
@@ -90,7 +102,7 @@ export class GameHost {
 					clearTimeout(pendingTimer)
 					this.pendingDisconnects.delete(conn.peer)
 					this.clients.set(conn.peer, { conn, name: msg.playerName })
-					conn.send({ type: 'WELCOME', playerId: conn.peer } as HostMessage)
+					conn.send({ type: 'WELCOME', playerId: conn.peer, gameId: this.def.id } as HostMessage)
 					this.broadcastLobby()
 					if (this.state) this.sendStateTo(conn, this.state)
 					return
@@ -112,12 +124,14 @@ export class GameHost {
 					return
 				}
 				this.clients.set(conn.peer, { conn, name: msg.playerName })
-				conn.send({ type: 'WELCOME', playerId: conn.peer } as HostMessage)
+				conn.send({ type: 'WELCOME', playerId: conn.peer, gameId: this.def.id } as HostMessage)
 				this.broadcastLobby()
 			} else if (msg.type === 'ACTION') {
 				this.handleAction(conn.peer, msg.action)
 			} else if (msg.type === 'RESYNC') {
 				if (this.state) this.sendStateTo(conn, this.state)
+			} else if (msg.type === 'PING') {
+				conn.send({ type: 'PONG', t: msg.t } as HostMessage)
 			}
 		})
 
@@ -151,7 +165,14 @@ export class GameHost {
 					players: this.state.players.filter((p) => p !== playerId)
 				}
 			} else {
-				return
+				const filtered = this.state.players.filter((p) => p !== playerId)
+				let nextTurn = this.state.turnPlayerId
+				if (nextTurn === playerId) {
+					const idx = this.state.players.indexOf(playerId)
+					nextTurn = this.state.players[(idx + 1) % this.state.players.length]
+					if (nextTurn === playerId) nextTurn = filtered[0] ?? playerId
+				}
+				next = { ...this.state, players: filtered, turnPlayerId: nextTurn }
 			}
 		}
 
@@ -167,7 +188,10 @@ export class GameHost {
 			(a: Action) =>
 				a.type === action.type &&
 				a.playerId === action.playerId &&
-				JSON.stringify(a.payload) === JSON.stringify(action.payload)
+				Object.entries(a.payload ?? {}).every(
+					([k, v]) =>
+						JSON.stringify((action.payload as Record<string, unknown>)?.[k]) === JSON.stringify(v)
+				)
 		)
 		if (!isValid) return
 		const next = this.def.applyAction(this.state, action)
@@ -177,7 +201,7 @@ export class GameHost {
 	}
 
 	private broadcastLobby() {
-		const msg: HostMessage = { type: 'LOBBY', players: this.lobbyPlayers }
+		const msg: HostMessage = { type: 'LOBBY', players: this.lobbyPlayers, options: this._options }
 		this.broadcast(msg)
 		this.onLobbyChange?.(this.lobbyPlayers)
 	}
@@ -214,10 +238,17 @@ export class GameHost {
 	/** Start the game. Player order = lobby order (host first). */
 	startGame() {
 		const playerIds = this.lobbyPlayers.map((p) => p.id)
-		const initial = this.def.setup(playerIds)
+		const initial = this.def.setup(playerIds, this._options)
 		this.state = initial
 		this.onState?.(initial)
 		this.broadcastState(initial)
+	}
+
+	/** Re-open the PeerJS signaling socket if mobile suspend killed it. */
+	reconnectSignaling() {
+		if (this.peer && !this.peer.destroyed && this.peer.disconnected) {
+			this.peer.reconnect()
+		}
 	}
 
 	close(message?: string) {

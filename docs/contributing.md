@@ -53,6 +53,7 @@ Format: `type(scope): subject`
 | `refactor` | Code change with no behaviour change     |
 | `test`     | Tests only                               |
 | `init`     | Initial commit or bootstrap              |
+| 'remove'   | Removing code or files                   |
 
 ### Examples
 

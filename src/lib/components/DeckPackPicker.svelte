@@ -36,7 +36,7 @@ function next() {
 		<div class="flex items-center gap-4">
 			<button
 				onclick={prev}
-				class="rounded-full p-1.5 text-muted-foreground transition-all hover:bg-muted hover:text-foreground active:scale-90"
+				class="rounded-full p-2.5 text-muted-foreground transition-all hover:bg-muted hover:text-foreground active:scale-90"
 				aria-label="Previous pack"
 			>
 				<ChevronLeft size={20} />
@@ -65,25 +65,29 @@ function next() {
 
 			<button
 				onclick={next}
-				class="rounded-full p-1.5 text-muted-foreground transition-all hover:bg-muted hover:text-foreground active:scale-90"
+				class="rounded-full p-2.5 text-muted-foreground transition-all hover:bg-muted hover:text-foreground active:scale-90"
 				aria-label="Next pack"
 			>
 				<ChevronRight size={20} />
 			</button>
 		</div>
 
-		<div class="mt-3 flex justify-center gap-1.5">
+		<div class="mt-1 flex justify-center">
 			{#each packs as p, i}
 				<button
 					onclick={() => {
 						direction = i > currentIndex ? 1 : -1
 						deckPacks.select(deckSlug, p)
 					}}
-					class="h-1.5 w-1.5 rounded-full transition-colors {i === currentIndex
-						? 'bg-primary'
-						: 'bg-border hover:bg-muted-foreground'}"
+					class="group p-2.5"
 					aria-label={p.name}
-				></button>
+				>
+					<span
+						class="block h-1.5 w-1.5 rounded-full transition-colors {i === currentIndex
+							? 'bg-primary'
+							: 'bg-border group-hover:bg-muted-foreground'}"
+					></span>
+				</button>
 			{/each}
 		</div>
 	</div>

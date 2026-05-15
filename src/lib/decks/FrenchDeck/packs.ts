@@ -16,9 +16,9 @@ export const frenchDeckPacks: CardPack[] = [
 		ext: '.svg'
 	},
 	{
-		id: 'korean',
-		name: 'Korean',
-		basePath: '/cards/FrenchDeck/korean',
+		id: 'joseon',
+		name: 'Joseon',
+		basePath: '/cards/FrenchDeck/joseon',
 		ext: '.svg'
 	}
 ]

@@ -76,7 +76,7 @@ type Action = {
 ## The GameDefinition interface
 
 ```typescript
-type DeckType = 'FrenchDeckWithJoker' | 'FrenchDeckWithoutJoker';
+type DeckType = 'FrenchDeckWithJoker' | 'FrenchDeckWithoutJoker' | 'UnoDeck';
 
 type GameDefinition<S extends GameStateGeneric> = {
 	id: string;
@@ -143,7 +143,7 @@ setup(players) {
 }
 ```
 
-Note: Pass `deckType` to `createDeck()`. War uses `'FrenchDeckWithoutJoker'` (52 cards); use `'FrenchDeckWithJoker'` (54 cards with 2 jokers) for games that need them.
+Note: Pass `deckType` to `createDeck()`. War uses `'FrenchDeckWithoutJoker'` (52 cards). See the Tips section below for all available deck types.
 
 ### 4 — Implement getValidActions
 
@@ -226,9 +226,14 @@ All utilities are exported from `$lib/engine`.
 
 ## Tips
 
-**Jokers.** Use `'FrenchDeckWithJoker'` in `deckType` to include 2 joker cards (54 cards total). Use `'FrenchDeckWithoutJoker'` for a standard 52-card deck. The engine filters automatically.
+**Deck types.** Built-in options:
+- `'FrenchDeckWithJoker'` — 54 cards (52 + 2 jokers)
+- `'FrenchDeckWithoutJoker'` — 52 standard cards
+- `'UnoDeck'` — 108 Uno cards (colored numbers, action cards, wilds)
 
-**Custom cards.** If your game needs wildcard or game-specific cards beyond jokers, create them locally in `setup` with `createCard` and add them to the deck before shuffling.
+To add a completely new deck type, see [card-pack.md](card-pack.md#creating-a-new-deck-type).
+
+**Custom one-off cards.** If your game needs a small number of game-specific cards on top of an existing deck, create them locally in `setup` with `createCard` and add them to the zone directly.
 
 **Tracking non-card state.** HP, scores, timers — store them directly on the state object as extra fields. Only use zones for actual cards.
 
@@ -240,6 +245,7 @@ All utilities are exported from `$lib/engine`.
 
 - [War rules and implementation notes](games/war.md)
 - [The Fight (La Bagarre) rules and implementation notes](games/fight.md)
+- [Uno rules and implementation notes](games/uno.md)
 
 ---
 

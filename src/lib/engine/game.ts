@@ -1,4 +1,5 @@
 import type { DeckType, GameStateGeneric } from '$lib/core/types'
+import type { OptionSchema } from './options'
 
 export type Action = {
 	type: string
@@ -18,9 +19,10 @@ export type GameDefinition<S extends GameStateGeneric> = {
 	deckType: DeckType
 	minPlayers: number
 	maxPlayers: number
+	optionsSchema?: OptionSchema[]
 
 	/** Returns the initial game state for the given list of player IDs. */
-	setup: (players: string[]) => S
+	setup: (players: string[], options?: Record<string, unknown>) => S
 
 	/** Returns every legal action the given player can take right now. */
 	getValidActions: (state: S, playerId: string) => Action[]

@@ -1,3 +1,5 @@
+import type { Card } from '$lib/core/types'
+
 export type CardPack = {
 	id: string
 	name: string
@@ -6,4 +8,5 @@ export type CardPack = {
 	license?: string
 	basePath: string
 	ext?: string // file extension, default '.png'
+	cardSrc?: (card: Card, basePath: string, ext: string) => string
 }

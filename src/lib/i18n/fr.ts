@@ -10,7 +10,8 @@ export default {
 		turnOf: 'Tour de {name}',
 		players: 'joueurs',
 		cancel: 'Annuler',
-		confirm: 'Confirmer'
+		confirm: 'Confirmer',
+		close: 'Fermer'
 	},
 	home: {
 		subtitle: 'Jeux de cartes entre amis — sans serveur',
@@ -55,6 +56,47 @@ export default {
 		rules: 'Règles',
 		cardStyle: 'Style des cartes'
 	},
+	card: {
+		hidden: 'Carte cachée',
+		joker: 'Joker',
+		label: '{face} de {suit}',
+		suit: {
+			hearts: 'cœur',
+			diamonds: 'carreau',
+			clubs: 'trèfle',
+			spades: 'pique'
+		}
+	},
+	uno: {
+		name: 'Uno',
+		draw: 'Piocher',
+		yourTurn: 'Ton tour',
+		chooseColor: 'Choisis une couleur',
+		wins: '{name} gagne !',
+		endTurn: 'Passer',
+		acceptPenalty: 'Accepter',
+		challenge: 'Contester',
+		challengeWon: 'Contestation réussie ! {name} pioche 4.',
+		challengeLost: 'Contestation échouée — tu pioches 6.',
+		swapWith: 'Échanger avec…',
+		options: {
+			accumulation: 'Accumulation',
+			accumulationDesc: 'Empile les +2 sur +2, ou les +4 sur +4.',
+			cut: 'Coupe',
+			cutDesc: "Joue la carte identique pour couper le tour de quelqu'un.",
+			playAfterDraw: 'Jouer après piocher',
+			playAfterDrawDesc: 'Si la carte piochée est jouable, tu peux la jouer immédiatement.',
+			drawUntilPlay: "Piocher jusqu'à pouvoir jouer",
+			drawUntilPlayDesc: "Continue de piocher jusqu'à trouver une carte jouable.",
+			playAfterPenalty: 'Jouer après pénalité',
+			playAfterPenaltyDesc:
+				'Après avoir pioché suite à un +2/+4, tu peux quand même jouer une carte.',
+			challengePlusFour: 'Contester le +4',
+			challengePlusFourDesc: 'Le joueur ciblé peut contester un Wild Draw Four.',
+			noWildFinish: 'Pas de Wild pour finir',
+			noWildFinishDesc: 'Tu ne peux pas jouer un Wild ou un Wild Draw Four comme dernière carte.'
+		}
+	},
 	war: {
 		name: 'La Bataille',
 		deck: 'Deck',
@@ -91,6 +133,7 @@ export default {
 		introDeal: 'Distribution',
 		introHp: 'Points de vie',
 		introStarter: 'Premier à jouer',
+		skipIntro: "Passer l'intro",
 		flashAttack: '{name} attaque {target}',
 		flashCharge: '{name} charge',
 		flashShieldSelf: '{name} change son bouclier',
@@ -103,6 +146,7 @@ export default {
 		timeFormat: "Format de l'heure",
 		timeFormat12: '12h',
 		timeFormat24: '24h',
+		timeFormatHint: "Utilisé dans l'historique des parties.",
 		language: 'Langue',
 		decks: 'Jeux de cartes',
 		bugReport: 'Signaler un bug',
@@ -116,13 +160,22 @@ export default {
 		by: 'Par {name}',
 		active: 'Actif',
 		setDefault: 'Définir par défaut',
-		frenchDeck: 'Jeu de cartes français'
+		frenchDeck: 'Jeu de cartes français',
+		unoDeck: 'Jeu de cartes Uno',
+		errorUnknownType: 'Type de jeu inconnu.'
 	},
 	network: {
 		connectionLost: 'La connexion avec le host a été perdue.',
 		connectionError: 'Erreur de connexion.',
 		hostNotFound: 'Salon introuvable — vérifie le code.',
 		reconnecting: 'Reconnexion…',
+		reconnectFailed: 'Reconnexion impossible.',
+		connection: 'Connexion',
+		quality: {
+			good: 'bonne',
+			warn: 'instable',
+			poor: 'faible'
+		},
 		hostGone: 'Le host a quitté la partie.',
 		kicked: 'Tu as été éjecté par le host.',
 		sessionFull: 'Nombre maximal de joueurs atteint dans la session.',
