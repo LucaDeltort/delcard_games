@@ -22,6 +22,7 @@ import { gameList, games } from '$lib/games/index'
 import { t } from '$lib/i18n'
 import { activeClient, activeHost } from '$lib/stores/session'
 import { settingsOpen } from '$lib/stores/settings'
+import { loadGameOptions, saveGameOptions } from '$lib/stores/gameOptions'
 
 const code = $page.params.id
 const isHost = $page.url.searchParams.get('role') === 'host'
@@ -100,6 +101,11 @@ onMount(() => {
 		}
 		myPlayerId = host.playerId
 		lobbyPlayers = host.lobbyPlayers
+		lobbyOptions = host.options
+		const saved = loadGameOptions(resolvedGameId)
+		for (const [key, value] of Object.entries(saved)) {
+			if (key in lobbyOptions) host.updateOption(key, value)
+		}
 		lobbyOptions = host.options
 		host.onLobbyChange = (players) => {
 			lobbyPlayers = players
@@ -200,6 +206,7 @@ function startGame() {
 function updateOption(key: string, value: unknown) {
 	get(activeHost)?.updateOption(key, value)
 	lobbyOptions = get(activeHost)?.options ?? {}
+	saveGameOptions(resolvedGameId, lobbyOptions)
 }
 
 function submitAction(action: Action) {
