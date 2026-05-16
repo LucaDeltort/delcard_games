@@ -54,7 +54,9 @@ export default {
 		hiddenCard: 'carte cachée',
 		hiddenCards: 'cartes cachées',
 		rules: 'Règles',
-		cardStyle: 'Style des cartes'
+		cardStyle: 'Style des cartes',
+		preloadingCards: 'Chargement des cartes… ({loaded}/{total})',
+		usePack: 'Utiliser ce paquet'
 	},
 	card: {
 		hidden: 'Carte cachée',
@@ -138,8 +140,7 @@ export default {
 		historyBlocked: '{name} a attaqué {target} — bloqué',
 		historyShield: '{name} a changé le bouclier de {target}',
 		historyEliminated: '{name} éliminé par {killer}',
-		historyEliminatedDragon: '{name} éliminé par le dragon',
-		historyDragon: 'Réveil du dragon !',
+		historyEliminatedDisconnect: '{name} déconnecté',
 		introDeal: 'Distribution',
 		introHp: 'Points de vie',
 		introStarter: 'Premier à jouer',

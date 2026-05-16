@@ -1,9 +1,8 @@
 <script lang="ts">
 import { ArrowLeft, Check, Flag } from 'lucide-svelte'
 import { page } from '$app/stores'
-import type { Card } from '$lib/core/types'
+import { cardSrc, preloadPack } from '$lib/decks/preload'
 import { getDeckBySlug } from '$lib/decks/registry'
-import type { CardPack } from '$lib/decks/types'
 import { t } from '$lib/i18n'
 import { deckPacks, resolvePackFor } from '$lib/stores/deckPacks'
 
@@ -14,7 +13,7 @@ const defaultPack = $derived(resolvePackFor($deckPacks, slug))
 let previewPackId = $state<string | null>(null) // button highlight (instant)
 let renderedPackId = $state<string | null>(null) // grid (post-preload)
 let loading = $state(false)
-let loadGen = 0
+let activeHandle: { cancel: () => void } | null = null
 
 $effect(() => {
 	slug
@@ -25,15 +24,6 @@ $effect(() => {
 
 const previewPack = $derived(entry?.packs.find((p) => p.id === previewPackId) ?? defaultPack)
 const renderedPack = $derived(entry?.packs.find((p) => p.id === renderedPackId) ?? defaultPack)
-
-function cardSrc(card: Card, pack: CardPack): string {
-	const ext = pack.ext ?? '.png'
-	if (pack.cardSrc) return pack.cardSrc(card, pack.basePath, ext)
-	if (card.face === 'Joker') return `${pack.basePath}/card_joker_${card.suit}${ext}`
-	if (!card.suit) return `${pack.basePath}/card_${card.face.toLowerCase()}${ext}`
-	const faceKey = /^\d$/.test(card.face) ? `0${card.face}` : card.face
-	return `${pack.basePath}/card_${card.suit}_${faceKey}${ext}`
-}
 
 const allCards = $derived(entry ? entry.createCards() : [])
 const cardsBySuit = $derived.by(() => {
@@ -50,21 +40,14 @@ async function switchPack(packId: string) {
 	const pack = entry?.packs.find((p) => p.id === packId) ?? defaultPack
 	if (!entry || !pack) return
 
-	const gen = ++loadGen
+	activeHandle?.cancel()
 	loading = true
 
-	await Promise.all(
-		allCards.map(
-			(card) =>
-				new Promise<void>((resolve) => {
-					const img = new Image()
-					img.onload = img.onerror = () => resolve()
-					img.src = cardSrc(card, pack)
-				})
-		)
-	)
+	const handle = preloadPack(slug, pack)
+	activeHandle = handle
+	await handle.promise
 
-	if (gen !== loadGen) return
+	if (activeHandle !== handle) return
 	renderedPackId = packId
 	loading = false
 }

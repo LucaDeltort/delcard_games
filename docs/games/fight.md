@@ -75,14 +75,6 @@ When a player's HP reaches **zero**, they are **eliminated** and their cards are
 
 When you eliminate a player, **immediately take one extra action**.
 
-#### Clairvoyance
-
-While you have **exactly 1 HP**, you may **look at the top card of the draw pile** before choosing your action (including deciding whether to charge).
-
-#### Dragon's Awakening
-
-When the draw pile runs out, reform it by shuffling the discard. Finish the current action, then **each player is attacked by the deck** in turn order starting from the next player.
-
 ---
 
 ## Implementation notes
@@ -97,6 +89,3 @@ Source: [`src/lib/games/fight.ts`](../../src/lib/games/fight.ts)
 
 **Turn model.** `state.pendingBonusAction` holds the player ID when a bonus action (Murder) is pending. `getValidActions` uses `pendingBonusAction ?? turnPlayerId` as the acting player. Bonus actions do not chain.
 
-**Clairvoyance.** Not modelled in the engine — it is a visibility permission (`state.hp[pid] === 1` → the UI layer may reveal the top draw card to that player). No engine action needed.
-
-**Dragon's Awakening.** Fires at the end of the current player's turn if the draw pile became empty during that turn (before or after their draw). The discard is reshuffled and all active players are attacked in order. Dragon attacks do not grant bonus actions.

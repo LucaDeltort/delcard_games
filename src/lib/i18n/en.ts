@@ -54,7 +54,9 @@ export default {
 		hiddenCard: 'hidden card',
 		hiddenCards: 'hidden cards',
 		rules: 'Rules',
-		cardStyle: 'Card style'
+		cardStyle: 'Card style',
+		preloadingCards: 'Loading cards… ({loaded}/{total})',
+		usePack: 'Use this pack'
 	},
 	card: {
 		hidden: 'Hidden card',
@@ -137,8 +139,7 @@ export default {
 		historyBlocked: '{name} attacked {target} — blocked',
 		historyShield: "{name} changed {target}'s shield",
 		historyEliminated: '{name} eliminated by {killer}',
-		historyEliminatedDragon: '{name} eliminated by the dragon',
-		historyDragon: 'Dragon awakening!',
+		historyEliminatedDisconnect: '{name} disconnected',
 		introDeal: 'Dealing',
 		introHp: 'Hit points',
 		introStarter: 'First to play',

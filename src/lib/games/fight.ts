@@ -40,7 +40,6 @@ type HistoryEntryInput =
 			newShield: Card
 	  }
 	| { type: 'ELIMINATED'; targetId: string; killedBy: string | null }
-	| { type: 'DRAGON' }
 
 export type HistoryEntry =
 	| { type: 'CHARGE'; actorId: string; chargedCard: Card; timestamp: number }
@@ -62,7 +61,6 @@ export type HistoryEntry =
 			timestamp: number
 	  }
 	| { type: 'ELIMINATED'; targetId: string; killedBy: string | null; timestamp: number }
-	| { type: 'DRAGON'; timestamp: number }
 
 export type FightState = GameStateGeneric & {
 	phase: 'playing' | 'gameover'
@@ -107,7 +105,8 @@ function reshuffleDiscard(state: FightState): FightState {
 /** Removes top card from draw, reshuffling discard first if needed. */
 function popDraw(state: FightState): [FightState, Card] {
 	const s = state.zones.draw.cards.length === 0 ? reshuffleDiscard(state) : state
-	const [card, ...rest] = s.zones.draw.cards
+	const [raw, ...rest] = s.zones.draw.cards
+	const card = raw.isHidden ? { ...raw, isHidden: false } : raw
 	return [{ ...s, zones: { ...s.zones, draw: { ...s.zones.draw, cards: rest } } }, card]
 }
 
@@ -137,7 +136,7 @@ function eliminatePlayer(state: FightState, pid: string, killedBy: string | null
 
 /**
  * Reduces pid's HP by damage. If they had a charge, it is discarded.
- * killedBy = null means no bonus action is granted on elimination (dragon attacks).
+ * killedBy = null means no bonus action is granted on elimination (disconnect).
  */
 function dealDamage(
 	state: FightState,
@@ -159,31 +158,6 @@ function dealDamage(
 	}
 
 	if (newHp <= 0) s = eliminatePlayer(s, pid, killedBy)
-	return s
-}
-
-/**
- * Reshuffle and attack each active player in order starting after currentPlayer.
- * Dragon kills do not grant bonus actions.
- */
-function dragonAwakening(state: FightState, currentPlayer: string): FightState {
-	let s = reshuffleDiscard(state)
-
-	const startIdx = (s.activePlayers.indexOf(currentPlayer) + 1) % s.activePlayers.length
-	const ordered = [...s.activePlayers.slice(startIdx), ...s.activePlayers.slice(0, startIdx)]
-
-	for (const pid of ordered) {
-		if (s.phase === 'gameover') return s
-		if (!s.activePlayers.includes(pid)) continue
-
-		let card: Card
-		;[s, card] = popDraw(s)
-		s = pushDiscard(s, [card])
-
-		const shieldVal = cv(s.zones[`shield_${pid}`].cards[0]?.face ?? '0')
-		const damage = Math.max(0, cv(card.face) - shieldVal)
-		if (damage > 0) s = dealDamage(s, pid, damage, null)
-	}
 	return s
 }
 
@@ -294,13 +268,9 @@ export const fight: GameDefinition<FightState> = {
 
 		const wasBonusTurn = state.pendingBonusAction !== null
 
-		// Draw a card (triggers reshuffle + tracks if draw was empty)
-		const needsDragon = state.zones.draw.cards.length === 0
 		let s: FightState
 		let drawnCard: Card
 		;[s, drawnCard] = popDraw(state)
-		// Also flag if draw became empty after the draw
-		const drawnEmptied = !needsDragon && s.zones.draw.cards.length === 0
 
 		const newEntries: HistoryEntryInput[] = []
 
@@ -374,18 +344,6 @@ export const fight: GameDefinition<FightState> = {
 				actorId: actingPid,
 				chargedCard: { ...drawnCard, isHidden: true }
 			})
-		}
-
-		// Dragon awakening: triggers when draw pile ran dry (before or after this draw)
-		if ((needsDragon || drawnEmptied) && s.phase === 'playing') {
-			const activeBeforeDragon = [...s.activePlayers]
-			s = dragonAwakening(s, actingPid)
-			newEntries.push({ type: 'DRAGON' })
-			for (const pid of activeBeforeDragon) {
-				if (!s.activePlayers.includes(pid)) {
-					newEntries.push({ type: 'ELIMINATED', targetId: pid, killedBy: null })
-				}
-			}
 		}
 
 		const ts = Date.now()

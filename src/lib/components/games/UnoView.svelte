@@ -1,5 +1,6 @@
 <script lang="ts">
-import { Settings as SettingsIcon } from 'lucide-svelte'
+import { RotateCcw, RotateCw, Settings as SettingsIcon } from 'lucide-svelte'
+import { cubicOut } from 'svelte/easing'
 import { fade, fly, scale } from 'svelte/transition'
 import RulesDrawer from '$lib/components/RulesDrawer.svelte'
 import { Button } from '$lib/components/ui/button'
@@ -90,6 +91,7 @@ const COLOR_LABELS: Record<UnoColor, string> = {
 const UNO_COLORS: UnoColor[] = ['red', 'yellow', 'green', 'blue']
 
 let pendingCardId = $state<string | null>(null)
+let opponentPlayCard = $state<string | null>(null)
 
 const drawDelays = new Map<string, number>()
 const prevHandIds = new Set<string>()
@@ -153,6 +155,10 @@ $effect(() => {
 		if (label) {
 			actionBanner = label
 			setTimeout(() => (actionBanner = null), 1800)
+		}
+		if (whoJustPlayed !== myPlayerId) {
+			opponentPlayCard = cardSrc(discardTop)
+			setTimeout(() => (opponentPlayCard = null), 700)
 		}
 		_prevDiscardTopId = topId
 	}
@@ -246,8 +252,9 @@ function handleColorPick(color: UnoColor) {
 		{/each}
 	</div>
 
-	<!-- Game area: draw · color · discard -->
-	<div class="flex flex-1 items-center justify-center gap-6 px-4 py-6">
+	<!-- Game area: draw · color · discard + direction -->
+	<div class="flex flex-1 flex-col items-center justify-center gap-5 px-4 py-6">
+	<div class="flex items-center gap-6">
 
 		<!-- Draw pile -->
 		<div class="flex flex-col items-center gap-1">
@@ -285,7 +292,7 @@ function handleColorPick(color: UnoColor) {
 			{#key discardTop?.id}
 				{#if discardTop}
 					<img
-						in:fly={{ y: -20, duration: 280 }}
+						in:fly={{ y: -30, duration: 220, easing: cubicOut }}
 						src={cardSrc(discardTop)}
 						alt="{discardTop.face}{discardTop.suit ? ' ' + discardTop.suit : ''}"
 						class="h-20 w-14 rounded-lg object-contain shadow-md sm:h-24 sm:w-16"
@@ -297,6 +304,21 @@ function handleColorPick(color: UnoColor) {
 			{/key}
 			<span class="text-xs text-muted-foreground">{discard.length}</span>
 		</div>
+	</div>
+
+	<!-- Turn direction indicator -->
+	{#key gs.direction}
+		<div
+			in:scale={{ duration: 400, start: 0.3 }}
+			class="text-muted-foreground"
+		>
+			{#if gs.direction === 1}
+				<RotateCw size={28} />
+			{:else}
+				<RotateCcw size={28} />
+			{/if}
+		</div>
+	{/key}
 	</div>
 
 	<!-- My hand -->
@@ -398,6 +420,18 @@ function handleColorPick(color: UnoColor) {
 			</div>
 		</div>
 	</div>
+{/if}
+
+<!-- Opponent played card fly-in overlay -->
+{#if opponentPlayCard}
+	<img
+		in:fly={{ y: -260, duration: 520, easing: cubicOut }}
+		out:fade={{ duration: 80 }}
+		src={opponentPlayCard}
+		alt="card played"
+		class="pointer-events-none fixed left-1/2 top-[42%] z-40 h-24 w-16 -translate-x-1/2 -translate-y-1/2 rounded-lg object-contain shadow-2xl sm:h-28 sm:w-20"
+		draggable="false"
+	/>
 {/if}
 
 <!-- Color picker overlay -->
