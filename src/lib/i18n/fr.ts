@@ -69,8 +69,8 @@ export default {
 			spades: 'pique'
 		}
 	},
-	uno: {
-		name: 'Uno',
+	color: {
+		name: 'Color',
 		draw: 'Piocher',
 		yourTurn: 'Ton tour',
 		actionSkip: 'Passe !',
@@ -172,7 +172,7 @@ export default {
 		active: 'Actif',
 		setDefault: 'Définir par défaut',
 		frenchDeck: 'Jeu de cartes français',
-		unoDeck: 'Jeu de cartes Uno',
+		colorDeck: 'Jeu de cartes Color',
 		errorUnknownType: 'Type de jeu inconnu.'
 	},
 	network: {

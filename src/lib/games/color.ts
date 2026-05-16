@@ -2,9 +2,9 @@ import type { Card, GameStateGeneric } from '$lib/core/types'
 import type { GameDefinition, OptionSchema } from '$lib/engine'
 import { createDeck, createZone, deal, moveCard, shuffle } from '$lib/engine'
 
-export type UnoColor = 'red' | 'yellow' | 'green' | 'blue'
+export type CardColor = 'red' | 'yellow' | 'green' | 'blue'
 
-export type UnoOptions = {
+export type ColorOptions = {
 	accumulation: boolean
 	cut: boolean
 	playAfterDraw: boolean
@@ -14,7 +14,7 @@ export type UnoOptions = {
 	noWildFinish: boolean
 }
 
-const DEFAULT_UNO_OPTIONS: UnoOptions = {
+const DEFAULT_COLOR_OPTIONS: ColorOptions = {
 	accumulation: false,
 	cut: false,
 	playAfterDraw: false,
@@ -24,8 +24,8 @@ const DEFAULT_UNO_OPTIONS: UnoOptions = {
 	noWildFinish: false
 }
 
-function parseOptions(raw?: Record<string, unknown>): UnoOptions {
-	if (!raw) return { ...DEFAULT_UNO_OPTIONS }
+function parseOptions(raw?: Record<string, unknown>): ColorOptions {
+	if (!raw) return { ...DEFAULT_COLOR_OPTIONS }
 	return {
 		accumulation: raw.accumulation === true,
 		cut: raw.cut === true,
@@ -37,11 +37,11 @@ function parseOptions(raw?: Record<string, unknown>): UnoOptions {
 	}
 }
 
-type UnoState = GameStateGeneric & {
+type ColorState = GameStateGeneric & {
 	phase: 'playing' | 'gameover'
 	direction: 1 | -1
-	currentColor: UnoColor
-	options: UnoOptions
+	currentColor: CardColor
+	options: ColorOptions
 	pendingDraw: number
 	pendingDrawType: 'two' | 'four' | null
 	drewCardId: string | null
@@ -57,7 +57,7 @@ function nextInDir(players: string[], current: string, direction: 1 | -1): strin
 	return players[(((idx + direction) % players.length) + players.length) % players.length]
 }
 
-function canPlay(card: Card, topDiscard: Card, currentColor: UnoColor): boolean {
+function canPlay(card: Card, topDiscard: Card, currentColor: CardColor): boolean {
 	if (card.face === 'Wild' || card.face === 'WildDrawFour') return true
 	return card.suit === currentColor || card.face === topDiscard.face
 }
@@ -66,7 +66,7 @@ function isWildCard(card: Card): boolean {
 	return card.face === 'Wild' || card.face === 'WildDrawFour'
 }
 
-function reshuffleDiscard(zones: UnoState['zones']): UnoState['zones'] {
+function reshuffleDiscard(zones: ColorState['zones']): ColorState['zones'] {
 	const discard = zones['discard']
 	if (discard.cards.length <= 1) return zones
 	const top = discard.cards[discard.cards.length - 1]
@@ -78,7 +78,11 @@ function reshuffleDiscard(zones: UnoState['zones']): UnoState['zones'] {
 	}
 }
 
-function drawCards(zones: UnoState['zones'], playerId: string, count: number): UnoState['zones'] {
+function drawCards(
+	zones: ColorState['zones'],
+	playerId: string,
+	count: number
+): ColorState['zones'] {
 	let z = zones
 	for (let i = 0; i < count; i++) {
 		if (z['draw'].cards.length === 0) z = reshuffleDiscard(z)
@@ -89,80 +93,80 @@ function drawCards(zones: UnoState['zones'], playerId: string, count: number): U
 }
 
 function firstPlayableInHand(
-	zones: UnoState['zones'],
+	zones: ColorState['zones'],
 	playerId: string,
 	top: Card,
-	currentColor: UnoColor
+	currentColor: CardColor
 ): string | null {
 	const hand = zones[`hand_${playerId}`]
 	return hand?.cards.find((c) => canPlay(c, top, currentColor))?.id ?? null
 }
 
-export const unoOptionsSchema: OptionSchema[] = [
+export const colorOptionsSchema: OptionSchema[] = [
 	{
 		key: 'accumulation',
 		type: 'boolean',
 		default: false,
-		label: 'uno.options.accumulation',
-		description: 'uno.options.accumulationDesc'
+		label: 'color.options.accumulation',
+		description: 'color.options.accumulationDesc'
 	},
 	{
 		key: 'cut',
 		type: 'boolean',
 		default: false,
-		label: 'uno.options.cut',
-		description: 'uno.options.cutDesc'
+		label: 'color.options.cut',
+		description: 'color.options.cutDesc'
 	},
 	{
 		key: 'playAfterDraw',
 		type: 'boolean',
 		default: false,
-		label: 'uno.options.playAfterDraw',
-		description: 'uno.options.playAfterDrawDesc'
+		label: 'color.options.playAfterDraw',
+		description: 'color.options.playAfterDrawDesc'
 	},
 	{
 		key: 'drawUntilPlay',
 		type: 'boolean',
 		default: false,
-		label: 'uno.options.drawUntilPlay',
-		description: 'uno.options.drawUntilPlayDesc'
+		label: 'color.options.drawUntilPlay',
+		description: 'color.options.drawUntilPlayDesc'
 	},
 	{
 		key: 'playAfterPenalty',
 		type: 'boolean',
 		default: false,
-		label: 'uno.options.playAfterPenalty',
-		description: 'uno.options.playAfterPenaltyDesc'
+		label: 'color.options.playAfterPenalty',
+		description: 'color.options.playAfterPenaltyDesc'
 	},
 	{
 		key: 'challengePlusFour',
 		type: 'boolean',
 		default: false,
-		label: 'uno.options.challengePlusFour',
-		description: 'uno.options.challengePlusFourDesc'
+		label: 'color.options.challengePlusFour',
+		description: 'color.options.challengePlusFourDesc'
 	},
 	{
 		key: 'noWildFinish',
 		type: 'boolean',
 		default: false,
-		label: 'uno.options.noWildFinish',
-		description: 'uno.options.noWildFinishDesc'
+		label: 'color.options.noWildFinish',
+		description: 'color.options.noWildFinishDesc'
 	}
 ]
 
-export const uno: GameDefinition<UnoState> = {
-	id: 'uno',
-	name: 'Uno',
-	deckType: 'UnoDeck',
+export const color: GameDefinition<ColorState> = {
+	id: 'color',
+	name: 'Color',
+	deckType: 'ColorDeck',
 	minPlayers: 2,
 	maxPlayers: 8,
-	optionsSchema: unoOptionsSchema,
+	optionsSchema: colorOptionsSchema,
 
 	setup(players, rawOptions) {
 		const options = parseOptions(rawOptions)
-		const { hands, remaining } = deal(createDeck('UnoDeck'), 7, players.length)
+		const { hands, remaining } = deal(createDeck('ColorDeck'), 7, players.length)
 
-		const zones: UnoState['zones'] = {}
+		const zones: ColorState['zones'] = {}
 		players.forEach((pid, i) => {
 			zones[`hand_${pid}`] = createZone(`hand_${pid}`, 'hidden', hands[i], pid)
 		})
@@ -189,9 +193,9 @@ export const uno: GameDefinition<UnoState> = {
 			zones,
 			turnPlayerId: players[0],
 			phase: 'playing',
-			activeGameId: 'uno',
+			activeGameId: 'color',
 			direction: 1,
-			currentColor: (discardCard.suit as UnoColor) ?? 'red',
+			currentColor: (discardCard.suit as CardColor) ?? 'red',
 			options,
 			pendingDraw: 0,
 			pendingDrawType: null,
@@ -435,7 +439,7 @@ export const uno: GameDefinition<UnoState> = {
 
 		const { cardId, chosenColor } = (action.payload ?? {}) as {
 			cardId?: string
-			chosenColor?: UnoColor
+			chosenColor?: CardColor
 		}
 		if (!cardId) return state
 
@@ -469,13 +473,13 @@ export const uno: GameDefinition<UnoState> = {
 		if (options.noWildFinish && wild && hand.cards.length === 1 && !state.penaltyTurn) return state
 
 		let zones = moveCard(state.zones, `hand_${action.playerId}`, 'discard', cardId)
-		const newColor: UnoColor = wild ? chosenColor! : (card.suit as UnoColor)
+		const newColor: CardColor = wild ? chosenColor! : (card.suit as CardColor)
 		let direction = state.direction
 		let nextTurn: string
 		let newLastSkipped: string | null = null
 		let newPendingDraw = 0
 		let newPendingDrawType: 'two' | 'four' | null = null
-		let newPendingChallenge: UnoState['pendingChallenge'] = null
+		let newPendingChallenge: ColorState['pendingChallenge'] = null
 		let newPenaltyTurn = false
 
 		if (card.face === 'Reverse') {

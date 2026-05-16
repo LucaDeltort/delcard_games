@@ -76,7 +76,7 @@ type Action = {
 ## The GameDefinition interface
 
 ```typescript
-type DeckType = 'FrenchDeckWithJoker' | 'FrenchDeckWithoutJoker' | 'UnoDeck';
+type DeckType = 'FrenchDeckWithJoker' | 'FrenchDeckWithoutJoker' | 'ColorDeck';
 
 type GameDefinition<S extends GameStateGeneric> = {
 	id: string;
@@ -229,7 +229,7 @@ All utilities are exported from `$lib/engine`.
 **Deck types.** Built-in options:
 - `'FrenchDeckWithJoker'` — 54 cards (52 + 2 jokers)
 - `'FrenchDeckWithoutJoker'` — 52 standard cards
-- `'UnoDeck'` — 108 Uno cards (colored numbers, action cards, wilds)
+- `'ColorDeck'` — 108 Color cards (colored numbers, action cards, wilds)
 
 To add a completely new deck type, see [card-pack.md](card-pack.md#creating-a-new-deck-type).
 
@@ -245,7 +245,7 @@ To add a completely new deck type, see [card-pack.md](card-pack.md#creating-a-ne
 
 - [War rules and implementation notes](games/war.md)
 - [The Fight (La Bagarre) rules and implementation notes](games/fight.md)
-- [Uno rules and implementation notes](games/uno.md)
+- [Color rules and implementation notes](games/color.md)
 
 ---
 

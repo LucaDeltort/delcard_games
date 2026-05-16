@@ -6,7 +6,7 @@ import RulesDrawer from '$lib/components/RulesDrawer.svelte'
 import { Button } from '$lib/components/ui/button'
 import type { Card, GameStateGeneric } from '$lib/core/types'
 import type { Action } from '$lib/engine'
-import type { UnoColor } from '$lib/games/uno'
+import type { CardColor } from '$lib/games/color'
 import { t } from '$lib/i18n'
 import type { LobbyPlayer } from '$lib/network/messages'
 import { deckPacks, resolvePackFor } from '$lib/stores/deckPacks'
@@ -15,9 +15,9 @@ import { settingsOpen } from '$lib/stores/settings'
 const DRAW_STAGGER_MS = 250
 const DRAW_DURATION_MS = 350
 
-type UnoState = GameStateGeneric & {
+type ColorState = GameStateGeneric & {
 	direction: 1 | -1
-	currentColor: UnoColor
+	currentColor: CardColor
 	drewCardId: string | null
 	pendingDraw: number
 	pendingChallenge: { by: string; hadBluff: boolean } | null
@@ -37,8 +37,8 @@ let {
 	onAction: (action: Action) => void
 } = $props()
 
-const gs = $derived(rawState as UnoState)
-const pack = $derived(resolvePackFor($deckPacks, 'uno-deck'))
+const gs = $derived(rawState as ColorState)
+const pack = $derived(resolvePackFor($deckPacks, 'color-deck'))
 
 function cardSrc(card: Card, showBack = false): string {
 	const ext = pack.ext ?? '.png'
@@ -74,21 +74,21 @@ const showChallengeOverlay = $derived(acceptAction !== null || challengeAction !
 const opponents = $derived(gs.players.filter((p) => p !== myPlayerId))
 const mustDraw = $derived(isMyTurn && canDraw && playableCardIds.size === 0 && gs.pendingDraw === 0)
 
-const COLOR_CLASSES: Record<UnoColor, string> = {
+const COLOR_CLASSES: Record<CardColor, string> = {
 	red: 'bg-red-500',
 	yellow: 'bg-yellow-400',
 	green: 'bg-green-500',
 	blue: 'bg-blue-500'
 }
 
-const COLOR_LABELS: Record<UnoColor, string> = {
+const COLOR_LABELS: Record<CardColor, string> = {
 	red: 'Red',
 	yellow: 'Yellow',
 	green: 'Green',
 	blue: 'Blue'
 }
 
-const UNO_COLORS: UnoColor[] = ['red', 'yellow', 'green', 'blue']
+const CARD_COLORS: CardColor[] = ['red', 'yellow', 'green', 'blue']
 
 let pendingCardId = $state<string | null>(null)
 let opponentPlayCard = $state<string | null>(null)
@@ -119,19 +119,19 @@ let _prevDiscardTopId: string | null = discardTop?.id ?? null
 const _prevOpponentHandSizes = new Map<string, number>()
 
 const ACTION_KEYS: Partial<Record<string, string>> = {
-	Skip: 'uno.actionSkip',
-	Reverse: 'uno.actionReverse',
-	DrawTwo: 'uno.actionDrawTwo',
-	Wild: 'uno.actionWild',
-	WildDrawFour: 'uno.actionWildDrawFour'
+	Skip: 'color.actionSkip',
+	Reverse: 'color.actionReverse',
+	DrawTwo: 'color.actionDrawTwo',
+	Wild: 'color.actionWild',
+	WildDrawFour: 'color.actionWildDrawFour'
 }
 
 const ACTION_KEYS_OTHER: Partial<Record<string, string>> = {
-	Skip: 'uno.actionSkipOther',
-	Reverse: 'uno.actionReverseOther',
-	DrawTwo: 'uno.actionDrawTwoOther',
-	Wild: 'uno.actionWildOther',
-	WildDrawFour: 'uno.actionWildDrawFourOther'
+	Skip: 'color.actionSkipOther',
+	Reverse: 'color.actionReverseOther',
+	DrawTwo: 'color.actionDrawTwoOther',
+	Wild: 'color.actionWildOther',
+	WildDrawFour: 'color.actionWildDrawFourOther'
 }
 
 $effect(() => {
@@ -186,7 +186,7 @@ function handleCardClick(card: Card) {
 	}
 }
 
-function handleColorPick(color: UnoColor) {
+function handleColorPick(color: CardColor) {
 	if (!pendingCardId) return
 	onAction({
 		type: 'PLAY_CARD',
@@ -211,7 +211,7 @@ function handleColorPick(color: UnoColor) {
 		</div>
 		<span class="font-medium">
 			{isMyTurn
-				? $t('uno.yourTurn')
+				? $t('color.yourTurn')
 				: $t('common.turnOf', { name: playerName(gs.turnPlayerId) })}
 		</span>
 		<button
@@ -262,7 +262,7 @@ function handleColorPick(color: UnoColor) {
 				onclick={() => canDraw && drawAction && onAction(drawAction)}
 				disabled={!canDraw}
 				class="rounded-lg transition-all {canDraw ? 'cursor-pointer opacity-100 hover:opacity-80' : 'cursor-default opacity-50'} {gs.pendingDraw > 0 ? 'animate-pulse ring-2 ring-yellow-400' : mustDraw ? 'animate-pulse ring-2 ring-primary' : ''}"
-				aria-label={$t('uno.draw')}
+				aria-label={$t('color.draw')}
 			>
 				{#if drawCount > 0}
 					<img
@@ -275,7 +275,7 @@ function handleColorPick(color: UnoColor) {
 					<div class="h-20 w-14 rounded-lg border-2 border-dashed border-border bg-secondary/30 sm:h-24 sm:w-16"></div>
 				{/if}
 			</button>
-			<span class="text-xs text-muted-foreground">{$t('uno.draw')} ({drawCount})</span>
+			<span class="text-xs text-muted-foreground">{$t('color.draw')} ({drawCount})</span>
 			{#if gs.pendingDraw > 0}
 				<span class="text-xs font-bold text-yellow-500">+{gs.pendingDraw}</span>
 			{/if}
@@ -358,13 +358,13 @@ function handleColorPick(color: UnoColor) {
 					onclick={() => onAction({ type: 'END_TURN', playerId: myPlayerId })}
 					class="rounded-full bg-secondary px-6 py-2 text-sm font-medium text-foreground transition-colors hover:bg-secondary/80"
 				>
-					{$t('uno.endTurn')}
+					{$t('color.endTurn')}
 				</button>
 			</div>
 		{/if}
 	</div>
 
-	<RulesDrawer gameId="uno" />
+	<RulesDrawer gameId="color" />
 </div>
 
 <!-- Action banner (Skip!, Reverse!, +2, +4, Color change) -->
@@ -386,7 +386,7 @@ function handleColorPick(color: UnoColor) {
 		class="pointer-events-none fixed inset-0 z-40 flex items-center justify-center"
 	>
 		<div class="animate-bounce rounded-2xl bg-primary px-8 py-4 text-2xl font-bold text-primary-foreground shadow-2xl">
-			{$t('uno.yourTurn')}
+			{$t('color.yourTurn')}
 		</div>
 	</div>
 {/if}
@@ -399,14 +399,14 @@ function handleColorPick(color: UnoColor) {
 		aria-modal="true"
 	>
 		<div class="flex flex-col items-center gap-4 rounded-2xl bg-card p-6 shadow-2xl">
-			<p class="text-sm font-medium text-foreground">{$t('uno.challenge')}</p>
+			<p class="text-sm font-medium text-foreground">{$t('color.challenge')}</p>
 			<div class="flex gap-3">
 				{#if acceptAction}
 					<button
 						onclick={() => onAction(acceptAction)}
 						class="rounded-xl bg-secondary px-6 py-3 text-sm font-medium text-foreground transition-colors hover:bg-secondary/80"
 					>
-						{$t('uno.acceptPenalty')}
+						{$t('color.acceptPenalty')}
 					</button>
 				{/if}
 				{#if challengeAction}
@@ -414,7 +414,7 @@ function handleColorPick(color: UnoColor) {
 						onclick={() => onAction(challengeAction)}
 						class="rounded-xl bg-primary px-6 py-3 text-sm font-medium text-primary-foreground transition-colors hover:opacity-90"
 					>
-						{$t('uno.challenge')}
+						{$t('color.challenge')}
 					</button>
 				{/if}
 			</div>
@@ -440,12 +440,12 @@ function handleColorPick(color: UnoColor) {
 		class="fixed inset-0 z-50 flex items-center justify-center bg-black/60"
 		role="dialog"
 		aria-modal="true"
-		aria-label={$t('uno.chooseColor')}
+		aria-label={$t('color.chooseColor')}
 	>
 		<div class="flex flex-col items-center gap-4 rounded-2xl bg-card p-6 shadow-2xl">
-			<p class="text-sm font-medium text-foreground">{$t('uno.chooseColor')}</p>
+			<p class="text-sm font-medium text-foreground">{$t('color.chooseColor')}</p>
 			<div class="grid grid-cols-2 gap-3">
-				{#each UNO_COLORS as color}
+				{#each CARD_COLORS as color}
 					<button
 						onclick={() => handleColorPick(color)}
 						class="h-14 w-24 rounded-xl {COLOR_CLASSES[color]} font-bold text-white shadow-md transition-transform hover:scale-105 active:scale-95"

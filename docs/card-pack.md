@@ -55,23 +55,23 @@ Examples: `card_hearts_A.svg`, `card_spades_10.svg`, `card_clubs_07.svg`, `card_
 
 ---
 
-## Creating a pack for the Uno deck
+## Creating a pack for the Color deck
 
-1. Create a folder: `static/cards/UnoDeck/<your-pack>/`
+1. Create a folder: `static/cards/ColorDeck/<your-pack>/`
 2. Provide the 55 files listed below (SVG preferred; PNG accepted at 500×700 px)
-3. Register your pack in `src/lib/decks/UnoDeck/packs.ts`
+3. Register your pack in `src/lib/decks/ColorDeck/packs.ts`
 
 ```ts
 {
   id: 'your-pack',
   name: 'Display name',
   author: 'Your name',
-  basePath: '/cards/UnoDeck/your-pack',
+  basePath: '/cards/ColorDeck/your-pack',
   ext: '.svg'  // or '.png'
 }
 ```
 
-## File list (Uno)
+## File list (Color)
 
 Total: **55 files** (52 colored cards + 2 wilds + 1 back)
 
@@ -118,7 +118,7 @@ A deck type defines which cards exist. Adding one requires four steps.
 Add your type to the `DeckType` union in `src/lib/core/types.ts`:
 
 ```typescript
-export type DeckType = 'FrenchDeckWithJoker' | 'FrenchDeckWithoutJoker' | 'UnoDeck' | 'YourDeckType'
+export type DeckType = 'FrenchDeckWithJoker' | 'FrenchDeckWithoutJoker' | 'ColorDeck' | 'YourDeckType'
 ```
 
 ### 2 — Define the cards
@@ -149,7 +149,7 @@ import { createYourDeck } from '$lib/decks/YourDeckType/cards'
 const registry: Record<DeckType, () => Card[]> = {
   FrenchDeckWithJoker:    () => createFrenchDeck(true),
   FrenchDeckWithoutJoker: () => createFrenchDeck(false),
-  UnoDeck:                () => createUnoDeck(),
+  ColorDeck:                () => createColorDeck(),
   YourDeckType:           () => createYourDeck(),   // ← add this
 }
 ```

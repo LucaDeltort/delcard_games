@@ -1,13 +1,13 @@
 import type { GameStateGeneric } from '$lib/core/types'
 import type { GameDefinition } from '$lib/engine'
+import { color } from './color'
 import { fight } from './fight'
+import colorRules from './rules/color.json'
 import fightRules from './rules/fight.json'
-import unoRules from './rules/uno.json'
 import warRules from './rules/war.json'
-import { uno } from './uno'
 import { war } from './war'
 
-export const games = { war, fight, uno } as unknown as Record<
+export const games = { war, fight, color } as unknown as Record<
 	string,
 	GameDefinition<GameStateGeneric>
 >
@@ -21,7 +21,7 @@ export const gameList: { id: string; minPlayers: number; maxPlayers: number }[] 
 }))
 
 export const gameRules: Record<string, { en: string; fr: string }> = {
-	uno: unoRules,
+	color: colorRules,
 	war: warRules,
 	fight: fightRules
 }
