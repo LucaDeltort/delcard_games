@@ -5,7 +5,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger } from '$lib/component
 import { type Locale, locale, t } from '$lib/i18n'
 import { settings, settingsOpen } from '$lib/stores/settings'
 
-declare const __APP_VERSION__: string
 const version = __APP_VERSION__
 
 const langLabels: Record<Locale, string> = { fr: 'Français', en: 'English' }
