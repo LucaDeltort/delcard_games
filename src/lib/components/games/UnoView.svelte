@@ -1,6 +1,6 @@
 <script lang="ts">
 import { Settings as SettingsIcon } from 'lucide-svelte'
-import { fly } from 'svelte/transition'
+import { fade, fly, scale } from 'svelte/transition'
 import RulesDrawer from '$lib/components/RulesDrawer.svelte'
 import { Button } from '$lib/components/ui/button'
 import type { Card, GameStateGeneric } from '$lib/core/types'
@@ -18,6 +18,7 @@ type UnoState = GameStateGeneric & {
 	direction: 1 | -1
 	currentColor: UnoColor
 	drewCardId: string | null
+	pendingDraw: number
 	pendingChallenge: { by: string; hadBluff: boolean } | null
 }
 
@@ -70,6 +71,7 @@ const challengeAction = $derived(validActions.find((a) => a.type === 'CHALLENGE_
 const showChallengeOverlay = $derived(acceptAction !== null || challengeAction !== null)
 
 const opponents = $derived(gs.players.filter((p) => p !== myPlayerId))
+const mustDraw = $derived(isMyTurn && canDraw && playableCardIds.size === 0 && gs.pendingDraw === 0)
 
 const COLOR_CLASSES: Record<UnoColor, string> = {
 	red: 'bg-red-500',
@@ -102,6 +104,73 @@ $effect.pre(() => {
 	currentIds.forEach((id) => prevHandIds.add(id))
 })
 
+// Animation 2 — your turn flash
+let showTurnFlash = $state(false)
+// Animation 4 — action banner
+let actionBanner = $state<string | null>(null)
+// Animation 6 — opponent draw bounce
+let bouncingOpponents = $state<Set<string>>(new Set())
+
+// Plain (non-reactive) prev-state trackers — same pattern as drawDelays/prevHandIds
+let _prevTurnPlayerId = gs.turnPlayerId
+let _prevDiscardTopId: string | null = discardTop?.id ?? null
+const _prevOpponentHandSizes = new Map<string, number>()
+
+const ACTION_KEYS: Partial<Record<string, string>> = {
+	Skip: 'uno.actionSkip',
+	Reverse: 'uno.actionReverse',
+	DrawTwo: 'uno.actionDrawTwo',
+	Wild: 'uno.actionWild',
+	WildDrawFour: 'uno.actionWildDrawFour'
+}
+
+const ACTION_KEYS_OTHER: Partial<Record<string, string>> = {
+	Skip: 'uno.actionSkipOther',
+	Reverse: 'uno.actionReverseOther',
+	DrawTwo: 'uno.actionDrawTwoOther',
+	Wild: 'uno.actionWildOther',
+	WildDrawFour: 'uno.actionWildDrawFourOther'
+}
+
+$effect(() => {
+	// Capture before any updates — identifies who just played
+	const whoJustPlayed = _prevTurnPlayerId
+
+	// Animation 2: your turn flash
+	if (gs.turnPlayerId !== _prevTurnPlayerId) {
+		if (gs.turnPlayerId === myPlayerId) {
+			showTurnFlash = true
+			setTimeout(() => (showTurnFlash = false), 1500)
+		}
+		_prevTurnPlayerId = gs.turnPlayerId
+	}
+
+	// Animation 4: action banner
+	const topId = discardTop?.id ?? null
+	if (topId !== _prevDiscardTopId && discardTop) {
+		const keys = whoJustPlayed === myPlayerId ? ACTION_KEYS : ACTION_KEYS_OTHER
+		const label = keys[discardTop.face] ?? null
+		if (label) {
+			actionBanner = label
+			setTimeout(() => (actionBanner = null), 1800)
+		}
+		_prevDiscardTopId = topId
+	}
+
+	// Animation 6: opponent draw bounce
+	for (const pid of opponents) {
+		const size = gs.zones[`hand_${pid}`]?.cards.length ?? 0
+		const prev = _prevOpponentHandSizes.get(pid)
+		if (prev !== undefined && size > prev) {
+			bouncingOpponents = new Set([...bouncingOpponents, pid])
+			setTimeout(() => {
+				bouncingOpponents = new Set([...bouncingOpponents].filter((p) => p !== pid))
+			}, 700)
+		}
+		_prevOpponentHandSizes.set(pid, size)
+	}
+})
+
 function handleCardClick(card: Card) {
 	if (!playableCardIds.has(card.id)) return
 	if (card.face === 'Wild' || card.face === 'WildDrawFour') {
@@ -128,7 +197,11 @@ function handleColorPick(color: UnoColor) {
 	<header class="flex items-center justify-between border-b border-border bg-card px-4 py-2 text-sm">
 		<div class="flex items-center gap-2">
 			<div class="h-3 w-3 rounded-full {COLOR_CLASSES[gs.currentColor]} ring-2 ring-border"></div>
-			<span class="text-xs text-muted-foreground">{gs.direction === 1 ? '↻' : '↺'}</span>
+			{#key gs.direction}
+			<span in:scale={{ duration: 400, start: 0.4 }} class="text-xs text-muted-foreground">
+				{gs.direction === 1 ? '↻' : '↺'}
+			</span>
+		{/key}
 		</div>
 		<span class="font-medium">
 			{isMyTurn
@@ -153,7 +226,7 @@ function handleColorPick(color: UnoColor) {
 					{playerName(pid)}
 					{#if gs.turnPlayerId === pid}<span class="ml-1">▶</span>{/if}
 				</span>
-				<div class="flex items-center gap-1">
+				<div class="flex items-center gap-1 {bouncingOpponents.has(pid) ? 'animate-bounce' : ''}">
 					{#each hand.slice(0, 5) as card (card.id)}
 						<img
 							src={cardSrc(card, true)}
@@ -181,7 +254,7 @@ function handleColorPick(color: UnoColor) {
 			<button
 				onclick={() => canDraw && drawAction && onAction(drawAction)}
 				disabled={!canDraw}
-				class="rounded-lg transition-opacity {canDraw ? 'cursor-pointer opacity-100 hover:opacity-80' : 'cursor-default opacity-50'}"
+				class="rounded-lg transition-all {canDraw ? 'cursor-pointer opacity-100 hover:opacity-80' : 'cursor-default opacity-50'} {gs.pendingDraw > 0 ? 'animate-pulse ring-2 ring-yellow-400' : mustDraw ? 'animate-pulse ring-2 ring-primary' : ''}"
 				aria-label={$t('uno.draw')}
 			>
 				{#if drawCount > 0}
@@ -196,6 +269,9 @@ function handleColorPick(color: UnoColor) {
 				{/if}
 			</button>
 			<span class="text-xs text-muted-foreground">{$t('uno.draw')} ({drawCount})</span>
+			{#if gs.pendingDraw > 0}
+				<span class="text-xs font-bold text-yellow-500">+{gs.pendingDraw}</span>
+			{/if}
 		</div>
 
 		<!-- Current color indicator -->
@@ -206,16 +282,19 @@ function handleColorPick(color: UnoColor) {
 
 		<!-- Discard pile -->
 		<div class="flex flex-col items-center gap-1">
-			{#if discardTop}
-				<img
-					src={cardSrc(discardTop)}
-					alt="{discardTop.face}{discardTop.suit ? ' ' + discardTop.suit : ''}"
-					class="h-20 w-14 rounded-lg object-contain shadow-md sm:h-24 sm:w-16"
-					draggable="false"
-				/>
-			{:else}
-				<div class="h-20 w-14 rounded-lg border-2 border-dashed border-border bg-secondary/30 sm:h-24 sm:w-16"></div>
-			{/if}
+			{#key discardTop?.id}
+				{#if discardTop}
+					<img
+						in:fly={{ y: -20, duration: 280 }}
+						src={cardSrc(discardTop)}
+						alt="{discardTop.face}{discardTop.suit ? ' ' + discardTop.suit : ''}"
+						class="h-20 w-14 rounded-lg object-contain shadow-md sm:h-24 sm:w-16"
+						draggable="false"
+					/>
+				{:else}
+					<div class="h-20 w-14 rounded-lg border-2 border-dashed border-border bg-secondary/30 sm:h-24 sm:w-16"></div>
+				{/if}
+			{/key}
 			<span class="text-xs text-muted-foreground">{discard.length}</span>
 		</div>
 	</div>
@@ -265,6 +344,30 @@ function handleColorPick(color: UnoColor) {
 
 	<RulesDrawer gameId="uno" />
 </div>
+
+<!-- Action banner (Skip!, Reverse!, +2, +4, Color change) -->
+{#if actionBanner}
+	<div
+		transition:fly={{ y: 30, duration: 300 }}
+		class="pointer-events-none fixed inset-x-0 bottom-36 z-40 flex justify-center"
+	>
+		<div class="rounded-full bg-foreground px-8 py-3 text-xl font-bold text-background shadow-2xl">
+			{$t(actionBanner)}
+		</div>
+	</div>
+{/if}
+
+<!-- Your turn flash -->
+{#if showTurnFlash}
+	<div
+		transition:fade={{ duration: 200 }}
+		class="pointer-events-none fixed inset-0 z-40 flex items-center justify-center"
+	>
+		<div class="animate-bounce rounded-2xl bg-primary px-8 py-4 text-2xl font-bold text-primary-foreground shadow-2xl">
+			{$t('uno.yourTurn')}
+		</div>
+	</div>
+{/if}
 
 <!-- Challenge +4 overlay -->
 {#if showChallengeOverlay}

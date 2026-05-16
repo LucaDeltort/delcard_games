@@ -5,6 +5,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger } from '$lib/component
 import { type Locale, locale, t } from '$lib/i18n'
 import { settings, settingsOpen } from '$lib/stores/settings'
 
+const version = __APP_VERSION__
+
 const langLabels: Record<Locale, string> = { fr: 'Français', en: 'English' }
 
 let lang = $state<Locale>($locale)
@@ -88,6 +90,7 @@ $effect(() => {
 					<Lightbulb size={14} />
 					{$t('settings.proposeGame')}
 				</a>
+				<span class="text-xs text-muted-foreground/50">v{version}</span>
 			</div>
 		</Dialog.Content>
 	</Dialog.Portal>
