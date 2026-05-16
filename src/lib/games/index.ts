@@ -1,11 +1,11 @@
 import type { GameStateGeneric } from '$lib/core/types'
 import type { GameDefinition } from '$lib/engine'
 import { fight } from './fight'
-import { uno } from './uno'
-import { war } from './war'
 import fightRules from './rules/fight.json'
 import unoRules from './rules/uno.json'
 import warRules from './rules/war.json'
+import { uno } from './uno'
+import { war } from './war'
 
 export const games = { war, fight, uno } as unknown as Record<
 	string,
