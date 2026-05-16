@@ -105,7 +105,8 @@ function reshuffleDiscard(state: FightState): FightState {
 /** Removes top card from draw, reshuffling discard first if needed. */
 function popDraw(state: FightState): [FightState, Card] {
 	const s = state.zones.draw.cards.length === 0 ? reshuffleDiscard(state) : state
-	const [card, ...rest] = s.zones.draw.cards
+	const [raw, ...rest] = s.zones.draw.cards
+	const card = raw.isHidden ? { ...raw, isHidden: false } : raw
 	return [{ ...s, zones: { ...s.zones, draw: { ...s.zones.draw, cards: rest } } }, card]
 }
 
