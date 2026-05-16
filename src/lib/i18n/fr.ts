@@ -54,7 +54,9 @@ export default {
 		hiddenCard: 'carte cachée',
 		hiddenCards: 'cartes cachées',
 		rules: 'Règles',
-		cardStyle: 'Style des cartes'
+		cardStyle: 'Style des cartes',
+		preloadingCards: 'Chargement des cartes… ({loaded}/{total})',
+		usePack: 'Utiliser ce paquet'
 	},
 	card: {
 		hidden: 'Carte cachée',

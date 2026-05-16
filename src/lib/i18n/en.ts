@@ -54,7 +54,9 @@ export default {
 		hiddenCard: 'hidden card',
 		hiddenCards: 'hidden cards',
 		rules: 'Rules',
-		cardStyle: 'Card style'
+		cardStyle: 'Card style',
+		preloadingCards: 'Loading cards… ({loaded}/{total})',
+		usePack: 'Use this pack'
 	},
 	card: {
 		hidden: 'Hidden card',

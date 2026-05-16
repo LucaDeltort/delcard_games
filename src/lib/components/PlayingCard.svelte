@@ -1,5 +1,6 @@
 <script lang="ts">
 import type { Card } from '$lib/core/types'
+import { cardSrc } from '$lib/decks/preload'
 import { t } from '$lib/i18n'
 import { deckPacks, resolvePackFor } from '$lib/stores/deckPacks'
 
@@ -22,13 +23,9 @@ const sizes = {
 }
 
 const src = $derived.by(() => {
-	const pack = resolvePackFor($deckPacks, deckSlug)
-	const ext = pack.ext ?? '.png'
 	if (!card) return null
-	if (back || card.isHidden) return `${pack.basePath}/card_back${ext}`
-	if (card.face === 'Joker') return `${pack.basePath}/card_joker_${card.suit}${ext}`
-	const faceKey = /^\d$/.test(card.face) ? `0${card.face}` : card.face
-	return `${pack.basePath}/card_${card.suit}_${faceKey}${ext}`
+	const pack = resolvePackFor($deckPacks, deckSlug)
+	return cardSrc(card, pack, back)
 })
 
 const alt = $derived.by(() => {
