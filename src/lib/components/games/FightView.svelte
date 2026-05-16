@@ -437,11 +437,9 @@ onDestroy(() => {
 										name: playerName(entry.targetId),
 										killer: playerName(entry.killedBy)
 									})
-								: $t('fight.historyEliminatedDragon', {
+								: $t('fight.historyEliminatedDisconnect', {
 										name: playerName(entry.targetId)
 									})}
-						{:else if entry.type === 'DRAGON'}
-							{$t('fight.historyDragon')}
 						{/if}
 					</p>
 				{/each}
