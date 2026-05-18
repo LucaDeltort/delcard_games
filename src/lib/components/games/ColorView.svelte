@@ -114,8 +114,9 @@ let actionBanner = $state<string | null>(null)
 let bouncingOpponents = $state<Set<string>>(new Set())
 
 // Plain (non-reactive) prev-state trackers — same pattern as drawDelays/prevHandIds
-let _prevTurnPlayerId = gs.turnPlayerId
-let _prevDiscardTopId: string | null = discardTop?.id ?? null
+let _prevTurnPlayerId = ''
+let _prevDiscardTopId: string | null = null
+let _hasPrevSnapshot = false
 const _prevOpponentHandSizes = new Map<string, number>()
 
 const ACTION_KEYS: Partial<Record<string, string>> = {
@@ -135,6 +136,16 @@ const ACTION_KEYS_OTHER: Partial<Record<string, string>> = {
 }
 
 $effect(() => {
+	if (!_hasPrevSnapshot) {
+		_prevTurnPlayerId = gs.turnPlayerId
+		_prevDiscardTopId = discardTop?.id ?? null
+		for (const pid of opponents) {
+			_prevOpponentHandSizes.set(pid, gs.zones[`hand_${pid}`]?.cards.length ?? 0)
+		}
+		_hasPrevSnapshot = true
+		return
+	}
+
 	// Capture before any updates — identifies who just played
 	const whoJustPlayed = _prevTurnPlayerId
 
