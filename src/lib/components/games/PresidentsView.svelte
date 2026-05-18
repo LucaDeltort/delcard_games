@@ -1,173 +1,177 @@
 <script lang="ts">
-    import { Settings as SettingsIcon } from "lucide-svelte";
-    import { untrack } from "svelte";
-    import { fade } from "svelte/transition";
-    import PlayerSlot from "$lib/components/PlayerSlot.svelte";
-    import PlayingCard from "$lib/components/PlayingCard.svelte";
-    import RulesDrawer from "$lib/components/RulesDrawer.svelte";
-    import { Button } from "$lib/components/ui/button";
-    import type { Card, GameStateGeneric } from "$lib/core/types";
-    import type { Action } from "$lib/engine";
-    import type { PresidentsState } from "$lib/games/presidents";
-    import { t } from "$lib/i18n";
-    import type { LobbyPlayer } from "$lib/network/messages";
-    import { settingsOpen } from "$lib/stores/settings";
+import { Settings as SettingsIcon } from 'lucide-svelte'
+import { untrack } from 'svelte'
+import { fade } from 'svelte/transition'
+import PlayerSlot from '$lib/components/PlayerSlot.svelte'
+import PlayingCard from '$lib/components/PlayingCard.svelte'
+import RulesDrawer from '$lib/components/RulesDrawer.svelte'
+import { Button } from '$lib/components/ui/button'
+import type { Card, GameStateGeneric } from '$lib/core/types'
+import type { Action } from '$lib/engine'
+import type { PresidentsState } from '$lib/games/presidents'
+import { t } from '$lib/i18n'
+import type { LobbyPlayer } from '$lib/network/messages'
+import { settingsOpen } from '$lib/stores/settings'
 
-    let {
-        state: gameState,
-        myPlayerId,
-        players,
-        validActions,
-        onAction,
-    }: {
-        state: GameStateGeneric;
-        myPlayerId: string;
-        players: LobbyPlayer[];
-        validActions: Action[];
-        onAction: (action: Action) => void;
-    } = $props();
+let {
+	state: gameState,
+	myPlayerId,
+	players,
+	validActions,
+	onAction
+}: {
+	state: GameStateGeneric
+	myPlayerId: string
+	players: LobbyPlayer[]
+	validActions: Action[]
+	onAction: (action: Action) => void
+} = $props()
 
-    const gs = $derived(gameState as PresidentsState);
+const gs = $derived(gameState as PresidentsState)
 
-    const me = $derived(myPlayerId);
-    const opponents = $derived(gs.players.filter((p) => p !== me));
+const me = $derived(myPlayerId)
+const opponents = $derived(gs.players.filter((p) => p !== me))
 
-    function playerName(id: string): string {
-        return players.find((p) => p.id === id)?.name ?? id;
-    }
+function playerName(id: string): string {
+	return players.find((p) => p.id === id)?.name ?? id
+}
 
-    function handCount(pid: string): number {
-        return gs.zones[`hand_${pid}`]?.cards.length ?? 0;
-    }
+function handCount(pid: string): number {
+	return gs.zones[`hand_${pid}`]?.cards.length ?? 0
+}
 
-    function isFinished(pid: string): boolean {
-        return !gs.activePlayers.includes(pid);
-    }
+function isFinished(pid: string): boolean {
+	return !gs.activePlayers.includes(pid)
+}
 
-    const myHand = $derived(gs.zones[`hand_${me}`]?.cards ?? []);
-    const FACE_ORDER = ["3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A", "2"];
-    const myHandSorted = $derived([...myHand].sort((a, b) => FACE_ORDER.indexOf(a.face) - FACE_ORDER.indexOf(b.face)));
-    const pileCards = $derived(gs.zones.pile?.cards ?? []);
-    const isMyTurn = $derived(gs.turnPlayerId === me && gs.activePlayers.includes(me));
-    const isExchanging = $derived(gs.phase === "exchanging");
-    const isExchangeGiver = $derived(gs.pendingExchange?.president === me);
-    const isVpExchange = $derived(gs.pendingExchange?.isVp ?? false);
-    const canSelectCard = $derived(isMyTurn || (isExchanging && isExchangeGiver));
+const myHand = $derived(gs.zones[`hand_${me}`]?.cards ?? [])
+const FACE_ORDER = ['3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A', '2']
+const myHandSorted = $derived(
+	[...myHand].sort((a, b) => FACE_ORDER.indexOf(a.face) - FACE_ORDER.indexOf(b.face))
+)
+const pileCards = $derived(gs.zones.pile?.cards ?? [])
+const isMyTurn = $derived(gs.turnPlayerId === me && gs.activePlayers.includes(me))
+const isExchanging = $derived(gs.phase === 'exchanging')
+const isExchangeGiver = $derived(gs.pendingExchange?.president === me)
+const isVpExchange = $derived(gs.pendingExchange?.isVp ?? false)
+const canSelectCard = $derived(isMyTurn || (isExchanging && isExchangeGiver))
 
-    let selectedIds = $state<Set<string>>(new Set());
+let selectedIds = $state<Set<string>>(new Set())
 
-    function toggleCard(id: string) {
-        if (!canSelectCard) return;
-        const next = new Set(selectedIds);
-        if (next.has(id)) {
-            next.delete(id);
-        } else {
-            next.add(id);
-        }
-        selectedIds = next;
-    }
+function toggleCard(id: string) {
+	if (!canSelectCard) return
+	const next = new Set(selectedIds)
+	if (next.has(id)) {
+		next.delete(id)
+	} else {
+		next.add(id)
+	}
+	selectedIds = next
+}
 
-    const playAction = $derived(
-        validActions.find((a) => {
-            if (a.type !== "PLAY") return false;
-            const ids = (a.payload as { cardIds: string[] }).cardIds;
-            if (ids.length !== selectedIds.size) return false;
-            return ids.every((id) => selectedIds.has(id));
-        }) ?? null,
-    );
+const playAction = $derived(
+	validActions.find((a) => {
+		if (a.type !== 'PLAY') return false
+		const ids = (a.payload as { cardIds: string[] }).cardIds
+		if (ids.length !== selectedIds.size) return false
+		return ids.every((id) => selectedIds.has(id))
+	}) ?? null
+)
 
-    const passAction = $derived(validActions.find((a) => a.type === "PASS") ?? null);
+const passAction = $derived(validActions.find((a) => a.type === 'PASS') ?? null)
 
-    function handlePlay() {
-        if (!playAction) return;
-        onAction(playAction);
-        selectedIds = new Set();
-    }
+function handlePlay() {
+	if (!playAction) return
+	onAction(playAction)
+	selectedIds = new Set()
+}
 
-    function handlePass() {
-        if (!passAction) return;
-        onAction(passAction);
-        selectedIds = new Set();
-    }
+function handlePass() {
+	if (!passAction) return
+	onAction(passAction)
+	selectedIds = new Set()
+}
 
-    const comboLabel = $derived.by(() => {
-        if (!gs.lastPlay) return null;
-        const key = `presidents.${gs.lastPlay.comboType}` as const;
-        return $t(key);
-    });
+const comboLabel = $derived.by(() => {
+	if (!gs.lastPlay) return null
+	const key = `presidents.${gs.lastPlay.comboType}` as const
+	return $t(key)
+})
 
-    function getRoleLabel(index: number, total: number): string {
-        if (index === 0) return $t("presidents.rankPresident");
-        if (index === total - 1) return $t("presidents.rankScum");
-        if (total >= 4 && index === 1) return $t("presidents.rankVicePresident");
-        if (total >= 4 && index === total - 2) return $t("presidents.rankViceScum");
-        return $t("presidents.rankNeutral");
-    }
+function getRoleLabel(index: number, total: number): string {
+	if (index === 0) return $t('presidents.rankPresident')
+	if (index === total - 1) return $t('presidents.rankScum')
+	if (total >= 4 && index === 1) return $t('presidents.rankVicePresident')
+	if (total >= 4 && index === total - 2) return $t('presidents.rankViceScum')
+	return $t('presidents.rankNeutral')
+}
 
-    const VALUE_TO_FACE: Record<number, string> = {
-        3: "3",
-        4: "4",
-        5: "5",
-        6: "6",
-        7: "7",
-        8: "8",
-        9: "9",
-        10: "10",
-        11: "J",
-        12: "Q",
-        13: "K",
-        14: "A",
-        15: "2",
-    };
-    const lockedFace = $derived(gs.sameValueLock && gs.lastPlay ? VALUE_TO_FACE[gs.lastPlay.value] : null);
+const VALUE_TO_FACE: Record<number, string> = {
+	3: '3',
+	4: '4',
+	5: '5',
+	6: '6',
+	7: '7',
+	8: '8',
+	9: '9',
+	10: '10',
+	11: 'J',
+	12: 'Q',
+	13: 'K',
+	14: 'A',
+	15: '2'
+}
+const lockedFace = $derived(
+	gs.sameValueLock && gs.lastPlay ? VALUE_TO_FACE[gs.lastPlay.value] : null
+)
 
-    const giveAction = $derived(
-        validActions.find((a) => {
-            if (a.type !== "GIVE_CARDS") return false;
-            const ids = (a.payload as { cardIds: string[] }).cardIds;
-            return ids.length === selectedIds.size && ids.every((id) => selectedIds.has(id));
-        }) ?? null,
-    );
+const giveAction = $derived(
+	validActions.find((a) => {
+		if (a.type !== 'GIVE_CARDS') return false
+		const ids = (a.payload as { cardIds: string[] }).cardIds
+		return ids.length === selectedIds.size && ids.every((id) => selectedIds.has(id))
+	}) ?? null
+)
 
-    function handleGive() {
-        if (!giveAction) return;
-        onAction(giveAction);
-        selectedIds = new Set();
-    }
+function handleGive() {
+	if (!giveAction) return
+	onAction(giveAction)
+	selectedIds = new Set()
+}
 
-    let exchangeFlash = $state<Card[] | null>(null);
-    let exchangeFlashTitle = $state<string>("");
-    let _exchangeTimer: ReturnType<typeof setTimeout> | null = null;
-    let _prevPhase = untrack(() => gs.phase);
+let exchangeFlash = $state<Card[] | null>(null)
+let exchangeFlashTitle = $state<string>('')
+let _exchangeTimer: ReturnType<typeof setTimeout> | null = null
+let _prevPhase = untrack(() => gs.phase)
 
-    $effect(() => {
-        const phase = gs.phase;
-        if (_prevPhase === "exchanging" && phase === "playing") {
-            const le = gs.lastExchange;
-            let cards: Card[] | null = null;
-            if (le?.scum === me) {
-                cards = le.givenToScum;
-                exchangeFlashTitle = $t("presidents.exchangeReceivedTitle");
-            } else if (le?.president === me) {
-                cards = le.givenToPresident;
-                exchangeFlashTitle = $t("presidents.exchangeReceivedFromScum");
-            } else if (le?.vs === me && le.givenToVs) {
-                cards = le.givenToVs;
-                exchangeFlashTitle = $t("presidents.exchangeReceivedFromVp");
-            } else if (le?.vp === me && le.givenToVp) {
-                cards = le.givenToVp;
-                exchangeFlashTitle = $t("presidents.exchangeReceivedFromVs");
-            }
-            if (cards && cards.length > 0) {
-                if (_exchangeTimer) clearTimeout(_exchangeTimer);
-                exchangeFlash = cards;
-                _exchangeTimer = setTimeout(() => {
-                    exchangeFlash = null;
-                }, 3500);
-            }
-        }
-        _prevPhase = phase;
-    });
+$effect(() => {
+	const phase = gs.phase
+	if (_prevPhase === 'exchanging' && phase === 'playing') {
+		const le = gs.lastExchange
+		let cards: Card[] | null = null
+		if (le?.scum === me) {
+			cards = le.givenToScum
+			exchangeFlashTitle = $t('presidents.exchangeReceivedTitle')
+		} else if (le?.president === me) {
+			cards = le.givenToPresident
+			exchangeFlashTitle = $t('presidents.exchangeReceivedFromScum')
+		} else if (le?.vs === me && le.givenToVs) {
+			cards = le.givenToVs
+			exchangeFlashTitle = $t('presidents.exchangeReceivedFromVp')
+		} else if (le?.vp === me && le.givenToVp) {
+			cards = le.givenToVp
+			exchangeFlashTitle = $t('presidents.exchangeReceivedFromVs')
+		}
+		if (cards && cards.length > 0) {
+			if (_exchangeTimer) clearTimeout(_exchangeTimer)
+			exchangeFlash = cards
+			_exchangeTimer = setTimeout(() => {
+				exchangeFlash = null
+			}, 3500)
+		}
+	}
+	_prevPhase = phase
+})
 </script>
 
 <div class="flex min-h-screen flex-col">
