@@ -128,8 +128,15 @@ export default {
 		giveCards: 'Donner',
 		waitingExchange: 'Le Président choisit ses cartes…',
 		lockedPlay: 'Tu dois jouer {face} ou passer',
+		endTrick: 'Terminé',
 		exchangeReceivedTitle: 'Reçu du Président',
-		exchangeReceivedFromScum: 'Reçu du Trou du cul'
+		exchangeReceivedFromScum: 'Reçu du Trou du cul',
+		results: 'Résultats',
+		rankPresident: 'Président',
+		rankVicePresident: 'Vice-Président',
+		rankViceScum: 'Vice-trou du cul',
+		rankScum: 'Trou du cul',
+		rankNeutral: 'Citoyen'
 	},
 	war: {
 		name: 'La Bataille',

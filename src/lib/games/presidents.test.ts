@@ -549,7 +549,7 @@ describe('presidents square rule', () => {
 		expect(next.zones.pile.cards).toHaveLength(0)
 	})
 
-	it('pass resets sameValueCount', () => {
+	it('pass resets sameValueLock but preserves sameValueCount', () => {
 		const state = buildState(
 			[
 				{ pid: P1, cards: [createCard('3', 'hearts')] },
@@ -564,7 +564,72 @@ describe('presidents square rule', () => {
 			}
 		)
 		const next = presidents.applyAction(state, { type: 'PASS', playerId: P2 })
-		expect(next.sameValueCount).toBe(0)
+		expect(next.sameValueCount).toBe(3)
 		expect(next.sameValueLock).toBe(false)
+	})
+
+	it('square completes via passes between two pairs', () => {
+		const pair1 = [createCard('9', 'hearts'), createCard('9', 'diamonds')]
+		const pair2 = [createCard('9', 'clubs'), createCard('9', 'spades')]
+		// Both P1 and P3 have extra cards so finishing hand branch is not triggered
+		const s0 = buildState([
+			{ pid: P1, cards: [...pair1, createCard('3', 'clubs')] },
+			{ pid: P2, cards: [createCard('3', 'hearts')] },
+			{ pid: P3, cards: [...pair2, createCard('4', 'clubs')] }
+		])
+		const s1 = presidents.applyAction(s0, {
+			type: 'PLAY',
+			playerId: P1,
+			payload: { cardIds: pair1.map((c) => c.id) }
+		})
+		expect(s1.sameValueCount).toBe(2)
+		// P2 passes — count must be preserved
+		const s2 = presidents.applyAction(s1, { type: 'PASS', playerId: P2 })
+		expect(s2.sameValueCount).toBe(2)
+		// P3 plays pair of 9s → count = 4 → square → trick ends, P3 leads
+		const s3 = presidents.applyAction(s2, {
+			type: 'PLAY',
+			playerId: P3,
+			payload: { cardIds: pair2.map((c) => c.id) }
+		})
+		expect(s3.lastPlay).toBeNull()
+		expect(s3.zones.pile.cards).toHaveLength(0)
+		expect(s3.turnPlayerId).toBe(P3)
+	})
+
+	it('finishing with a 2 puts player in scumPenalties not finishOrder', () => {
+		const c2 = createCard('2', 'hearts')
+		const state = buildState([
+			{ pid: P1, cards: [c2] },
+			{ pid: P2, cards: [createCard('K', 'diamonds')] },
+			{ pid: P3, cards: [createCard('A', 'clubs')] }
+		])
+		const next = presidents.applyAction(state, {
+			type: 'PLAY',
+			playerId: P1,
+			payload: { cardIds: [c2.id] }
+		})
+		expect(next.scumPenalties).toContain(P1)
+		expect(next.finishOrder).not.toContain(P1)
+		expect(next.activePlayers).not.toContain(P1)
+	})
+
+	it('scumPenalties appended to finishOrder at gameover', () => {
+		const c2 = createCard('2', 'hearts')
+		const state = buildState(
+			[
+				{ pid: P1, cards: [c2] },
+				{ pid: P2, cards: [createCard('K', 'diamonds')] }
+			],
+			{ activePlayers: [P1, P2], scumPenalties: [] }
+		)
+		const next = presidents.applyAction(state, {
+			type: 'PLAY',
+			playerId: P1,
+			payload: { cardIds: [c2.id] }
+		})
+		expect(next.phase).toBe('gameover')
+		expect(next.finishOrder[next.finishOrder.length - 1]).toBe(P1)
+		expect(next.finishOrder[0]).toBe(P2)
 	})
 })

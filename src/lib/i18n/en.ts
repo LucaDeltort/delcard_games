@@ -127,8 +127,15 @@ export default {
 		giveCards: 'Give',
 		waitingExchange: 'President is choosing cards to give…',
 		lockedPlay: 'Must play {face} or pass',
+		endTrick: 'Finished',
 		exchangeReceivedTitle: 'Cards received from President',
-		exchangeReceivedFromScum: 'Cards received from Asshole'
+		exchangeReceivedFromScum: 'Cards received from Asshole',
+		results: 'Results',
+		rankPresident: 'President',
+		rankVicePresident: 'Vice-President',
+		rankViceScum: 'Vice-Asshole',
+		rankScum: 'Asshole',
+		rankNeutral: 'Citizen'
 	},
 	war: {
 		name: 'War',

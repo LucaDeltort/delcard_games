@@ -86,6 +86,7 @@ function handlePlay() {
 function handlePass() {
 	if (!passAction) return
 	onAction(passAction)
+	selectedIds = new Set()
 }
 
 const comboLabel = $derived.by(() => {
@@ -96,6 +97,14 @@ const comboLabel = $derived.by(() => {
 
 const isExchanging = $derived(gs.phase === 'exchanging')
 const isPresident = $derived(gs.pendingExchange?.president === me)
+
+function getRoleLabel(index: number, total: number): string {
+	if (index === 0) return $t('presidents.rankPresident')
+	if (index === total - 1) return $t('presidents.rankScum')
+	if (total >= 4 && index === 1) return $t('presidents.rankVicePresident')
+	if (total >= 4 && index === total - 2) return $t('presidents.rankViceScum')
+	return $t('presidents.rankNeutral')
+}
 
 const VALUE_TO_FACE: Record<number, string> = {
 	3: '3',
@@ -176,6 +185,23 @@ $effect(() => {
 		</div>
 	</header>
 
+	{#if gs.phase === 'gameover'}
+		<!-- Results: full-screen centered -->
+		<div class="flex flex-1 flex-col items-center justify-center gap-4 px-4 py-6">
+			<p class="text-sm font-semibold text-accent">{$t('game.over')}</p>
+			<ol class="flex w-full max-w-xs flex-col gap-1.5">
+				{#each gs.finishOrder as pid, i}
+					<li class="flex items-center gap-3 rounded-lg border px-3 py-2 {pid === me ? 'border-accent/50 bg-accent/5' : 'border-border bg-card'}">
+						<span class="w-5 text-center font-mono text-xs text-muted-foreground">#{i + 1}</span>
+						<span class="flex-1 text-sm {pid === me ? 'font-semibold text-accent' : 'font-medium'}">
+							{playerName(pid)}{pid === me ? ` (${$t('common.you')})` : ''}
+						</span>
+						<span class="text-xs text-muted-foreground">{getRoleLabel(i, gs.finishOrder.length)}</span>
+					</li>
+				{/each}
+			</ol>
+		</div>
+	{:else}
 	<div class="flex flex-1 flex-col gap-4 px-4 py-6">
 		<!-- Opponents -->
 		<div class="flex flex-wrap justify-center gap-6">
@@ -224,9 +250,7 @@ $effect(() => {
 
 		<!-- Status -->
 		<div class="text-center text-sm">
-			{#if gs.phase === 'gameover'}
-				<span class="text-accent">{$t('game.over')}</span>
-			{:else if isExchanging}
+			{#if isExchanging}
 				<span class={isPresident ? 'font-medium text-accent' : 'text-muted-foreground'}>
 					{isPresident ? $t('presidents.chooseToGive') : $t('presidents.waitingExchange')}
 				</span>
@@ -279,13 +303,14 @@ $effect(() => {
 					</Button>
 					{#if passAction}
 						<Button onclick={handlePass} variant="outline" size="lg">
-							{$t('presidents.pass')}
+							{gs.leaderCanPlay ? $t('presidents.endTrick') : $t('presidents.pass')}
 						</Button>
 					{/if}
 				</div>
 			{/if}
 		</div>
 	</div>
+	{/if}
 </div>
 
 {#if exchangeFlash !== null}

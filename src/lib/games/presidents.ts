@@ -8,6 +8,7 @@ export type PresidentsState = GameStateGeneric & {
 	phase: 'exchanging' | 'playing' | 'gameover'
 	activePlayers: string[]
 	finishOrder: string[]
+	scumPenalties: string[]
 	lastPlay: { playerId: string; comboType: ComboType; value: number } | null
 	passedThisTrick: string[]
 	trickLeaderId: string
@@ -204,6 +205,7 @@ export const presidents: GameDefinition<PresidentsState> = {
 				activeGameId: 'presidents',
 				activePlayers: [...players],
 				finishOrder: [],
+				scumPenalties: [],
 				lastPlay: null,
 				passedThisTrick: [],
 				trickLeaderId: president,
@@ -225,6 +227,7 @@ export const presidents: GameDefinition<PresidentsState> = {
 			activeGameId: 'presidents',
 			activePlayers: [...players],
 			finishOrder: [],
+			scumPenalties: [],
 			lastPlay: null,
 			passedThisTrick: [],
 			trickLeaderId: starterId,
@@ -366,7 +369,6 @@ export const presidents: GameDefinition<PresidentsState> = {
 				...state,
 				passedThisTrick,
 				sameValueLock: false,
-				sameValueCount: 0,
 				leaderCanPlay: false,
 				turnPlayerId: nextInSeatOrder(state.players, state.activePlayers, action.playerId)
 			}
@@ -401,10 +403,16 @@ export const presidents: GameDefinition<PresidentsState> = {
 			}
 
 			let { activePlayers, finishOrder } = state
+			let scumPenalties = state.scumPenalties
 
 			if (newHandCards.length === 0) {
 				activePlayers = activePlayers.filter((p) => p !== action.playerId)
-				finishOrder = [...finishOrder, action.playerId]
+				if (combo.value === 15) {
+					// Finished with a 2 → goes to end of finishOrder (scum)
+					scumPenalties = [...scumPenalties, action.playerId]
+				} else {
+					finishOrder = [...finishOrder, action.playerId]
+				}
 			}
 
 			// Gameover: only 1 or 0 active players remain
@@ -412,11 +420,13 @@ export const presidents: GameDefinition<PresidentsState> = {
 				if (activePlayers.length === 1) {
 					finishOrder = [...finishOrder, activePlayers[0]]
 				}
+				finishOrder = [...finishOrder, ...scumPenalties]
 				return {
 					...state,
 					zones: newZones,
 					activePlayers,
 					finishOrder,
+					scumPenalties: [],
 					phase: 'gameover',
 					lastPlay: { playerId: action.playerId, comboType: combo.comboType, value: combo.value },
 					passedThisTrick: [],
@@ -435,6 +445,7 @@ export const presidents: GameDefinition<PresidentsState> = {
 					zones: { ...newZones, pile: { ...newZones.pile, cards: [] } },
 					activePlayers,
 					finishOrder,
+					scumPenalties,
 					turnPlayerId: nextLeader,
 					trickLeaderId: nextLeader,
 					lastPlay: null,
@@ -455,6 +466,7 @@ export const presidents: GameDefinition<PresidentsState> = {
 					zones: { ...newZones, pile: { ...newZones.pile, cards: [] } },
 					activePlayers,
 					finishOrder,
+					scumPenalties,
 					turnPlayerId: nextLeader,
 					trickLeaderId: nextLeader,
 					lastPlay: null,
@@ -472,6 +484,7 @@ export const presidents: GameDefinition<PresidentsState> = {
 				zones: newZones,
 				activePlayers,
 				finishOrder,
+				scumPenalties,
 				turnPlayerId: nextTurn,
 				lastPlay: { playerId: action.playerId, comboType: combo.comboType, value: combo.value },
 				passedThisTrick: [],
