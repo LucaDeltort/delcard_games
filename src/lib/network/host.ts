@@ -238,7 +238,8 @@ export class GameHost {
 	/** Start the game. Player order = lobby order (host first). */
 	startGame() {
 		const playerIds = this.lobbyPlayers.map((p) => p.id)
-		const initial = this.def.setup(playerIds, this._options)
+		const opts = this.state ? { ...this._options, previousState: this.state } : this._options
+		const initial = this.def.setup(playerIds, opts)
 		this.state = initial
 		this.onState?.(initial)
 		this.broadcastState(initial)

@@ -108,6 +108,28 @@ export default {
 			noWildFinishDesc: 'Cannot play a Wild or Wild Draw Four as your last card.'
 		}
 	},
+	presidents: {
+		name: 'Presidents',
+		hand: 'Hand',
+		pile: 'Pile',
+		play: 'Play',
+		pass: 'Pass',
+		cards: '{n} cards',
+		yourTurn: 'Your turn',
+		newTrick: 'New trick — play anything',
+		finished: 'finished',
+		single: 'Single',
+		pair: 'Pair',
+		triple: 'Triple',
+		quad: 'Quad',
+		exchangeTitle: 'Card exchange',
+		chooseToGive: 'Choose 2 cards to give to Asshole',
+		giveCards: 'Give',
+		waitingExchange: 'President is choosing cards to give…',
+		lockedPlay: 'Must play {face} or pass',
+		exchangeReceivedTitle: 'Cards received from President',
+		exchangeReceivedFromScum: 'Cards received from Asshole'
+	},
 	war: {
 		name: 'War',
 		deck: 'Deck',

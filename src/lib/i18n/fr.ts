@@ -109,6 +109,28 @@ export default {
 			noWildFinishDesc: 'Tu ne peux pas jouer un Wild ou un Wild Draw Four comme dernière carte.'
 		}
 	},
+	presidents: {
+		name: 'Présidents',
+		hand: 'Main',
+		pile: 'Pli',
+		play: 'Jouer',
+		pass: 'Passer',
+		cards: '{n} cartes',
+		yourTurn: 'Ton tour',
+		newTrick: "Nouveau pli — joue n'importe quoi",
+		finished: 'terminé',
+		single: 'Simple',
+		pair: 'Paire',
+		triple: 'Brelan',
+		quad: 'Carré',
+		exchangeTitle: 'Échange de cartes',
+		chooseToGive: 'Choisir 2 cartes à donner au Trou du cul',
+		giveCards: 'Donner',
+		waitingExchange: 'Le Président choisit ses cartes…',
+		lockedPlay: 'Tu dois jouer {face} ou passer',
+		exchangeReceivedTitle: 'Reçu du Président',
+		exchangeReceivedFromScum: 'Reçu du Trou du cul'
+	},
 	war: {
 		name: 'La Bataille',
 		deck: 'Deck',

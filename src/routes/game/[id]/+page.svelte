@@ -12,6 +12,7 @@ import DeckPackPicker from '$lib/components/DeckPackPicker.svelte'
 import GameOptionsPanel from '$lib/components/GameOptionsPanel.svelte'
 import ColorView from '$lib/components/games/ColorView.svelte'
 import FightView from '$lib/components/games/FightView.svelte'
+import PresidentsView from '$lib/components/games/PresidentsView.svelte'
 import WarView from '$lib/components/games/WarView.svelte'
 import RulesDrawer from '$lib/components/RulesDrawer.svelte'
 import { Button } from '$lib/components/ui/button'
@@ -429,6 +430,15 @@ $effect(() => {
 	/>
 {:else if gameState.activeGameId === 'color'}
 	<ColorView
+		state={gameState}
+		{myPlayerId}
+		players={enrichedPlayers}
+		{validActions}
+		onAction={submitAction}
+	/>
+
+{:else if gameState.activeGameId === 'presidents'}
+	<PresidentsView
 		state={gameState}
 		{myPlayerId}
 		players={enrichedPlayers}
