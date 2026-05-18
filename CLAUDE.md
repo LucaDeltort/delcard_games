@@ -116,7 +116,7 @@ type GameDefinition<S> = {
 
 ## Deck System
 
-- `DeckType` = card definition (standard, tarot, uno...)
+- `DeckType` = card definition (standard, tarot, color...)
 - `DeckTheme` = visual assets, separate from type, interchangeable
 - Folders: `src/lib/decks/<type>/`
 

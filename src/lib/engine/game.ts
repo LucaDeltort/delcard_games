@@ -20,6 +20,7 @@ export type GameDefinition<S extends GameStateGeneric> = {
 	minPlayers: number
 	maxPlayers: number
 	optionsSchema?: OptionSchema[]
+	isNew?: boolean
 
 	/** Returns the initial game state for the given list of player IDs. */
 	setup: (players: string[], options?: Record<string, unknown>) => S

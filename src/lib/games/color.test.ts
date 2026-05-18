@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import { createCard } from '$lib/engine/cards'
 import { createZone } from '$lib/engine/zones'
-import type { UnoColor, UnoOptions } from './uno'
-import { uno } from './uno'
+import type { CardColor, ColorOptions } from './color'
+import { color } from './color'
 
 const P1 = 'p1'
 const P2 = 'p2'
@@ -10,10 +10,10 @@ const P3 = 'p3'
 const PLAYERS = [P1, P2, P3]
 
 function setup(players = PLAYERS) {
-	return uno.setup(players)
+	return color.setup(players)
 }
 
-const NO_OPTIONS: UnoOptions = {
+const NO_OPTIONS: ColorOptions = {
 	accumulation: false,
 	cut: false,
 	playAfterDraw: false,
@@ -28,10 +28,10 @@ function makeState(
 	handCards: Record<string, ReturnType<typeof createCard>[]>,
 	discardTop: ReturnType<typeof createCard>,
 	drawCards: ReturnType<typeof createCard>[],
-	currentColor: UnoColor = 'red',
+	currentColor: CardColor = 'red',
 	direction: 1 | -1 = 1,
 	turnPlayerId = players[0],
-	options: UnoOptions = NO_OPTIONS
+	options: ColorOptions = NO_OPTIONS
 ) {
 	const zones: ReturnType<typeof setup>['zones'] = {}
 	players.forEach((pid) => {
@@ -44,7 +44,7 @@ function makeState(
 		zones,
 		turnPlayerId,
 		phase: 'playing' as const,
-		activeGameId: 'uno',
+		activeGameId: 'color',
 		direction,
 		currentColor,
 		options,
@@ -57,7 +57,7 @@ function makeState(
 	}
 }
 
-describe('uno.setup', () => {
+describe('color.setup', () => {
 	it('deals 7 cards to each player', () => {
 		const state = setup()
 		PLAYERS.forEach((p) => expect(state.zones[`hand_${p}`].cards).toHaveLength(7))
@@ -91,11 +91,11 @@ describe('uno.setup', () => {
 	})
 })
 
-describe('uno.getValidActions', () => {
+describe('color.getValidActions', () => {
 	it('inactive player gets no actions', () => {
 		const state = setup()
 		const other = PLAYERS.find((p) => p !== state.turnPlayerId)!
-		expect(uno.getValidActions(state, other)).toHaveLength(0)
+		expect(color.getValidActions(state, other)).toHaveLength(0)
 	})
 
 	it('DRAW_CARD always in valid actions on player turn', () => {
@@ -107,7 +107,7 @@ describe('uno.getValidActions', () => {
 			[createCard('7', 'green')],
 			'red'
 		)
-		const actions = uno.getValidActions(state, P1)
+		const actions = color.getValidActions(state, P1)
 		expect(actions.some((a) => a.type === 'DRAW_CARD')).toBe(true)
 	})
 
@@ -115,7 +115,7 @@ describe('uno.getValidActions', () => {
 		const discard = createCard('5', 'red')
 		const matchCard = createCard('3', 'red')
 		const state = makeState([P1, P2], { p1: [matchCard], p2: [] }, discard, [], 'red')
-		const actions = uno.getValidActions(state, P1)
+		const actions = color.getValidActions(state, P1)
 		const playActions = actions.filter((a) => a.type === 'PLAY_CARD')
 		expect(playActions).toHaveLength(1)
 		expect((playActions[0].payload as { cardId: string }).cardId).toBe(matchCard.id)
@@ -125,7 +125,7 @@ describe('uno.getValidActions', () => {
 		const discard = createCard('5', 'red')
 		const matchCard = createCard('5', 'blue')
 		const state = makeState([P1, P2], { p1: [matchCard], p2: [] }, discard, [], 'red')
-		const actions = uno.getValidActions(state, P1)
+		const actions = color.getValidActions(state, P1)
 		expect(actions.some((a) => a.type === 'PLAY_CARD')).toBe(true)
 	})
 
@@ -133,17 +133,17 @@ describe('uno.getValidActions', () => {
 		const discard = createCard('5', 'red')
 		const wild = createCard('Wild')
 		const state = makeState([P1, P2], { p1: [wild], p2: [] }, discard, [], 'red')
-		const actions = uno.getValidActions(state, P1)
+		const actions = color.getValidActions(state, P1)
 		expect(actions.some((a) => a.type === 'PLAY_CARD')).toBe(true)
 	})
 
 	it('no actions in gameover phase', () => {
 		const state = { ...setup(), phase: 'gameover' as const }
-		PLAYERS.forEach((p) => expect(uno.getValidActions(state, p)).toHaveLength(0))
+		PLAYERS.forEach((p) => expect(color.getValidActions(state, p)).toHaveLength(0))
 	})
 })
 
-describe('uno.applyAction PLAY_CARD number', () => {
+describe('color.applyAction PLAY_CARD number', () => {
 	it('moves card from hand to discard', () => {
 		const playCard = createCard('3', 'red')
 		const discard = createCard('5', 'red')
@@ -153,7 +153,7 @@ describe('uno.applyAction PLAY_CARD number', () => {
 			discard,
 			[]
 		)
-		const next = uno.applyAction(state, {
+		const next = color.applyAction(state, {
 			type: 'PLAY_CARD',
 			playerId: P1,
 			payload: { cardId: playCard.id }
@@ -174,7 +174,7 @@ describe('uno.applyAction PLAY_CARD number', () => {
 			createCard('5', 'red'),
 			[]
 		)
-		const next = uno.applyAction(state, {
+		const next = color.applyAction(state, {
 			type: 'PLAY_CARD',
 			playerId: P1,
 			payload: { cardId: playCard.id }
@@ -190,7 +190,7 @@ describe('uno.applyAction PLAY_CARD number', () => {
 			createCard('5', 'red'),
 			[]
 		)
-		const next = uno.applyAction(state, {
+		const next = color.applyAction(state, {
 			type: 'PLAY_CARD',
 			playerId: P1,
 			payload: { cardId: playCard.id }
@@ -199,7 +199,7 @@ describe('uno.applyAction PLAY_CARD number', () => {
 	})
 })
 
-describe('uno.applyAction PLAY_CARD Skip', () => {
+describe('color.applyAction PLAY_CARD Skip', () => {
 	it('skips next player', () => {
 		const skip = createCard('Skip', 'red')
 		const state = makeState(
@@ -212,7 +212,7 @@ describe('uno.applyAction PLAY_CARD Skip', () => {
 			createCard('5', 'red'),
 			[]
 		)
-		const next = uno.applyAction(state, {
+		const next = color.applyAction(state, {
 			type: 'PLAY_CARD',
 			playerId: P1,
 			payload: { cardId: skip.id }
@@ -221,7 +221,7 @@ describe('uno.applyAction PLAY_CARD Skip', () => {
 	})
 })
 
-describe('uno.applyAction PLAY_CARD Reverse', () => {
+describe('color.applyAction PLAY_CARD Reverse', () => {
 	it('reverses direction in 3+ player game', () => {
 		const reverse = createCard('Reverse', 'red')
 		const state = makeState(
@@ -236,7 +236,7 @@ describe('uno.applyAction PLAY_CARD Reverse', () => {
 			'red',
 			1
 		)
-		const next = uno.applyAction(state, {
+		const next = color.applyAction(state, {
 			type: 'PLAY_CARD',
 			playerId: P1,
 			payload: { cardId: reverse.id }
@@ -253,7 +253,7 @@ describe('uno.applyAction PLAY_CARD Reverse', () => {
 			createCard('5', 'red'),
 			[]
 		)
-		const next = uno.applyAction(state, {
+		const next = color.applyAction(state, {
 			type: 'PLAY_CARD',
 			playerId: P1,
 			payload: { cardId: reverse.id }
@@ -262,7 +262,7 @@ describe('uno.applyAction PLAY_CARD Reverse', () => {
 	})
 })
 
-describe('uno.applyAction PLAY_CARD DrawTwo', () => {
+describe('color.applyAction PLAY_CARD DrawTwo', () => {
 	it('next player draws 2 and is skipped', () => {
 		const drawTwo = createCard('DrawTwo', 'red')
 		const drawPile = [createCard('A', 'blue'), createCard('B', 'blue')]
@@ -276,7 +276,7 @@ describe('uno.applyAction PLAY_CARD DrawTwo', () => {
 			createCard('5', 'red'),
 			drawPile
 		)
-		const next = uno.applyAction(state, {
+		const next = color.applyAction(state, {
 			type: 'PLAY_CARD',
 			playerId: P1,
 			payload: { cardId: drawTwo.id }
@@ -286,7 +286,7 @@ describe('uno.applyAction PLAY_CARD DrawTwo', () => {
 	})
 })
 
-describe('uno.applyAction PLAY_CARD Wild', () => {
+describe('color.applyAction PLAY_CARD Wild', () => {
 	it('requires chosenColor — no-ops without it', () => {
 		const wild = createCard('Wild')
 		const state = makeState(
@@ -295,7 +295,7 @@ describe('uno.applyAction PLAY_CARD Wild', () => {
 			createCard('5', 'red'),
 			[]
 		)
-		const next = uno.applyAction(state, {
+		const next = color.applyAction(state, {
 			type: 'PLAY_CARD',
 			playerId: P1,
 			payload: { cardId: wild.id }
@@ -311,7 +311,7 @@ describe('uno.applyAction PLAY_CARD Wild', () => {
 			createCard('5', 'red'),
 			[]
 		)
-		const next = uno.applyAction(state, {
+		const next = color.applyAction(state, {
 			type: 'PLAY_CARD',
 			playerId: P1,
 			payload: { cardId: wild.id, chosenColor: 'blue' }
@@ -320,7 +320,7 @@ describe('uno.applyAction PLAY_CARD Wild', () => {
 	})
 })
 
-describe('uno.applyAction PLAY_CARD WildDrawFour', () => {
+describe('color.applyAction PLAY_CARD WildDrawFour', () => {
 	it('next player draws 4 and is skipped', () => {
 		const wdf = createCard('WildDrawFour')
 		const drawPile = [1, 2, 3, 4].map((n) => createCard(String(n), 'green'))
@@ -334,7 +334,7 @@ describe('uno.applyAction PLAY_CARD WildDrawFour', () => {
 			createCard('5', 'red'),
 			drawPile
 		)
-		const next = uno.applyAction(state, {
+		const next = color.applyAction(state, {
 			type: 'PLAY_CARD',
 			playerId: P1,
 			payload: { cardId: wdf.id, chosenColor: 'green' }
@@ -345,7 +345,7 @@ describe('uno.applyAction PLAY_CARD WildDrawFour', () => {
 	})
 })
 
-describe('uno.applyAction DRAW_CARD', () => {
+describe('color.applyAction DRAW_CARD', () => {
 	it('adds a card to player hand and advances turn', () => {
 		const drawPile = [createCard('7', 'blue')]
 		const state = makeState(
@@ -354,7 +354,7 @@ describe('uno.applyAction DRAW_CARD', () => {
 			createCard('5', 'red'),
 			drawPile
 		)
-		const next = uno.applyAction(state, { type: 'DRAW_CARD', playerId: P1 })
+		const next = color.applyAction(state, { type: 'DRAW_CARD', playerId: P1 })
 		expect(next.zones[`hand_${P1}`].cards).toHaveLength(2)
 		expect(next.turnPlayerId).toBe(P2)
 	})
@@ -371,7 +371,7 @@ describe('uno.applyAction DRAW_CARD', () => {
 			},
 			turnPlayerId: P1,
 			phase: 'playing',
-			activeGameId: 'uno',
+			activeGameId: 'color',
 			direction: 1,
 			currentColor: 'red',
 			options: NO_OPTIONS,
@@ -382,21 +382,21 @@ describe('uno.applyAction DRAW_CARD', () => {
 			lastSkippedPlayer: null,
 			pendingChallenge: null
 		}
-		const next = uno.applyAction(state, { type: 'DRAW_CARD', playerId: P1 })
+		const next = color.applyAction(state, { type: 'DRAW_CARD', playerId: P1 })
 		expect(next.zones[`hand_${P1}`].cards).toHaveLength(1)
 		// top of discard kept; rest reshuffled into draw
 		expect(next.zones['discard'].cards).toHaveLength(1)
 	})
 })
 
-describe('uno.isOver / getWinner', () => {
+describe('color.isOver / getWinner', () => {
 	it('isOver is false during playing', () => {
-		expect(uno.isOver(setup())).toBe(false)
+		expect(color.isOver(setup())).toBe(false)
 	})
 
 	it('isOver is true in gameover', () => {
 		const state = { ...setup(), phase: 'gameover' as const }
-		expect(uno.isOver(state)).toBe(true)
+		expect(color.isOver(state)).toBe(true)
 	})
 
 	it('getWinner returns player with empty hand', () => {
@@ -411,31 +411,31 @@ describe('uno.isOver / getWinner', () => {
 				[`hand_${P3}`]: createZone(`hand_${P3}`, 'hidden', [createCard('3', 'blue')], P3)
 			}
 		}
-		expect(uno.getWinner(state)).toBe(P1)
+		expect(color.getWinner(state)).toBe(P1)
 	})
 
 	it('getWinner returns null when not gameover', () => {
-		expect(uno.getWinner(setup())).toBeNull()
+		expect(color.getWinner(setup())).toBeNull()
 	})
 })
 
-describe('uno.onPlayerDisconnect', () => {
+describe('color.onPlayerDisconnect', () => {
 	it('ends game when players drop below 2', () => {
-		const state = uno.setup([P1, P2])
-		const next = uno.onPlayerDisconnect!(state, P2)
+		const state = color.setup([P1, P2])
+		const next = color.onPlayerDisconnect!(state, P2)
 		expect(next.phase).toBe('gameover')
 	})
 
 	it('removes player and continues with 3+', () => {
 		const state = setup()
-		const next = uno.onPlayerDisconnect!(state, P3)
+		const next = color.onPlayerDisconnect!(state, P3)
 		expect(next.players).not.toContain(P3)
 		expect(next.phase).toBe('playing')
 	})
 })
 
-describe('uno options: accumulation', () => {
-	const opts: UnoOptions = { ...NO_OPTIONS, accumulation: true }
+describe('color options:accumulation', () => {
+	const opts: ColorOptions = { ...NO_OPTIONS, accumulation: true }
 
 	it('stacks DrawTwo on DrawTwo', () => {
 		const draw2a = createCard('DrawTwo', 'red')
@@ -459,7 +459,7 @@ describe('uno options: accumulation', () => {
 			P1,
 			opts
 		)
-		const after1 = uno.applyAction(state, {
+		const after1 = color.applyAction(state, {
 			type: 'PLAY_CARD',
 			playerId: P1,
 			payload: { cardId: draw2a.id }
@@ -467,7 +467,7 @@ describe('uno options: accumulation', () => {
 		expect(after1.pendingDraw).toBe(2)
 		expect(after1.turnPlayerId).toBe(P2)
 
-		const after2 = uno.applyAction(after1, {
+		const after2 = color.applyAction(after1, {
 			type: 'PLAY_CARD',
 			playerId: P2,
 			payload: { cardId: draw2b.id }
@@ -475,14 +475,14 @@ describe('uno options: accumulation', () => {
 		expect(after2.pendingDraw).toBe(4)
 		expect(after2.turnPlayerId).toBe(P3)
 
-		const after3 = uno.applyAction(after2, { type: 'DRAW_CARD', playerId: P3 })
+		const after3 = color.applyAction(after2, { type: 'DRAW_CARD', playerId: P3 })
 		expect(after3.zones[`hand_${P3}`].cards).toHaveLength(5) // 1 existing + 4 drawn
 		expect(after3.pendingDraw).toBe(0)
 	})
 })
 
-describe('uno options: cut', () => {
-	const opts: UnoOptions = { ...NO_OPTIONS, cut: true }
+describe('color options:cut', () => {
+	const opts: ColorOptions = { ...NO_OPTIONS, cut: true }
 
 	it('non-turn player with exact match can cut', () => {
 		const topCard = createCard('5', 'red')
@@ -501,10 +501,10 @@ describe('uno options: cut', () => {
 			P1,
 			opts
 		)
-		const actions = uno.getValidActions(state, P2)
+		const actions = color.getValidActions(state, P2)
 		expect(actions.some((a) => a.type === 'PLAY_CARD')).toBe(true)
 
-		const next = uno.applyAction(state, {
+		const next = color.applyAction(state, {
 			type: 'PLAY_CARD',
 			playerId: P2,
 			payload: { cardId: cutCard.id }
@@ -523,17 +523,17 @@ describe('uno options: cut', () => {
 			'red',
 			1,
 			P1,
-			{ ...opts, lastSkippedPlayer: P2 } as UnoOptions & { lastSkippedPlayer: string }
+			{ ...opts, lastSkippedPlayer: P2 } as ColorOptions & { lastSkippedPlayer: string }
 		)
 		// Override lastSkippedPlayer in state
 		const stateWithSkip = { ...state, lastSkippedPlayer: P2 }
-		const actions = uno.getValidActions(stateWithSkip, P2)
+		const actions = color.getValidActions(stateWithSkip, P2)
 		expect(actions.every((a) => a.playerId !== P2 || a.type !== 'PLAY_CARD')).toBe(true)
 	})
 })
 
-describe('uno options: playAfterDraw', () => {
-	const opts: UnoOptions = { ...NO_OPTIONS, playAfterDraw: true }
+describe('color options:playAfterDraw', () => {
+	const opts: ColorOptions = { ...NO_OPTIONS, playAfterDraw: true }
 
 	it('sets drewCardId when drawn card is playable', () => {
 		const drawPile = [createCard('5', 'red')]
@@ -547,7 +547,7 @@ describe('uno options: playAfterDraw', () => {
 			P1,
 			opts
 		)
-		const next = uno.applyAction(state, { type: 'DRAW_CARD', playerId: P1 })
+		const next = color.applyAction(state, { type: 'DRAW_CARD', playerId: P1 })
 		expect(next.drewCardId).not.toBeNull()
 		expect(next.turnPlayerId).toBe(P1)
 	})
@@ -564,18 +564,18 @@ describe('uno options: playAfterDraw', () => {
 			P1,
 			opts
 		)
-		const afterDraw = uno.applyAction(state, { type: 'DRAW_CARD', playerId: P1 })
-		const actions = uno.getValidActions(afterDraw, P1)
+		const afterDraw = color.applyAction(state, { type: 'DRAW_CARD', playerId: P1 })
+		const actions = color.getValidActions(afterDraw, P1)
 		expect(actions.some((a) => a.type === 'END_TURN')).toBe(true)
 
-		const afterEnd = uno.applyAction(afterDraw, { type: 'END_TURN', playerId: P1 })
+		const afterEnd = color.applyAction(afterDraw, { type: 'END_TURN', playerId: P1 })
 		expect(afterEnd.turnPlayerId).toBe(P2)
 		expect(afterEnd.drewCardId).toBeNull()
 	})
 })
 
-describe('uno options: noWildFinish', () => {
-	const opts: UnoOptions = { ...NO_OPTIONS, noWildFinish: true }
+describe('color options:noWildFinish', () => {
+	const opts: ColorOptions = { ...NO_OPTIONS, noWildFinish: true }
 
 	it('cannot play Wild as last card', () => {
 		const wild = createCard('Wild')
@@ -589,7 +589,7 @@ describe('uno options: noWildFinish', () => {
 			P1,
 			opts
 		)
-		const actions = uno.getValidActions(state, P1)
+		const actions = color.getValidActions(state, P1)
 		expect(actions.every((a) => a.type !== 'PLAY_CARD')).toBe(true)
 	})
 
@@ -605,13 +605,13 @@ describe('uno options: noWildFinish', () => {
 			P1,
 			opts
 		)
-		const actions = uno.getValidActions(state, P1)
+		const actions = color.getValidActions(state, P1)
 		expect(actions.some((a) => a.type === 'PLAY_CARD')).toBe(true)
 	})
 })
 
-describe('uno options: challengePlusFour', () => {
-	const opts: UnoOptions = { ...NO_OPTIONS, challengePlusFour: true }
+describe('color options:challengePlusFour', () => {
+	const opts: ColorOptions = { ...NO_OPTIONS, challengePlusFour: true }
 
 	it('sets pendingChallenge when WildDrawFour is played', () => {
 		const wdf = createCard('WildDrawFour')
@@ -630,7 +630,7 @@ describe('uno options: challengePlusFour', () => {
 			P1,
 			opts
 		)
-		const next = uno.applyAction(state, {
+		const next = color.applyAction(state, {
 			type: 'PLAY_CARD',
 			playerId: P1,
 			payload: { cardId: wdf.id, chosenColor: 'green' }
@@ -652,12 +652,12 @@ describe('uno options: challengePlusFour', () => {
 			P1,
 			opts
 		)
-		const challenged = uno.applyAction(state, {
+		const challenged = color.applyAction(state, {
 			type: 'PLAY_CARD',
 			playerId: P1,
 			payload: { cardId: wdf.id, chosenColor: 'green' }
 		})
-		const accepted = uno.applyAction(challenged, { type: 'ACCEPT_PENALTY', playerId: P2 })
+		const accepted = color.applyAction(challenged, { type: 'ACCEPT_PENALTY', playerId: P2 })
 		expect(accepted.zones[`hand_${P2}`].cards).toHaveLength(5) // 1 + 4
 		expect(accepted.pendingChallenge).toBeNull()
 	})
@@ -677,14 +677,14 @@ describe('uno options: challengePlusFour', () => {
 			P1,
 			opts
 		)
-		const challenged = uno.applyAction(state, {
+		const challenged = color.applyAction(state, {
 			type: 'PLAY_CARD',
 			playerId: P1,
 			payload: { cardId: wdf.id, chosenColor: 'green' }
 		})
 		expect(challenged.pendingChallenge?.hadBluff).toBe(true)
 
-		const next = uno.applyAction(challenged, { type: 'CHALLENGE_DRAW_FOUR', playerId: P2 })
+		const next = color.applyAction(challenged, { type: 'CHALLENGE_DRAW_FOUR', playerId: P2 })
 		expect(next.zones[`hand_${P1}`].cards.length).toBeGreaterThanOrEqual(5) // 1 (red5) + 4
 		expect(next.turnPlayerId).toBe(P2) // challenger gets turn
 	})

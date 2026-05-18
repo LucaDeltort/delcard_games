@@ -4,7 +4,7 @@ import { createCard } from '$lib/engine/cards'
 const COLORS = ['red', 'yellow', 'green', 'blue'] as const
 const ACTIONS = ['Skip', 'Reverse', 'DrawTwo'] as const
 
-export function createUnoDeck(): Card[] {
+export function createColorDeck(): Card[] {
 	const cards: Card[] = []
 
 	for (const color of COLORS) {

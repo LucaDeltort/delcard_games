@@ -1,6 +1,6 @@
-# Uno
+# Color
 
-**Players:** 2–8 · **Deck:** Uno (108 cards) · **Duration:** ~15 min
+**Players:** 2–8 · **Deck:** Color (108 cards)
 
 ---
 
@@ -49,15 +49,15 @@ The first player to empty their hand wins.
 
 ## Implementation notes
 
-Source: [`src/lib/games/uno.ts`](../../src/lib/games/uno.ts)
+Source: [`src/lib/games/color.ts`](../../src/lib/games/color.ts)
 
 ### State type
 
 ```typescript
-type UnoState = GameStateGeneric & {
+type ColorState = GameStateGeneric & {
   phase: 'playing' | 'gameover';
   direction: 1 | -1;          // 1 = clockwise, -1 = counter-clockwise
-  currentColor: UnoColor;     // 'red' | 'yellow' | 'green' | 'blue'
+  currentColor: ColorColor;     // 'red' | 'yellow' | 'green' | 'blue'
 }
 ```
 
@@ -73,10 +73,10 @@ type UnoState = GameStateGeneric & {
 
 | Action | Payload | Description |
 | ------ | ------- | ----------- |
-| `PLAY_CARD` | `{ cardId: string, chosenColor?: UnoColor }` | Play a card. `chosenColor` required for Wild and Wild Draw Four. |
+| `PLAY_CARD` | `{ cardId: string, chosenColor?: ColorColor }` | Play a card. `chosenColor` required for Wild and Wild Draw Four. |
 | `DRAW_CARD` | — | Draw the top card from the draw pile. Ends the player's turn. |
 
-`getValidActions` returns one `PLAY_CARD` per playable card (without `chosenColor`), plus one `DRAW_CARD`. The `UnoView` adds `chosenColor` via a color picker before dispatching wild actions.
+`getValidActions` returns one `PLAY_CARD` per playable card (without `chosenColor`), plus one `DRAW_CARD`. The `ColorView` adds `chosenColor` via a color picker before dispatching wild actions.
 
 ### Direction and skip mechanics
 
@@ -93,7 +93,7 @@ type UnoState = GameStateGeneric & {
 
 ### View
 
-`UnoView.svelte` renders Uno-specific card images (no `PlayingCard.svelte`). It uses a local `cardSrc` function:
+`ColorView.svelte` renders Color-specific card images (no `PlayingCard.svelte`). It uses a local `cardSrc` function:
 
 ```typescript
 function cardSrc(card: Card, showBack = false): string {
@@ -106,4 +106,4 @@ function cardSrc(card: Card, showBack = false): string {
 
 Wild card color selection is handled client-side: clicking a Wild sets `pendingCardId`, which opens an overlay. Picking a color dispatches the action with `chosenColor` appended.
 
-Image assets go in `static/cards/UnoDeck/default/`. See [card-pack.md](../card-pack.md#creating-a-pack-for-the-uno-deck) for the full file list.
+Image assets go in `static/cards/ColorDeck/default/`. See [card-pack.md](../card-pack.md#creating-a-pack-for-the-color-deck) for the full file list.

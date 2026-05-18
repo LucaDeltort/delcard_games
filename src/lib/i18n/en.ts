@@ -69,8 +69,8 @@ export default {
 			spades: 'spades'
 		}
 	},
-	uno: {
-		name: 'Uno',
+	color: {
+		name: 'Color',
 		draw: 'Draw',
 		yourTurn: 'Your turn',
 		actionSkip: 'Skip!',
@@ -107,6 +107,39 @@ export default {
 			noWildFinish: 'No Wild finish',
 			noWildFinishDesc: 'Cannot play a Wild or Wild Draw Four as your last card.'
 		}
+	},
+	presidents: {
+		name: 'Presidents',
+		hand: 'Hand',
+		pile: 'Pile',
+		play: 'Play',
+		pass: 'Pass',
+		cards: '{n} cards',
+		yourTurn: 'Your turn',
+		newTrick: 'New trick — play anything',
+		finished: 'finished',
+		single: 'Single',
+		pair: 'Pair',
+		triple: 'Triple',
+		quad: 'Quad',
+		exchangeTitle: 'Card exchange',
+		chooseToGive: 'Choose 2 cards to give to Asshole',
+		giveCards: 'Give',
+		waitingExchange: 'President is choosing cards to give…',
+		chooseToGiveVp: 'Choose 1 card to give to Vice-Asshole',
+		waitingExchangeVp: 'Vice-President is choosing a card to give…',
+		lockedPlay: 'Must play {face} or pass',
+		endTrick: 'Finished',
+		exchangeReceivedTitle: 'Cards received from President',
+		exchangeReceivedFromScum: 'Cards received from Asshole',
+		exchangeReceivedFromVp: 'Card received from Vice-President',
+		exchangeReceivedFromVs: 'Card received from Vice-Asshole',
+		results: 'Results',
+		rankPresident: 'President',
+		rankVicePresident: 'Vice-President',
+		rankViceScum: 'Vice-Asshole',
+		rankScum: 'Asshole',
+		rankNeutral: 'Citizen'
 	},
 	war: {
 		name: 'War',
@@ -171,7 +204,7 @@ export default {
 		active: 'Active',
 		setDefault: 'Set as default',
 		frenchDeck: 'French Deck',
-		unoDeck: 'Uno Deck',
+		colorDeck: 'Color Deck',
 		errorUnknownType: 'Unknown deck type.'
 	},
 	network: {

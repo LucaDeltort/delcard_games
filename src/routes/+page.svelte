@@ -48,7 +48,7 @@ async function createGame() {
         <p class="mt-2 text-muted-foreground">{$t("home.subtitle")}</p>
     </header>
 
-    <div class="grid w-full max-w-2xl gap-4 sm:grid-cols-2">
+    <div class="grid w-full max-w-4xl gap-4 sm:grid-cols-2">
         <!-- New game -->
         <div class="flex flex-col gap-4 rounded-xl border border-border bg-card p-6">
             <h2 class="text-2xl text-foreground">{$t("home.newGame")}</h2>
@@ -65,7 +65,12 @@ async function createGame() {
                                     : 'border-border text-muted-foreground hover:border-border/60'}"
                             >
                                 <input type="radio" name="game" value={game.id} bind:group={selectedGame} class="hidden" />
-                                <span class="flex-1 font-medium">{$t(`${game.id}.name`)}</span>
+                                <span class="flex flex-1 items-center gap-2 font-medium">
+                                    {$t(`${game.id}.name`)}
+                                    {#if game.isNew}
+                                        <span class="rounded-full bg-primary px-1.5 py-0.5 text-[10px] font-bold text-primary-foreground uppercase tracking-widest">New</span>
+                                    {/if}
+                                </span>
                                 <span class="text-xs"
                                     >{game.minPlayers === game.maxPlayers
                                         ? game.minPlayers
@@ -109,7 +114,7 @@ async function createGame() {
 
     <a
         href="/decks"
-        class="group relative w-full max-w-2xl overflow-hidden rounded-2xl bg-blue px-8 py-5 transition-all hover:brightness-110"
+        class="group relative w-full max-w-4xl overflow-hidden rounded-2xl bg-blue px-8 py-5 transition-all hover:brightness-110"
     >
         <div class="relative z-10 flex max-w-[55%] flex-col gap-4">
             <h2 class="text-4xl text-white sm:text-5xl">{$t("decks.title")}</h2>

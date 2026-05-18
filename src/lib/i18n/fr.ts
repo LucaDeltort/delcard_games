@@ -69,8 +69,8 @@ export default {
 			spades: 'pique'
 		}
 	},
-	uno: {
-		name: 'Uno',
+	color: {
+		name: 'Color',
 		draw: 'Piocher',
 		yourTurn: 'Ton tour',
 		actionSkip: 'Passe !',
@@ -108,6 +108,39 @@ export default {
 			noWildFinish: 'Pas de Wild pour finir',
 			noWildFinishDesc: 'Tu ne peux pas jouer un Wild ou un Wild Draw Four comme dernière carte.'
 		}
+	},
+	presidents: {
+		name: 'Présidents',
+		hand: 'Main',
+		pile: 'Pli',
+		play: 'Jouer',
+		pass: 'Passer',
+		cards: '{n} cartes',
+		yourTurn: 'Ton tour',
+		newTrick: "Nouveau pli — joue n'importe quoi",
+		finished: 'terminé',
+		single: 'Simple',
+		pair: 'Paire',
+		triple: 'Brelan',
+		quad: 'Carré',
+		exchangeTitle: 'Échange de cartes',
+		chooseToGive: 'Choisir 2 cartes à donner au Trou du cul',
+		giveCards: 'Donner',
+		waitingExchange: 'Le Président choisit ses cartes…',
+		chooseToGiveVp: 'Choisir 1 carte à donner au Vice-trou du cul',
+		waitingExchangeVp: 'Le Vice-Président choisit sa carte…',
+		lockedPlay: 'Tu dois jouer {face} ou passer',
+		endTrick: 'Terminé',
+		exchangeReceivedTitle: 'Reçu du Président',
+		exchangeReceivedFromScum: 'Reçu du Trou du cul',
+		exchangeReceivedFromVp: 'Reçu du Vice-Président',
+		exchangeReceivedFromVs: 'Reçu du Vice-trou du cul',
+		results: 'Résultats',
+		rankPresident: 'Président',
+		rankVicePresident: 'Vice-Président',
+		rankViceScum: 'Vice-trou du cul',
+		rankScum: 'Trou du cul',
+		rankNeutral: 'Citoyen'
 	},
 	war: {
 		name: 'La Bataille',
@@ -172,7 +205,7 @@ export default {
 		active: 'Actif',
 		setDefault: 'Définir par défaut',
 		frenchDeck: 'Jeu de cartes français',
-		unoDeck: 'Jeu de cartes Uno',
+		colorDeck: 'Jeu de cartes Color',
 		errorUnknownType: 'Type de jeu inconnu.'
 	},
 	network: {

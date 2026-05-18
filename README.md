@@ -36,7 +36,7 @@ The engine is designed so each game is a self-contained `GameDefinition` object 
 
 See **[docs/engine.md](docs/engine.md)** for the full guide.
 
-Existing games: [War](docs/games/war.md) · [The Fight](docs/games/fight.md) · [Uno](docs/games/uno.md)
+Existing games: [War](docs/games/war.md) · [The Fight](docs/games/fight.md) · [Color](docs/games/color.md) · [Presidents](docs/games/presidents.md)
 
 ## Project structure
 
