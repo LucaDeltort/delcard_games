@@ -51,6 +51,9 @@ const myHandSorted = $derived(
 )
 const pileCards = $derived(gs.zones.pile?.cards ?? [])
 const isMyTurn = $derived(gs.turnPlayerId === me && gs.activePlayers.includes(me))
+const isExchanging = $derived(gs.phase === 'exchanging')
+const isExchangeGiver = $derived(gs.pendingExchange?.president === me)
+const isVpExchange = $derived(gs.pendingExchange?.isVp ?? false)
 const canSelectCard = $derived(isMyTurn || (isExchanging && isExchangeGiver))
 
 let selectedIds = $state<Set<string>>(new Set())
@@ -94,10 +97,6 @@ const comboLabel = $derived.by(() => {
 	const key = `presidents.${gs.lastPlay.comboType}` as const
 	return $t(key)
 })
-
-const isExchanging = $derived(gs.phase === 'exchanging')
-const isExchangeGiver = $derived(gs.pendingExchange?.president === me)
-const isVpExchange = $derived(gs.pendingExchange?.isVp ?? false)
 
 function getRoleLabel(index: number, total: number): string {
 	if (index === 0) return $t('presidents.rankPresident')
