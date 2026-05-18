@@ -12,7 +12,14 @@ export type PresidentsState = GameStateGeneric & {
 	lastPlay: { playerId: string; comboType: ComboType; value: number } | null
 	passedThisTrick: string[]
 	trickLeaderId: string
-	pendingExchange: { president: string; scum: string; count: number; presidentTook: Card[] } | null
+	pendingExchange: {
+		president: string
+		scum: string
+		count: number
+		presidentTook: Card[]
+		isVp?: boolean
+	} | null
+	pendingVpExchange: { vp: string; vs: string; vpTook: Card[] } | null
 	sameValueLock: boolean
 	sameValueCount: number
 	leaderCanPlay: boolean
@@ -21,6 +28,10 @@ export type PresidentsState = GameStateGeneric & {
 		president: string
 		givenToScum: Card[]
 		givenToPresident: Card[]
+		vs?: string
+		vp?: string
+		givenToVs?: Card[]
+		givenToVp?: Card[]
 	} | null
 }
 
@@ -180,21 +191,22 @@ export const presidents: GameDefinition<PresidentsState> = {
 				cards: [...zones[`hand_${president}`].cards, ...taken]
 			}
 
-			// Auto VP/VS swap (4+ players in previous finishOrder)
+			// Auto-take VS's best → VP (4+ players); VP will choose what to give back
+			let pendingVpExchange: PresidentsState['pendingVpExchange'] = null
 			if (prevState.finishOrder.length >= 4) {
 				const vp = prevState.finishOrder[1]
 				const vs = prevState.finishOrder[prevState.finishOrder.length - 2]
-				const bestVp = sortByValue(zones[`hand_${vp}`].cards)[0]
 				const bestVs = sortByValue(zones[`hand_${vs}`].cards)[0]
-				if (bestVp && bestVs) {
-					zones[`hand_${vp}`] = {
-						...zones[`hand_${vp}`],
-						cards: [...zones[`hand_${vp}`].cards.filter((c) => c.id !== bestVp.id), bestVs]
-					}
+				if (bestVs) {
 					zones[`hand_${vs}`] = {
 						...zones[`hand_${vs}`],
-						cards: [...zones[`hand_${vs}`].cards.filter((c) => c.id !== bestVs.id), bestVp]
+						cards: zones[`hand_${vs}`].cards.filter((c) => c.id !== bestVs.id)
 					}
+					zones[`hand_${vp}`] = {
+						...zones[`hand_${vp}`],
+						cards: [...zones[`hand_${vp}`].cards, bestVs]
+					}
+					pendingVpExchange = { vp, vs, vpTook: [bestVs] }
 				}
 			}
 
@@ -211,6 +223,7 @@ export const presidents: GameDefinition<PresidentsState> = {
 				passedThisTrick: [],
 				trickLeaderId: president,
 				pendingExchange: { president, scum, count: 2, presidentTook: taken },
+				pendingVpExchange,
 				sameValueLock: false,
 				sameValueCount: 0,
 				leaderCanPlay: false,
@@ -233,6 +246,7 @@ export const presidents: GameDefinition<PresidentsState> = {
 			passedThisTrick: [],
 			trickLeaderId: starterId,
 			pendingExchange: null,
+			pendingVpExchange: null,
 			sameValueLock: false,
 			sameValueCount: 0,
 			leaderCanPlay: false,
@@ -248,13 +262,19 @@ export const presidents: GameDefinition<PresidentsState> = {
 			if (!pe || playerId !== pe.president) return []
 			const hand = state.zones[`hand_${pe.president}`]?.cards ?? []
 			const actions: Action[] = []
-			for (let i = 0; i < hand.length - 1; i++) {
-				for (let j = i + 1; j < hand.length; j++) {
-					actions.push({
-						type: 'GIVE_CARDS',
-						playerId,
-						payload: { cardIds: [hand[i].id, hand[j].id] }
-					})
+			if (pe.count === 1) {
+				for (const card of hand) {
+					actions.push({ type: 'GIVE_CARDS', playerId, payload: { cardIds: [card.id] } })
+				}
+			} else {
+				for (let i = 0; i < hand.length - 1; i++) {
+					for (let j = i + 1; j < hand.length; j++) {
+						actions.push({
+							type: 'GIVE_CARDS',
+							playerId,
+							payload: { cardIds: [hand[i].id, hand[j].id] }
+						})
+					}
 				}
 			}
 			return actions
@@ -286,28 +306,79 @@ export const presidents: GameDefinition<PresidentsState> = {
 			if (!pe || action.playerId !== pe.president) return state
 			const { cardIds } = action.payload as { cardIds: string[] }
 			if (cardIds.length !== pe.count) return state
-			const presHand = state.zones[`hand_${pe.president}`]
-			const scumHand = state.zones[`hand_${pe.scum}`]
-			if (!presHand || !scumHand) return state
+			const giverHand = state.zones[`hand_${pe.president}`]
+			const receiverHand = state.zones[`hand_${pe.scum}`]
+			if (!giverHand || !receiverHand) return state
 			const given = cardIds
-				.map((id) => presHand.cards.find((c) => c.id === id))
+				.map((id) => giverHand.cards.find((c) => c.id === id))
 				.filter((c): c is Card => c !== undefined)
 			if (given.length !== pe.count) return state
 
 			const newZones = {
 				...state.zones,
 				[`hand_${pe.president}`]: {
-					...presHand,
-					cards: presHand.cards.filter((c) => !cardIds.includes(c.id))
+					...giverHand,
+					cards: giverHand.cards.filter((c) => !cardIds.includes(c.id))
 				},
-				[`hand_${pe.scum}`]: { ...scumHand, cards: [...scumHand.cards, ...given] }
+				[`hand_${pe.scum}`]: { ...receiverHand, cards: [...receiverHand.cards, ...given] }
 			}
 
+			// President exchange done — VP exchange follows
+			if (!pe.isVp && state.pendingVpExchange) {
+				const vpEx = state.pendingVpExchange
+				return {
+					...state,
+					zones: newZones,
+					pendingExchange: {
+						president: vpEx.vp,
+						scum: vpEx.vs,
+						count: 1,
+						presidentTook: vpEx.vpTook,
+						isVp: true
+					},
+					pendingVpExchange: null,
+					lastExchange: {
+						scum: pe.scum,
+						president: pe.president,
+						givenToScum: given,
+						givenToPresident: pe.presidentTook
+					}
+				}
+			}
+
+			// VP exchange completing → transition to playing
+			if (pe.isVp) {
+				const scumLeader = state.lastExchange!.scum
+				return {
+					...state,
+					zones: newZones,
+					phase: 'playing',
+					pendingExchange: null,
+					pendingVpExchange: null,
+					turnPlayerId: scumLeader,
+					trickLeaderId: scumLeader,
+					lastPlay: null,
+					passedThisTrick: [],
+					sameValueLock: false,
+					sameValueCount: 0,
+					leaderCanPlay: false,
+					lastExchange: {
+						...state.lastExchange!,
+						vs: pe.scum,
+						vp: pe.president,
+						givenToVs: given,
+						givenToVp: pe.presidentTook
+					}
+				}
+			}
+
+			// No VP exchange (3-player game) → transition to playing immediately
 			return {
 				...state,
 				zones: newZones,
 				phase: 'playing',
 				pendingExchange: null,
+				pendingVpExchange: null,
 				turnPlayerId: pe.scum,
 				trickLeaderId: pe.scum,
 				lastPlay: null,

@@ -474,6 +474,55 @@ describe('presidents exchange', () => {
 		expect(state.phase).toBe('playing')
 		expect(state.pendingExchange).toBeNull()
 	})
+
+	it('VP exchange: auto-takes VS best, VP chooses 1 card back (4-player)', () => {
+		const P4 = 'p4'
+		const players4 = [P1, P2, P3, P4]
+		// P1=president, P2=VP, P3=VS, P4=scum
+		const prevState = {
+			...presidents.setup(players4),
+			phase: 'gameover' as const,
+			finishOrder: [P1, P2, P3, P4],
+			activeGameId: 'presidents'
+		}
+		const state = presidents.setup(players4, { previousState: prevState })
+
+		expect(state.phase).toBe('exchanging')
+		expect(state.pendingExchange).toMatchObject({ president: P1, scum: P4, count: 2 })
+		expect(state.pendingVpExchange).toMatchObject({ vp: P2, vs: P3 })
+		expect(state.pendingVpExchange!.vpTook).toHaveLength(1)
+
+		// President completes exchange
+		const presActions = presidents.getValidActions(state, P1)
+		expect(presActions.length).toBeGreaterThan(0)
+		const afterPres = presidents.applyAction(state, presActions[0])
+
+		// VP exchange now active
+		expect(afterPres.phase).toBe('exchanging')
+		expect(afterPres.pendingExchange).toMatchObject({
+			president: P2,
+			scum: P3,
+			count: 1,
+			isVp: true
+		})
+		expect(afterPres.pendingVpExchange).toBeNull()
+
+		// VP gets single-card actions only
+		const vpActions = presidents.getValidActions(afterPres, P2)
+		expect(vpActions.every((a) => (a.payload as { cardIds: string[] }).cardIds.length === 1)).toBe(
+			true
+		)
+		expect(presidents.getValidActions(afterPres, P3)).toHaveLength(0)
+
+		// VP completes exchange → playing, scum (P4) leads
+		const afterVp = presidents.applyAction(afterPres, vpActions[0])
+		expect(afterVp.phase).toBe('playing')
+		expect(afterVp.turnPlayerId).toBe(P4)
+		expect(afterVp.lastExchange?.vp).toBe(P2)
+		expect(afterVp.lastExchange?.vs).toBe(P3)
+		expect(afterVp.lastExchange?.givenToVs).toHaveLength(1)
+		expect(afterVp.lastExchange?.givenToVp).toHaveLength(1)
+	})
 })
 
 describe('presidents square rule', () => {

@@ -51,7 +51,7 @@ const myHandSorted = $derived(
 )
 const pileCards = $derived(gs.zones.pile?.cards ?? [])
 const isMyTurn = $derived(gs.turnPlayerId === me && gs.activePlayers.includes(me))
-const canSelectCard = $derived(isMyTurn || (isExchanging && isPresident))
+const canSelectCard = $derived(isMyTurn || (isExchanging && isExchangeGiver))
 
 let selectedIds = $state<Set<string>>(new Set())
 
@@ -96,7 +96,8 @@ const comboLabel = $derived.by(() => {
 })
 
 const isExchanging = $derived(gs.phase === 'exchanging')
-const isPresident = $derived(gs.pendingExchange?.president === me)
+const isExchangeGiver = $derived(gs.pendingExchange?.president === me)
+const isVpExchange = $derived(gs.pendingExchange?.isVp ?? false)
 
 function getRoleLabel(index: number, total: number): string {
 	if (index === 0) return $t('presidents.rankPresident')
@@ -155,6 +156,12 @@ $effect(() => {
 		} else if (le?.president === me) {
 			cards = le.givenToPresident
 			exchangeFlashTitle = $t('presidents.exchangeReceivedFromScum')
+		} else if (le?.vs === me && le.givenToVs) {
+			cards = le.givenToVs
+			exchangeFlashTitle = $t('presidents.exchangeReceivedFromVp')
+		} else if (le?.vp === me && le.givenToVp) {
+			cards = le.givenToVp
+			exchangeFlashTitle = $t('presidents.exchangeReceivedFromVs')
 		}
 		if (cards && cards.length > 0) {
 			if (_exchangeTimer) clearTimeout(_exchangeTimer)
@@ -251,8 +258,12 @@ $effect(() => {
 		<!-- Status -->
 		<div class="text-center text-sm">
 			{#if isExchanging}
-				<span class={isPresident ? 'font-medium text-accent' : 'text-muted-foreground'}>
-					{isPresident ? $t('presidents.chooseToGive') : $t('presidents.waitingExchange')}
+				<span class={isExchangeGiver ? 'font-medium text-accent' : 'text-muted-foreground'}>
+					{#if isExchangeGiver}
+						{isVpExchange ? $t('presidents.chooseToGiveVp') : $t('presidents.chooseToGive')}
+					{:else}
+						{isVpExchange ? $t('presidents.waitingExchangeVp') : $t('presidents.waitingExchange')}
+					{/if}
 				</span>
 			{:else if isMyTurn && lockedFace}
 				<span class="font-medium text-accent">
@@ -290,7 +301,7 @@ $effect(() => {
 			</div>
 
 			<!-- Actions -->
-			{#if isExchanging && isPresident}
+			{#if isExchanging && isExchangeGiver}
 				<div class="mt-4 flex justify-center gap-3">
 					<Button onclick={handleGive} disabled={!giveAction} size="lg">
 						{$t('presidents.giveCards')}
