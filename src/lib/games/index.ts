@@ -14,13 +14,13 @@ export const games = { war, fight, color, presidents } as unknown as Record<
 	GameDefinition<GameStateGeneric>
 >
 
-export const gameList: { id: string; minPlayers: number; maxPlayers: number }[] = Object.values(
-	games as Record<string, GameDefinition<GameStateGeneric>>
-).map((g) => ({
-	id: g.id,
-	minPlayers: g.minPlayers,
-	maxPlayers: g.maxPlayers
-}))
+export const gameList: { id: string; minPlayers: number; maxPlayers: number; isNew?: boolean }[] =
+	Object.values(games as Record<string, GameDefinition<GameStateGeneric>>).map((g) => ({
+		id: g.id,
+		minPlayers: g.minPlayers,
+		maxPlayers: g.maxPlayers,
+		isNew: g.isNew
+	}))
 
 export const gameRules: Record<string, { en: string; fr: string }> = {
 	color: colorRules,

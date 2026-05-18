@@ -150,6 +150,7 @@ export const presidents: GameDefinition<PresidentsState> = {
 	deckType: 'FrenchDeckWithoutJoker',
 	minPlayers: 3,
 	maxPlayers: 6,
+	isNew: true,
 
 	setup(players, options) {
 		const deck = createDeck('FrenchDeckWithoutJoker')
