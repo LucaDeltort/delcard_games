@@ -23,9 +23,10 @@ const sizes = {
 }
 
 const src = $derived.by(() => {
-	if (!card) return null
 	const pack = resolvePackFor($deckPacks, deckSlug)
-	return cardSrc(card, pack, back)
+	if (back) return `${pack.basePath}/card_back${pack.ext ?? '.png'}`
+	if (!card) return null
+	return cardSrc(card, pack, false)
 })
 
 const alt = $derived.by(() => {
@@ -40,7 +41,7 @@ const alt = $derived.by(() => {
 })
 </script>
 
-{#if !card}
+{#if !src}
 	<div class="{sizes[size]} rounded-lg border-2 border-dashed border-border bg-secondary/30"></div>
 {:else}
 	<img
