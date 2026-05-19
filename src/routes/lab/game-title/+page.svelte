@@ -23,11 +23,16 @@ function replay() {
 }
 
 let copied = $state(false)
-function copyParams() {
-	const snippet = `<GameTitle title="${iTitle || 'BATTLE'}" entry="${iEntry}" exit="${iExit}" rotation="${iRot}" size="${iSize}" color="${iColor}" />`
-	navigator.clipboard.writeText(snippet)
-	copied = true
-	setTimeout(() => (copied = false), 1500)
+async function copyParams() {
+	const title = (iTitle || 'BATTLE').replace(/\\/g, '\\\\').replace(/"/g, '\\"')
+	const snippet = `<GameTitle title="${title}" entry="${iEntry}" exit="${iExit}" rotation="${iRot}" size="${iSize}" color="${iColor}" />`
+	try {
+		await navigator.clipboard.writeText(snippet)
+		copied = true
+		setTimeout(() => (copied = false), 1500)
+	} catch {
+		// clipboard unavailable (non-secure context or denied permission)
+	}
 }
 
 // --- Grid data ---
@@ -64,7 +69,6 @@ const colorsNeon: ColorProp[] = [
 	'neon-pink'
 ]
 const colorsAnimated: ColorProp[] = ['rainbow', 'fire', 'plasma', 'gold', 'glitch-color']
-const allColors: ColorProp[] = ['default', ...colorsSolid, ...colorsNeon, ...colorsAnimated]
 
 let entryKeys = $state(entries.map(() => 0))
 let exitShows = $state(exits.map(() => true))

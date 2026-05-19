@@ -116,7 +116,6 @@ const isGradientColor = $derived(['rainbow', 'fire', 'plasma', 'gold'].includes(
 	<div class="flex justify-center {rotClass}">
 		<div class={sizeClass}>
 			{#key contentKey}
-				<!-- svelte-ignore a11y_no_static_element_interactions -->
 				<div class="{entryClass} {exitClass}" onanimationend={onExitEnd}>
 					<h1 class="font-heading text-7xl uppercase tracking-widest {colorClass}" style={colorStyle}>
 						{#if entry === 'letterStagger'}
