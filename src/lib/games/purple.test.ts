@@ -126,7 +126,9 @@ describe('purple.applyAction', () => {
 	it('banks penalties and resets deck on STOP', () => {
 		let state = setup()
 		state.turnBets = 3
-		state.zones[`penaltyBank_${P1}`].cards = [{ id: 'c1', suit: 'hearts', value: 'A', face: 'up' }]
+		state.zones[`penaltyBank_${P1}`].cards = [
+			{ id: 'c1', suit: 'hearts', face: 'A', isHidden: false }
+		]
 
 		state = purple.applyAction(state, { type: 'STOP', playerId: P1 })
 
@@ -150,8 +152,12 @@ describe('purple.applyAction', () => {
 	it('refills deck and banks penalties when deck is empty', () => {
 		let state = setup()
 		state.zones['deck'].cards = []
-		state.zones[`penaltyBank_${P1}`].cards = [{ id: 'c1', suit: 'hearts', value: 'A', face: 'up' }]
-		state.zones[`penaltyBank_${P2}`].cards = [{ id: 'c2', suit: 'spades', value: 'K', face: 'up' }]
+		state.zones[`penaltyBank_${P1}`].cards = [
+			{ id: 'c1', suit: 'hearts', face: 'A', isHidden: false }
+		]
+		state.zones[`penaltyBank_${P2}`].cards = [
+			{ id: 'c2', suit: 'spades', face: 'K', isHidden: false }
+		]
 
 		// Trigger a bet to force refill
 		state = purple.applyAction(state, { type: 'BET_RED', playerId: P1 })
