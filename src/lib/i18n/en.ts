@@ -149,6 +149,8 @@ export default {
 		reveal: 'Reveal',
 		continue: 'Continue',
 		roundWon: '{name} wins this round',
+		roundWonMe: 'Won!',
+		roundLost: 'Lost...',
 		roundTie: 'Tie'
 	},
 	fight: {

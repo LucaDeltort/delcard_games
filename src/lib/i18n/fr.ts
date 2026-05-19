@@ -150,6 +150,8 @@ export default {
 		reveal: 'Révéler',
 		continue: 'Continuer',
 		roundWon: '{name} remporte ce tour',
+		roundWonMe: 'Gagné !',
+		roundLost: 'Perdu...',
 		roundTie: 'Égalité'
 	},
 	fight: {

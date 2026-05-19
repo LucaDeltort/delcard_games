@@ -113,11 +113,11 @@ const isGradientColor = $derived(['rainbow', 'fire', 'plasma', 'gold'].includes(
 </script>
 
 {#if visible}
-	<div class="flex justify-center {rotClass}">
+	<div class="flex w-full justify-center {rotClass}">
 		<div class={sizeClass}>
 			{#key contentKey}
 				<div class="{entryClass} {exitClass}" onanimationend={onExitEnd}>
-					<h1 class="font-heading text-7xl uppercase tracking-widest {colorClass}" style={colorStyle}>
+					<h1 class="text-center font-heading text-7xl uppercase tracking-widest {colorClass}" style={colorStyle}>
 						{#if entry === 'letterStagger'}
 							{#each letters as { char, i } (i)}
 								<span

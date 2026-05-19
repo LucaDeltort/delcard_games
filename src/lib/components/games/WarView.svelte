@@ -1,6 +1,7 @@
 <script lang="ts">
 import { Settings as SettingsIcon } from 'lucide-svelte'
 import CardZone from '$lib/components/CardZone.svelte'
+import GameTitle from '$lib/components/GameTitle.svelte'
 import PlayerSlot from '$lib/components/PlayerSlot.svelte'
 import RulesDrawer from '$lib/components/RulesDrawer.svelte'
 import { Button } from '$lib/components/ui/button'
@@ -11,7 +12,7 @@ import type { LobbyPlayer } from '$lib/network/messages'
 import { settingsOpen } from '$lib/stores/settings'
 
 let {
-	state,
+	state: gameState,
 	myPlayerId,
 	players,
 	validActions,
@@ -24,11 +25,11 @@ let {
 	onAction: (action: Action) => void
 } = $props()
 
-const me = $derived(state.players.find((p) => p === myPlayerId) ?? state.players[0])
-const opponent = $derived(state.players.find((p) => p !== me) ?? state.players[1])
+const me = $derived(gameState.players.find((p) => p === myPlayerId) ?? gameState.players[0])
+const opponent = $derived(gameState.players.find((p) => p !== me) ?? gameState.players[1])
 
 function zone(id: string) {
-	return state.zones[id]
+	return gameState.zones[id]
 }
 
 function playerName(id: string): string {
@@ -37,7 +38,7 @@ function playerName(id: string): string {
 
 const myAction = $derived(validActions[0] ?? null)
 const isMyTurn = $derived(validActions.length > 0)
-const isReviewing = $derived(state.phase === 'reviewing')
+const isReviewing = $derived(gameState.phase === 'reviewing')
 
 const roundWinnerId = $derived(
 	isReviewing
@@ -67,7 +68,67 @@ const roundWinnerId = $derived(
 			})()
 		: null
 )
+
+let lastRoundWinnerId = $state<string | null>(null)
+$effect(() => {
+	if (isReviewing && roundWinnerId !== null) lastRoundWinnerId = roundWinnerId
+})
+
+const resultTitle = $derived(
+	lastRoundWinnerId === 'tie'
+		? $t('war.roundTie')
+		: lastRoundWinnerId === me
+			? $t('war.roundWonMe')
+			: $t('war.roundLost')
+)
+const resultProps = $derived(
+	lastRoundWinnerId === 'tie'
+		? ({
+				entry: 'flipDown',
+				exit: 'shrink',
+				rotation: 'wobble',
+				size: 'none',
+				color: 'fire'
+			} as const)
+		: lastRoundWinnerId === me
+			? ({
+					entry: 'bigEntrance',
+					exit: 'explode',
+					rotation: 'wobble',
+					size: 'pulse',
+					color: 'gold'
+				} as const)
+			: ({
+					entry: 'letterStagger',
+					exit: 'blur',
+					rotation: 'tilt',
+					size: 'breathe',
+					color: 'red'
+				} as const)
+)
+
+function onKeydown(e: KeyboardEvent) {
+	if ((e.code === 'Space' || e.code === 'Enter') && isMyTurn && myAction) {
+		e.preventDefault()
+		onAction(myAction)
+	}
+}
 </script>
+
+<svelte:window onkeydown={onKeydown} />
+
+<!-- Round result overlay -->
+<div class="pointer-events-none fixed inset-0 z-50 flex items-center justify-center">
+	<GameTitle
+		title={resultTitle}
+		show={isReviewing}
+		entry={resultProps.entry}
+		exit={resultProps.exit}
+		rotation={resultProps.rotation}
+		size={resultProps.size}
+		color={resultProps.color}
+	/>
+</div>
 
 <div class="flex min-h-screen flex-col">
 	<header class="flex items-center justify-between border-b border-border bg-card px-4 py-2 text-xs text-muted-foreground">
@@ -115,17 +176,6 @@ const roundWinnerId = $derived(
 		<!-- Action -->
 		<div class="mt-2 flex flex-col items-center gap-3">
 			{#if isReviewing}
-				<p
-					class="text-sm font-medium {roundWinnerId === 'tie'
-						? 'text-muted-foreground'
-						: roundWinnerId === me
-							? 'text-accent'
-							: 'text-foreground'}"
-				>
-					{roundWinnerId === 'tie'
-						? $t('war.roundTie')
-						: $t('war.roundWon', { name: playerName(roundWinnerId ?? '') })}
-				</p>
 				{#if isMyTurn && myAction}
 					<Button onclick={() => onAction(myAction)} size="lg">{$t('war.continue')}</Button>
 				{:else}
