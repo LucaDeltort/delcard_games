@@ -74,10 +74,8 @@ let contentKey = $state(0)
 $effect(() => {
 	if (show) {
 		isExiting = false
-		if (!visible) {
-			contentKey++
-			visible = true
-		}
+		untrack(() => contentKey++)
+		visible = true
 	} else if (visible && !isExiting) {
 		isExiting = true
 	}
