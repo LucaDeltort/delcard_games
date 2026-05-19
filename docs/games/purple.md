@@ -42,9 +42,10 @@ When it is **not** your turn, you may perform a **Decrease** action (if enabled 
 
 #### Empty Deck
 If the deck runs out of cards during a turn:
-1. All current penalty banks are cleared and their cards are added to the players' permanent scores.
-2. The deck is refilled and reshuffled using all available cards.
-3. **Setting**: If "End the player's turn at the end of the deck" is enabled, the turn ends immediately and passes to the next player. Otherwise, the current player continues their turn with the new deck.
+1. The active player's penalty bank is cleared and added to their permanent score.
+2. All other players' penalty banks are cleared and their cards are returned to the deck.
+3. The deck is refilled and reshuffled using all available cards.
+4. **Setting**: If "End the player's turn at the end of the deck" is enabled, the turn ends immediately and passes to the next player. Otherwise, the current player continues their turn with the new deck.
 
 ### Winning
 The goal is to have the **lowest** permanent score when the game ends.

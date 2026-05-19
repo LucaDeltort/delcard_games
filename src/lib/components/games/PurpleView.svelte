@@ -101,7 +101,7 @@ const otherPlayers = $derived(state.players.filter((id) => id !== myPlayerId))
 		<div class="flex w-full flex-wrap justify-center gap-4">
 	{#each otherPlayers as pid}
 				<div class="flex flex-col items-center gap-2">
-					<PlayerSlot name={players.find(p => p.id === pid)?.name ?? pid} dimmed={s.turnPlayerId === pid} />
+					<PlayerSlot name={players.find(p => p.id === pid)?.name ?? pid} dimmed={s.turnPlayerId !== pid} />
 					<div class="flex flex-col items-center gap-1">
 						<div class="relative h-8 w-6">
 					{#each s.zones[`penaltyBank_${pid}`].cards.slice(0, 3) as card, i}
@@ -138,7 +138,7 @@ const otherPlayers = $derived(state.players.filter((id) => id !== myPlayerId))
 			<div class="flex flex-col items-center">
 				<PlayingCard card={{ id: 'back', face: 'back', isHidden: true }} back size="md" {deckSlug} />
 				<span class="mt-2 text-xs font-bold text-foreground">{s.zones['deck'].cards.length}</span>
-				<span class="text-xs text-muted-foreground uppercase">Deck</span>
+				<span class="text-xs text-muted-foreground uppercase">{$t('purple.deck')}</span>
 			</div>
 
 			<!-- Playing Bank (Middle) -->
@@ -156,7 +156,7 @@ const otherPlayers = $derived(state.players.filter((id) => id !== myPlayerId))
 					{/each}
 				</div>
 				<span class="mt-2 text-xs font-bold text-foreground">{playingBankCards.length}</span>
-				<span class="text-xs text-muted-foreground uppercase">Playing Bank</span>
+				<span class="text-xs text-muted-foreground uppercase">{$t('purple.playingBank')}</span>
 			</div>
 
 			<!-- Penalty Zone (Right) -->
@@ -184,7 +184,7 @@ const otherPlayers = $derived(state.players.filter((id) => id !== myPlayerId))
 		<!-- Bottom section: My turn / Actions -->
 		<div class="flex w-full flex-col items-center gap-8">
 			<div class="flex flex-col items-center gap-2">
-				<PlayerSlot name={players.find(p => p.id === myPlayerId)?.name ?? myPlayerId} you dimmed={isMyTurn} />
+				<PlayerSlot name={players.find(p => p.id === myPlayerId)?.name ?? myPlayerId} you dimmed={!isMyTurn} />
 				<div class="relative">
 					<div class="rounded-full bg-destructive px-4 py-1 text-sm font-bold text-destructive-foreground">
 						{$t('purple.penaltyBank')}: {getBankedScore(myPlayerId)}
@@ -216,7 +216,7 @@ const otherPlayers = $derived(state.players.filter((id) => id !== myPlayerId))
 								variant="outline"
 								class="px-6 py-2 text-xs font-bold text-destructive border-destructive hover:bg-destructive/10"
 							>
-								Decrease
+								{$t('purple.decreaseScore')}
 							</Button>
 						{/if}
 					</div>

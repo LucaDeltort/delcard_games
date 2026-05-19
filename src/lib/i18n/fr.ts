@@ -165,6 +165,7 @@ export default {
 		betPurple: 'Purple',
 		stop: "S'arrêter",
 		continue: 'Continuer',
+		decreaseScore: 'Diminuer',
 		playingBank: 'Banque de Jeu',
 		penaltyBank: 'Score',
 		cards: '{n} cartes',

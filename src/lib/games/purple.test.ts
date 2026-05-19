@@ -68,7 +68,7 @@ describe('purple.applyAction', () => {
 		expect(state.phase).toBe('betting') // Needs 3 cards for decision
 	})
 
-	it('transitions to decision phase after 3 successful bets', () => {
+	it('remains in betting phase after 3 successful bets', () => {
 		let state = setup()
 
 		// Force win by looking at deck
@@ -80,7 +80,7 @@ describe('purple.applyAction', () => {
 		}
 
 		expect(state.turnBets).toBe(3)
-		expect(state.phase).toBe('decision')
+		expect(state.phase).toBe('betting')
 	})
 
 	it('handles BET_PURPLE success', () => {
@@ -103,15 +103,15 @@ describe('purple.applyAction', () => {
 	it('moves everything to penalty bank on fail after delay', () => {
 		let state = setup()
 
-		// Add some cards to playingBank
-		state = purple.applyAction(state, { type: 'BET_RED', playerId: P1 }) // win or fail, just get something in there
+		// Ensure first bet wins to get cards in playingBank and stay in betting phase
+		const card1 = state.zones['deck'].cards[0]
+		const action1 = isRed(card1) ? 'BET_RED' : 'BET_BLACK'
+		state = purple.applyAction(state, { type: action1, playerId: P1 })
 
-		// Force fail
-		const card = state.zones['deck'].cards[0]
-		const isRed = card.suit === 'hearts' || card.suit === 'diamonds'
-		const actionType = isRed ? 'BET_BLACK' : 'BET_RED'
-
-		state = purple.applyAction(state, { type: actionType, playerId: P1 })
+		// Force fail second bet
+		const card2 = state.zones['deck'].cards[0]
+		const action2 = isRed(card2) ? 'BET_BLACK' : 'BET_RED'
+		state = purple.applyAction(state, { type: action2, playerId: P1 })
 
 		expect(state.phase).toBe('failing')
 
