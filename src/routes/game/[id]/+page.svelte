@@ -21,6 +21,7 @@ import type { GameStateGeneric } from '$lib/core/types'
 import { getDeckSlugForType } from '$lib/decks/registry'
 import type { Action } from '$lib/engine'
 import { gameList, games } from '$lib/games/index'
+import type { PurpleState } from '$lib/games/purple'
 import { t } from '$lib/i18n'
 import { loadGameOptions, saveGameOptions } from '$lib/stores/gameOptions'
 import { activeClient, activeHost } from '$lib/stores/session'
@@ -449,7 +450,7 @@ $effect(() => {
 
 {:else if gameState.activeGameId === 'purple'}
 	<PurpleView
-		state={gameState}
+		state={gameState as PurpleState}
 		{myPlayerId}
 		players={enrichedPlayers}
 		{validActions}
