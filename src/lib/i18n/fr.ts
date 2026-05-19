@@ -83,6 +83,7 @@ export default {
 		actionDrawTwoOther: 'Pioche 2 !',
 		actionWildOther: 'Changement de couleur',
 		actionWildDrawFourOther: 'Pioche 4 !',
+		actionDrawAcc: 'Pioche {count} !',
 		chooseColor: 'Choisis une couleur',
 		wins: '{name} gagne !',
 		endTurn: 'Passer',

@@ -83,6 +83,7 @@ export default {
 		actionDrawTwoOther: 'Draw 2!',
 		actionWildOther: 'Color change',
 		actionWildDrawFourOther: 'Draw 4!',
+		actionDrawAcc: 'Draw {count}!',
 		chooseColor: 'Choose a color',
 		wins: '{name} wins!',
 		endTurn: 'End turn',
