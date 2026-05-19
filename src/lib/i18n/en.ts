@@ -154,6 +154,24 @@ export default {
 		roundLost: 'Lost...',
 		roundTie: 'Tie'
 	},
+	purple: {
+		name: 'Purple',
+		betRed: 'Red',
+		betBlack: 'Black',
+		betPurple: 'Purple',
+		stop: 'Stop',
+		continue: 'Continue',
+		playingBank: 'Playing Bank',
+		penaltyBank: 'Score',
+		deck: 'Deck',
+		decreaseScore: 'Decrease',
+		cards: '{n} cards',
+		betsProgress: '{current}/{total} bets won',
+		options: {
+			endTurnOnEmptyDeck: "End the player's turn at the end of the deck.",
+			allowDecreaseScore: 'Allow score decrease'
+		}
+	},
 	fight: {
 		name: 'The Fight',
 		bonusKill: 'Kill — bonus action!',

@@ -3,13 +3,15 @@ import type { GameDefinition } from '$lib/engine'
 import { color } from './color'
 import { fight } from './fight'
 import { presidents } from './presidents'
+import { purple } from './purple'
 import colorRules from './rules/color.json'
 import fightRules from './rules/fight.json'
 import presidentsRules from './rules/presidents.json'
+import purpleRules from './rules/purple.json'
 import warRules from './rules/war.json'
 import { war } from './war'
 
-export const games = { war, fight, color, presidents } as unknown as Record<
+export const games = { war, fight, color, presidents, purple } as unknown as Record<
 	string,
 	GameDefinition<GameStateGeneric>
 >
@@ -26,5 +28,6 @@ export const gameRules: Record<string, { en: string; fr: string }> = {
 	color: colorRules,
 	war: warRules,
 	fight: fightRules,
-	presidents: presidentsRules
+	presidents: presidentsRules,
+	purple: purpleRules
 }

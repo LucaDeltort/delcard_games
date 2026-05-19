@@ -155,6 +155,23 @@ export default {
 		roundLost: 'Perdu...',
 		roundTie: 'Égalité'
 	},
+	purple: {
+		name: 'Purple',
+		betRed: 'Rouge',
+		betBlack: 'Noir',
+		betPurple: 'Purple',
+		stop: "S'arrêter",
+		continue: 'Continuer',
+		decreaseScore: 'Diminuer',
+		playingBank: 'Banque de Jeu',
+		penaltyBank: 'Score',
+		cards: '{n} cartes',
+		betsProgress: '{current}/{total} paris gagnés',
+		options: {
+			endTurnOnEmptyDeck: 'Mettre fin au tour du joueur à la fin du deck.',
+			allowDecreaseScore: 'Autoriser la diminution du score'
+		}
+	},
 	fight: {
 		name: 'La Bagarre',
 		bonusKill: 'Meurtre — action bonus !',
