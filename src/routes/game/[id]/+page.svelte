@@ -13,6 +13,7 @@ import GameOptionsPanel from '$lib/components/GameOptionsPanel.svelte'
 import ColorView from '$lib/components/games/ColorView.svelte'
 import FightView from '$lib/components/games/FightView.svelte'
 import PresidentsView from '$lib/components/games/PresidentsView.svelte'
+import PurpleView from '$lib/components/games/PurpleView.svelte'
 import WarView from '$lib/components/games/WarView.svelte'
 import RulesDrawer from '$lib/components/RulesDrawer.svelte'
 import { Button } from '$lib/components/ui/button'
@@ -446,6 +447,15 @@ $effect(() => {
 		onAction={submitAction}
 	/>
 
+{:else if gameState.activeGameId === 'purple'}
+	<PurpleView
+		state={gameState}
+		{myPlayerId}
+		players={enrichedPlayers}
+		{validActions}
+		onAction={submitAction}
+		{deckSlug}
+	/>
 	<!-- ── Game (generic fallback) ───────────────────────────────── -->
 {:else}
 	{@const activePlayer = enrichedPlayers.find((p) => p.id === gameState?.turnPlayerId)}
