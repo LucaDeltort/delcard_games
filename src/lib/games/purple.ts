@@ -3,7 +3,7 @@ import type { Action, GameDefinition } from '$lib/engine'
 import { createDeck, createZone, moveCard, nextPlayer, shuffle } from '$lib/engine'
 
 export type PurpleState = GameStateGeneric & {
-	phase: 'betting' | 'decision' | 'gameover' | 'failing'
+	phase: 'betting' | 'failing'
 	scores: Record<string, number>
 	turnBets: number
 	lastFlipped: Card[]
@@ -96,8 +96,7 @@ export const purple: GameDefinition<PurpleState> = {
 	},
 
 	getValidActions(state, playerId) {
-		if (state.phase !== 'betting' && state.phase !== 'decision' && state.phase !== 'failing')
-			return []
+		if (state.phase !== 'betting' && state.phase !== 'failing') return []
 
 		const actions: Action[] = []
 
@@ -127,7 +126,10 @@ export const purple: GameDefinition<PurpleState> = {
 		let s = { ...state }
 
 		if (action.type === 'BET_RED' || action.type === 'BET_BLACK') {
+			const oldTurnPlayerId = s.turnPlayerId
 			s = refillDeckIfNeeded(s, 1)
+			if (s.turnPlayerId !== oldTurnPlayerId) return s
+
 			const deck = s.zones['deck'].cards
 			if (deck.length === 0) return s
 
@@ -142,7 +144,7 @@ export const purple: GameDefinition<PurpleState> = {
 
 			if (win) {
 				s.turnBets += 1
-				s.phase = s.turnBets >= 3 ? 'decision' : 'betting'
+				s.phase = 'betting'
 			} else {
 				s.phase = 'failing'
 			}
@@ -150,7 +152,10 @@ export const purple: GameDefinition<PurpleState> = {
 		}
 
 		if (action.type === 'BET_PURPLE') {
+			const oldTurnPlayerId = s.turnPlayerId
 			s = refillDeckIfNeeded(s, 2)
+			if (s.turnPlayerId !== oldTurnPlayerId) return s
+
 			const deck = s.zones['deck'].cards
 			if (deck.length < 2) return s
 
@@ -164,7 +169,7 @@ export const purple: GameDefinition<PurpleState> = {
 			if (win) {
 				s.turnBets += 2
 				s.lastFlipped = [card1, card2]
-				s.phase = s.turnBets >= 3 ? 'decision' : 'betting'
+				s.phase = 'betting'
 			} else {
 				s.lastFlipped = [card1, card2]
 				s.phase = 'failing'
@@ -176,8 +181,11 @@ export const purple: GameDefinition<PurpleState> = {
 			const targetId = action.playerId
 			const currentScore = s.scores[targetId] || 0
 			if (currentScore > 0) {
-				s.scores[targetId] = currentScore - 1
-				s.lastScoreEvent = { pid: targetId, timestamp: Date.now() }
+				s = {
+					...s,
+					scores: { ...s.scores, [targetId]: currentScore - 1 },
+					lastScoreEvent: { pid: targetId, timestamp: Date.now() }
+				}
 			}
 			return s
 		}
@@ -199,7 +207,10 @@ export const purple: GameDefinition<PurpleState> = {
 
 		if (action.type === 'STOP') {
 			const pid = s.turnPlayerId
-			s.scores[pid] = (s.scores[pid] || 0) + s.zones[`penaltyBank_${pid}`].cards.length
+			const newScores = {
+				...s.scores,
+				[pid]: (s.scores[pid] || 0) + s.zones[`penaltyBank_${pid}`].cards.length
+			}
 
 			const newZones = { ...s.zones }
 			s.players.forEach((p) => {
@@ -208,16 +219,15 @@ export const purple: GameDefinition<PurpleState> = {
 			newZones['playingBank'] = { ...newZones['playingBank'], cards: [] }
 			newZones['deck'] = createZone('deck', 'hidden', shuffle(createDeck('FrenchDeckWithoutJoker')))
 
-			s.zones = newZones
-			s.turnPlayerId = nextPlayer(s.players, s.turnPlayerId)
-			s.turnBets = 0
-			s.lastFlipped = []
-			s.phase = 'betting'
-			return s
-		}
-
-		if (action.type === 'CONTINUE') {
-			s.phase = 'betting'
+			s = {
+				...s,
+				scores: newScores,
+				zones: newZones,
+				turnPlayerId: nextPlayer(s.players, s.turnPlayerId),
+				turnBets: 0,
+				lastFlipped: [],
+				phase: 'betting'
+			}
 			return s
 		}
 

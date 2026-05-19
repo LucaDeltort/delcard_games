@@ -160,11 +160,13 @@ export default {
 		continue: 'Continue',
 		playingBank: 'Playing Bank',
 		penaltyBank: 'Score',
+		deck: 'Deck',
+		decreaseScore: 'Decrease',
 		cards: '{n} cards',
 		betsProgress: '{current}/{total} bets won',
 		options: {
 			endTurnOnEmptyDeck: "End the player's turn at the end of the deck.",
-			allowDecreaseScore: 'Allow decrease score'
+			allowDecreaseScore: 'Allow score decrease'
 		}
 	},
 	fight: {
