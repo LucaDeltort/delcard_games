@@ -169,7 +169,7 @@ export class GameHost {
 		if (this.def.onPlayerDisconnect) {
 			next = this.def.onPlayerDisconnect(this.state, playerId)
 		} else {
-			const remaining = 1 + this.clients.size
+			const remaining = this.state.players.filter((p) => p !== playerId).length
 			if (remaining < this.def.minPlayers) {
 				next = {
 					...this.state,
