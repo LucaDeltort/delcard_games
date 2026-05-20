@@ -534,7 +534,7 @@ $effect(() => {
 				{/if}
 				<Button
 					onclick={() => get(activeHost)?.startGame()}
-					disabled={lobbyPlayers.length < (gameMeta?.minPlayers ?? 2)}
+					disabled={!gameMeta || lobbyPlayers.length < gameMeta.minPlayers}
 					size="sm"
 				>
 					{$t('game.rematch')}
