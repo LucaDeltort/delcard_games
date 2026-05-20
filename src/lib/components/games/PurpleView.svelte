@@ -173,7 +173,7 @@ const otherPlayers = $derived(state.players.filter((id) => id !== myPlayerId))
 					{/each}
 				</div>
 				<span class="mt-2 text-xs font-bold text-red-500">{getCurrentPenaltyCount(s.turnPlayerId)}</span>
-				<span class="text-xs text-red-500 uppercase">Penalty</span>
+				<span class="text-xs text-red-500 uppercase">{$t('purple.penalty')}</span>
 			</div>
 		</div>
 

@@ -7,7 +7,7 @@ export type PurpleState = GameStateGeneric & {
 	scores: Record<string, number>
 	turnBets: number
 	lastFlipped: Card[]
-	options: Record<string, unknown>
+	options: { endTurnOnEmptyDeck: boolean; allowDecreaseScore: boolean; endScore: number }
 	lastScoreEvent?: { pid: string; timestamp: number }
 }
 
@@ -39,7 +39,7 @@ function refillDeckIfNeeded(state: PurpleState, required: number): PurpleState {
 
 	const newState = { ...state, zones: newZones, scores: newScores }
 
-	if (state.options?.endTurnOnEmptyDeck === true) {
+	if (state.options.endTurnOnEmptyDeck) {
 		newState.turnPlayerId = nextPlayer(state.players, state.turnPlayerId)
 		newState.turnBets = 0
 		newState.lastFlipped = []
@@ -67,6 +67,14 @@ export const purple: GameDefinition<PurpleState> = {
 			label: 'purple.options.allowDecreaseScore',
 			type: 'boolean',
 			default: true
+		},
+		{
+			key: 'endScore',
+			label: 'purple.options.endScore',
+			type: 'number',
+			default: 15,
+			min: 5,
+			max: 50
 		}
 	],
 
@@ -91,7 +99,11 @@ export const purple: GameDefinition<PurpleState> = {
 			scores,
 			turnBets: 0,
 			lastFlipped: [],
-			options
+			options: {
+				endTurnOnEmptyDeck: options?.endTurnOnEmptyDeck === true,
+				allowDecreaseScore: options?.allowDecreaseScore !== false,
+				endScore: typeof options?.endScore === 'number' ? options.endScore : 15
+			}
 		}
 	},
 
@@ -114,7 +126,7 @@ export const purple: GameDefinition<PurpleState> = {
 				}
 			}
 		} else {
-			if (state.options?.allowDecreaseScore === true) {
+			if (state.options.allowDecreaseScore) {
 				actions.push({ type: 'DECREASE_SCORE', playerId })
 			}
 		}
@@ -234,11 +246,16 @@ export const purple: GameDefinition<PurpleState> = {
 		return s
 	},
 
-	isOver() {
-		return false
+	isOver(state) {
+		const limit = state.options.endScore ?? 15
+		return state.players.some((pid) => (state.scores[pid] ?? 0) >= limit)
 	},
 
-	getWinner() {
-		return null
+	getWinner(state) {
+		const limit = state.options.endScore ?? 15
+		if (!state.players.some((pid) => (state.scores[pid] ?? 0) >= limit)) return null
+		return state.players.reduce((best, pid) =>
+			(state.scores[pid] ?? 0) < (state.scores[best] ?? 0) ? pid : best
+		)
 	}
 }

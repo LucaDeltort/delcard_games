@@ -168,11 +168,14 @@ export default {
 		decreaseScore: 'Diminuer',
 		playingBank: 'Banque de Jeu',
 		penaltyBank: 'Score',
+		penalty: 'Pénalité',
+		deck: 'Deck',
 		cards: '{n} cartes',
 		betsProgress: '{current}/{total} paris gagnés',
 		options: {
-			endTurnOnEmptyDeck: 'Mettre fin au tour du joueur à la fin du deck.',
-			allowDecreaseScore: 'Autoriser la diminution du score'
+			endTurnOnEmptyDeck: 'Mettre fin au tour du joueur quand le deck est vide.',
+			allowDecreaseScore: 'Autoriser la diminution du score',
+			endScore: 'Score de fin de partie'
 		}
 	},
 	fight: {

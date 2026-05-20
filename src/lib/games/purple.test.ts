@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { Card } from '$lib/core/types'
 import { purple } from './purple'
+import type { PurpleState } from './purple'
 
 const P1 = 'p1'
 const P2 = 'p2'
@@ -124,11 +125,18 @@ describe('purple.applyAction', () => {
 	})
 
 	it('banks penalties and resets deck on STOP', () => {
-		let state = setup()
-		state.turnBets = 3
-		state.zones[`penaltyBank_${P1}`].cards = [
-			{ id: 'c1', suit: 'hearts', face: 'A', isHidden: false }
-		]
+		const initial = setup()
+		let state: PurpleState = {
+			...initial,
+			turnBets: 3,
+			zones: {
+				...initial.zones,
+				[`penaltyBank_${P1}`]: {
+					...initial.zones[`penaltyBank_${P1}`],
+					cards: [{ id: 'c1', suit: 'hearts', face: 'A', isHidden: false }]
+				}
+			}
+		}
 
 		state = purple.applyAction(state, { type: 'STOP', playerId: P1 })
 
@@ -140,8 +148,8 @@ describe('purple.applyAction', () => {
 	})
 
 	it('reduces score on DECREASE_SCORE', () => {
-		let state = setup()
-		state.scores[P1] = 5
+		const initial = setup()
+		let state: PurpleState = { ...initial, scores: { ...initial.scores, [P1]: 5 } }
 
 		state = purple.applyAction(state, { type: 'DECREASE_SCORE', playerId: P1 })
 
@@ -150,14 +158,22 @@ describe('purple.applyAction', () => {
 	})
 
 	it('refills deck and banks penalties when deck is empty', () => {
-		let state = setup()
-		state.zones['deck'].cards = []
-		state.zones[`penaltyBank_${P1}`].cards = [
-			{ id: 'c1', suit: 'hearts', face: 'A', isHidden: false }
-		]
-		state.zones[`penaltyBank_${P2}`].cards = [
-			{ id: 'c2', suit: 'spades', face: 'K', isHidden: false }
-		]
+		const initial = setup()
+		let state: PurpleState = {
+			...initial,
+			zones: {
+				...initial.zones,
+				deck: { ...initial.zones['deck'], cards: [] },
+				[`penaltyBank_${P1}`]: {
+					...initial.zones[`penaltyBank_${P1}`],
+					cards: [{ id: 'c1', suit: 'hearts', face: 'A', isHidden: false }]
+				},
+				[`penaltyBank_${P2}`]: {
+					...initial.zones[`penaltyBank_${P2}`],
+					cards: [{ id: 'c2', suit: 'spades', face: 'K', isHidden: false }]
+				}
+			}
+		}
 
 		// Trigger a bet to force refill
 		state = purple.applyAction(state, { type: 'BET_RED', playerId: P1 })
