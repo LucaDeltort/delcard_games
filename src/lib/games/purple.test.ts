@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { Card } from '$lib/core/types'
-import { purple } from './purple'
 import type { PurpleState } from './purple'
+import { purple } from './purple'
 
 const P1 = 'p1'
 const P2 = 'p2'

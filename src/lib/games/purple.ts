@@ -3,7 +3,7 @@ import type { Action, GameDefinition } from '$lib/engine'
 import { createDeck, createZone, moveCard, nextPlayer, shuffle } from '$lib/engine'
 
 export type PurpleState = GameStateGeneric & {
-	phase: 'betting' | 'failing'
+	phase: 'betting' | 'failing' | 'gameover'
 	scores: Record<string, number>
 	turnBets: number
 	lastFlipped: Card[]
@@ -19,13 +19,6 @@ function refillDeckIfNeeded(state: PurpleState, required: number): PurpleState {
 	const deckZone = state.zones['deck']
 	if (deckZone.cards.length >= required) return state
 
-	const pid = state.turnPlayerId
-	const penaltyBank = state.zones[`penaltyBank_${pid}`]
-
-	// Bank current player's penalties
-	const newScores = { ...state.scores }
-	newScores[pid] = (newScores[pid] || 0) + penaltyBank.cards.length
-
 	let newCards = [...deckZone.cards]
 	const newZones = { ...state.zones }
 
@@ -37,7 +30,7 @@ function refillDeckIfNeeded(state: PurpleState, required: number): PurpleState {
 
 	newZones['deck'] = { ...deckZone, cards: shuffle(newCards) }
 
-	const newState = { ...state, zones: newZones, scores: newScores }
+	const newState = { ...state, zones: newZones }
 
 	if (state.options.endTurnOnEmptyDeck) {
 		newState.turnPlayerId = nextPlayer(state.players, state.turnPlayerId)
@@ -55,6 +48,7 @@ export const purple: GameDefinition<PurpleState> = {
 	deckType: 'FrenchDeckWithoutJoker',
 	minPlayers: 2,
 	maxPlayers: 8,
+	isNew: true,
 	optionsSchema: [
 		{
 			key: 'endTurnOnEmptyDeck',
@@ -257,5 +251,45 @@ export const purple: GameDefinition<PurpleState> = {
 		return state.players.reduce((best, pid) =>
 			(state.scores[pid] ?? 0) < (state.scores[best] ?? 0) ? pid : best
 		)
+	},
+
+	onPlayerDisconnect(state, playerId) {
+		const remaining = state.players.filter((p) => p !== playerId)
+		const newZones = { ...state.zones }
+
+		// Reclaim stuck cards: penalty bank + playing bank if it was their turn
+		const rescued = [
+			...(newZones[`penaltyBank_${playerId}`]?.cards ?? []),
+			...(state.turnPlayerId === playerId ? newZones['playingBank'].cards : [])
+		]
+		newZones[`penaltyBank_${playerId}`] = { ...newZones[`penaltyBank_${playerId}`], cards: [] }
+		if (state.turnPlayerId === playerId) {
+			newZones['playingBank'] = { ...newZones['playingBank'], cards: [] }
+		}
+		newZones['deck'] = {
+			...newZones['deck'],
+			cards: shuffle([...newZones['deck'].cards, ...rescued])
+		}
+
+		if (remaining.length < 2) {
+			return { ...state, players: remaining, zones: newZones, phase: 'gameover' }
+		}
+
+		let nextTurn = state.turnPlayerId
+		if (nextTurn === playerId) {
+			const idx = state.players.indexOf(playerId)
+			const candidate = state.players[(idx + 1) % state.players.length]
+			nextTurn = candidate === playerId ? remaining[0] : candidate
+		}
+
+		return {
+			...state,
+			players: remaining,
+			zones: newZones,
+			turnPlayerId: nextTurn,
+			turnBets: 0,
+			lastFlipped: [],
+			phase: 'betting'
+		}
 	}
 }
