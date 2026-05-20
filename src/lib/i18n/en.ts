@@ -14,7 +14,7 @@ export default {
 		close: 'Close'
 	},
 	home: {
-		subtitle: 'Card games with friends — no server',
+		subtitle: 'Card games with friends - no ads, no sign-up.',
 		newGame: 'New game',
 		labelGame: 'Game',
 		creating: 'Creating…',
@@ -56,7 +56,10 @@ export default {
 		rules: 'Rules',
 		cardStyle: 'Card style',
 		preloadingCards: 'Loading cards… ({loaded}/{total})',
-		usePack: 'Use this pack'
+		usePack: 'Use this pack',
+		spectating: "Watching — you'll join the next game",
+		waitingToJoin: '{n} waiting to join',
+		joiningNextGame: 'Joining next game'
 	},
 	card: {
 		hidden: 'Hidden card',
@@ -83,6 +86,7 @@ export default {
 		actionDrawTwoOther: 'Draw 2!',
 		actionWildOther: 'Color change',
 		actionWildDrawFourOther: 'Draw 4!',
+		actionDrawAcc: 'Draw {count}!',
 		chooseColor: 'Choose a color',
 		wins: '{name} wins!',
 		endTurn: 'End turn',
@@ -149,7 +153,29 @@ export default {
 		reveal: 'Reveal',
 		continue: 'Continue',
 		roundWon: '{name} wins this round',
+		roundWonMe: 'Won!',
+		roundLost: 'Lost...',
 		roundTie: 'Tie'
+	},
+	purple: {
+		name: 'Purple',
+		betRed: 'Red',
+		betBlack: 'Black',
+		betPurple: 'Purple',
+		stop: 'Stop',
+		continue: 'Continue',
+		playingBank: 'Playing Bank',
+		penaltyBank: 'Score',
+		penalty: 'Penalty',
+		deck: 'Deck',
+		decreaseScore: 'Decrease',
+		cards: '{n} cards',
+		betsProgress: '{current}/{total} bets won',
+		options: {
+			endTurnOnEmptyDeck: "End the player's turn when the deck runs out.",
+			allowDecreaseScore: 'Allow decreasing score',
+			endScore: 'End game score'
+		}
 	},
 	fight: {
 		name: 'The Fight',
@@ -182,7 +208,13 @@ export default {
 		flashShieldSelf: '{name} changes their shield',
 		flashShield: "{name} changes {target}'s shield",
 		flashDamage: '→ {n} dmg',
-		flashBlocked: '→ Blocked'
+		flashBlocked: '→ Blocked',
+		yourTurn: 'Your Turn!',
+		bonusTurn: 'Bonus Turn!',
+		bannerAttack: 'Attack!',
+		bannerBlocked: 'Blocked!',
+		bannerCharge: 'Charge!',
+		bannerShield: 'Shield!'
 	},
 	settings: {
 		title: 'Settings',

@@ -3,6 +3,7 @@ import { ChevronDown, ChevronUp, MessageSquare, Settings as SettingsIcon, X } fr
 import { onDestroy, onMount, untrack } from 'svelte'
 import { fade } from 'svelte/transition'
 import CardZone from '$lib/components/CardZone.svelte'
+import GameTitle from '$lib/components/GameTitle.svelte'
 import PlayingCard from '$lib/components/PlayingCard.svelte'
 import RulesDrawer from '$lib/components/RulesDrawer.svelte'
 import { Button } from '$lib/components/ui/button'
@@ -18,13 +19,15 @@ let {
 	myPlayerId,
 	players,
 	validActions,
-	onAction
+	onAction,
+	isSpectator = false
 }: {
 	state: GameStateGeneric
 	myPlayerId: string
 	players: LobbyPlayer[]
 	validActions: Action[]
 	onAction: (action: Action) => void
+	isSpectator?: boolean
 } = $props()
 
 const gs = $derived(gameState as unknown as FightState)
@@ -83,6 +86,10 @@ const FLASH_DURATION = 2500
 
 let actionFlash = $state<ActionFlash | null>(null)
 let _flashTimeout: ReturnType<typeof setTimeout> | null = null
+let showTurnFlash = $state(false)
+let showBonusFlash = $state(false)
+let bannerType = $state<'attack' | 'blocked' | 'charge' | 'shield' | null>(null)
+let _bannerTimer: ReturnType<typeof setTimeout> | null = null
 let _prevHistLen = untrack(() => gs.history.length)
 
 $effect(() => {
@@ -94,11 +101,41 @@ $effect(() => {
 		(e) => e.type === 'ATTACK' || e.type === 'CHANGE_SHIELD' || e.type === 'CHARGE'
 	)
 	if (!entry) return
+	const flash = entry as ActionFlash
 	if (_flashTimeout) clearTimeout(_flashTimeout)
-	actionFlash = entry as ActionFlash
+	actionFlash = flash
 	_flashTimeout = setTimeout(() => {
 		actionFlash = null
 	}, FLASH_DURATION)
+	if (_bannerTimer) clearTimeout(_bannerTimer)
+	if (flash.type === 'ATTACK') bannerType = flash.damage > 0 ? 'attack' : 'blocked'
+	else if (flash.type === 'CHARGE') bannerType = 'charge'
+	else if (flash.type === 'CHANGE_SHIELD') bannerType = 'shield'
+	_bannerTimer = setTimeout(() => {
+		bannerType = null
+	}, FLASH_DURATION)
+})
+
+let _prevTurnPlayerId = untrack(() => gs.turnPlayerId)
+let _prevPendingBonus = untrack(() => gs.pendingBonusAction)
+
+$effect(() => {
+	const tid = gs.turnPlayerId
+	const bonus = gs.pendingBonusAction
+	if (bonus !== _prevPendingBonus) {
+		if (bonus === myPlayerId) {
+			showBonusFlash = true
+			setTimeout(() => (showBonusFlash = false), 1500)
+		}
+		_prevPendingBonus = bonus
+	}
+	if (tid !== _prevTurnPlayerId) {
+		if (tid === myPlayerId && !bonus) {
+			showTurnFlash = true
+			setTimeout(() => (showTurnFlash = false), 1500)
+		}
+		_prevTurnPlayerId = tid
+	}
 })
 
 const _shouldIntro = untrack(() => {
@@ -157,6 +194,7 @@ onMount(() => {
 onDestroy(() => {
 	_introTimeouts.forEach(clearTimeout)
 	if (_flashTimeout) clearTimeout(_flashTimeout)
+	if (_bannerTimer) clearTimeout(_bannerTimer)
 })
 </script>
 
@@ -283,7 +321,8 @@ onDestroy(() => {
 		<CardZone card={gs.zones.discard?.cards.at(-1) ?? null} label={$t('fight.discard')} />
 	</div>
 
-	<!-- Me -->
+	<!-- Me (hidden for spectators) -->
+	{#if !isSpectator}
 	<div class="flex flex-col items-center gap-3 border-t border-border bg-card/50 px-4 py-4">
 		<p class="text-sm text-foreground">
 			{playerName(myPlayerId)}
@@ -299,10 +338,13 @@ onDestroy(() => {
 			<CardZone card={gs.zones[`charge_${myPlayerId}`]?.cards[0] ?? null} count={(gs.zones[`charge_${myPlayerId}`]?.cards.length ?? 0) > 1 ? gs.zones[`charge_${myPlayerId}`]?.cards.length : undefined} label={$t('fight.charge')} />
 		</div>
 	</div>
+	{/if}
 
 	<!-- Actions -->
 	<footer class="mt-auto border-t border-border bg-card px-4 py-4">
-		{#if !iAmAlive}
+		{#if isSpectator}
+			<!-- spectators have no actions -->
+		{:else if !iAmAlive}
 			<p class="text-sm text-muted-foreground">{$t('fight.youEliminated')}</p>
 		{:else if isMyTurn}
 			<div class="flex flex-col gap-3">
@@ -450,9 +492,12 @@ onDestroy(() => {
 
 {#if actionFlash !== null}
 	<div
-		class="pointer-events-none fixed inset-0 z-50 flex items-center justify-center"
+		class="pointer-events-none fixed inset-0 z-50 flex flex-col items-center justify-center gap-4"
 		transition:fade={{ duration: 150 }}
 	>
+		{#key bannerType}
+			<GameTitle title={bannerType === 'attack' ? $t('fight.bannerAttack') : bannerType === 'blocked' ? $t('fight.bannerBlocked') : bannerType === 'charge' ? $t('fight.bannerCharge') : $t('fight.bannerShield')} show={bannerType !== null} entry={bannerType === 'attack' ? 'slideDown' : bannerType === 'blocked' ? 'letterStagger' : bannerType === 'charge' ? 'fadeScale' : 'flipDown'} exit={bannerType === 'attack' ? 'shrink' : bannerType === 'blocked' ? 'blur' : bannerType === 'charge' ? 'fadeOut' : 'shrink'} rotation={bannerType === 'attack' ? 'wobble' : bannerType === 'blocked' ? 'tilt' : 'none'} size={bannerType === 'charge' ? 'breathe' : 'pulse'} color={bannerType === 'attack' ? 'red' : bannerType === 'blocked' ? 'gold' : bannerType === 'charge' ? 'yellow' : 'green'} />
+		{/key}
 		<div class="rounded-xl border border-border bg-card/95 px-8 py-6 text-center shadow-2xl backdrop-blur-sm">
 			{#if actionFlash.type === 'ATTACK'}
 				<p class="mb-4 text-sm font-medium text-foreground">
@@ -498,4 +543,13 @@ onDestroy(() => {
 		</div>
 	</div>
 {/if}
+
+<!-- Your turn / bonus turn flashes -->
+<div class="pointer-events-none">
+	<GameTitle title={$t('fight.yourTurn')} show={showTurnFlash} entry="bigEntrance" exit="shrink" rotation="wobble" size="pulse" color="default" />
+</div>
+<div class="pointer-events-none">
+	<GameTitle title={$t('fight.bonusTurn')} show={showBonusFlash} entry="bigEntrance" exit="explode" rotation="sway" size="breathe" color="fire" />
+</div>
+
 {/if}

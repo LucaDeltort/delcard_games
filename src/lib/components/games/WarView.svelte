@@ -1,6 +1,7 @@
 <script lang="ts">
 import { Settings as SettingsIcon } from 'lucide-svelte'
 import CardZone from '$lib/components/CardZone.svelte'
+import GameTitle from '$lib/components/GameTitle.svelte'
 import PlayerSlot from '$lib/components/PlayerSlot.svelte'
 import RulesDrawer from '$lib/components/RulesDrawer.svelte'
 import { Button } from '$lib/components/ui/button'
@@ -11,7 +12,7 @@ import type { LobbyPlayer } from '$lib/network/messages'
 import { settingsOpen } from '$lib/stores/settings'
 
 let {
-	state,
+	state: gameState,
 	myPlayerId,
 	players,
 	validActions,
@@ -24,11 +25,11 @@ let {
 	onAction: (action: Action) => void
 } = $props()
 
-const me = $derived(state.players.find((p) => p === myPlayerId) ?? state.players[0])
-const opponent = $derived(state.players.find((p) => p !== me) ?? state.players[1])
+const me = $derived(gameState.players.find((p) => p === myPlayerId))
+const opponent = $derived(gameState.players.find((p) => p !== myPlayerId) ?? gameState.players[0])
 
 function zone(id: string) {
-	return state.zones[id]
+	return gameState.zones[id]
 }
 
 function playerName(id: string): string {
@@ -37,14 +38,16 @@ function playerName(id: string): string {
 
 const myAction = $derived(validActions[0] ?? null)
 const isMyTurn = $derived(validActions.length > 0)
-const isReviewing = $derived(state.phase === 'reviewing')
+const isReviewing = $derived(gameState.phase === 'reviewing')
 
 const roundWinnerId = $derived(
 	isReviewing
 		? (() => {
-				const myCard = zone(`played_${me}`)?.cards[0]
-				const oppCard = zone(`played_${opponent}`)?.cards[0]
-				if (!myCard || !oppCard) return null
+				const [p0, p1] = gameState.players
+				if (!p0 || !p1) return null
+				const c0 = zone(`played_${p0}`)?.cards[0]
+				const c1 = zone(`played_${p1}`)?.cards[0]
+				if (!c0 || !c1) return null
 				const faceVal: Record<string, number> = {
 					'2': 2,
 					'3': 3,
@@ -60,14 +63,76 @@ const roundWinnerId = $derived(
 					K: 13,
 					A: 14
 				}
-				const myV = faceVal[myCard.face] ?? 0
-				const oppV = faceVal[oppCard.face] ?? 0
-				if (myV === oppV) return 'tie'
-				return myV > oppV ? me : opponent
+				const v0 = faceVal[c0.face] ?? 0
+				const v1 = faceVal[c1.face] ?? 0
+				if (v0 === v1) return 'tie'
+				return v0 > v1 ? p0 : p1
 			})()
 		: null
 )
+
+let lastRoundWinnerId = $state<string | null>(null)
+$effect(() => {
+	if (isReviewing && roundWinnerId !== null) lastRoundWinnerId = roundWinnerId
+})
+
+const resultTitle = $derived(
+	lastRoundWinnerId === 'tie'
+		? $t('war.roundTie')
+		: lastRoundWinnerId === me
+			? $t('war.roundWonMe')
+			: me
+				? $t('war.roundLost')
+				: $t('war.roundWon', { name: playerName(lastRoundWinnerId ?? '') })
+)
+const resultProps = $derived(
+	lastRoundWinnerId === 'tie'
+		? ({
+				entry: 'flipDown',
+				exit: 'shrink',
+				rotation: 'wobble',
+				size: 'none',
+				color: 'fire'
+			} as const)
+		: lastRoundWinnerId === me || (!me && lastRoundWinnerId !== null)
+			? ({
+					entry: 'bigEntrance',
+					exit: 'explode',
+					rotation: 'wobble',
+					size: 'pulse',
+					color: 'gold'
+				} as const)
+			: ({
+					entry: 'letterStagger',
+					exit: 'blur',
+					rotation: 'tilt',
+					size: 'breathe',
+					color: 'red'
+				} as const)
+)
+
+function onKeydown(e: KeyboardEvent) {
+	if ((e.code === 'Space' || e.code === 'Enter') && isMyTurn && myAction) {
+		e.preventDefault()
+		onAction(myAction)
+	}
+}
 </script>
+
+<svelte:window onkeydown={onKeydown} />
+
+<!-- Round result overlay -->
+<div class="pointer-events-none fixed inset-0 z-50 flex items-center justify-center">
+	<GameTitle
+		title={resultTitle}
+		show={isReviewing}
+		entry={resultProps.entry}
+		exit={resultProps.exit}
+		rotation={resultProps.rotation}
+		size={resultProps.size}
+		color={resultProps.color}
+	/>
+</div>
 
 <div class="flex min-h-screen flex-col">
 	<header class="flex items-center justify-between border-b border-border bg-card px-4 py-2 text-xs text-muted-foreground">
@@ -102,30 +167,33 @@ const roundWinnerId = $derived(
 			<div class="h-px flex-1 bg-border"></div>
 		</div>
 
-		<!-- Me -->
-		<div class="flex flex-col items-center gap-4">
-			<div class="flex items-end gap-6">
-				<CardZone card={zone(`deck_${me}`)?.cards[0] ?? null} back label={$t('war.deck')} count={zone(`deck_${me}`)?.cards.length ?? 0} />
-				<CardZone card={zone(`played_${me}`)?.cards[0] ?? null} size="lg" label={$t('war.played')} />
-				<CardZone card={zone(`won_${me}`)?.cards[0] ?? null} back label={$t('war.won')} count={zone(`won_${me}`)?.cards.length ?? 0} countVariant="accent" />
+		<!-- Me / spectator second player -->
+		{#if me}
+			<div class="flex flex-col items-center gap-4">
+				<div class="flex items-end gap-6">
+					<CardZone card={zone(`deck_${me}`)?.cards[0] ?? null} back label={$t('war.deck')} count={zone(`deck_${me}`)?.cards.length ?? 0} />
+					<CardZone card={zone(`played_${me}`)?.cards[0] ?? null} size="lg" label={$t('war.played')} />
+					<CardZone card={zone(`won_${me}`)?.cards[0] ?? null} back label={$t('war.won')} count={zone(`won_${me}`)?.cards.length ?? 0} countVariant="accent" />
+				</div>
+				<PlayerSlot name={playerName(me)} you />
 			</div>
-			<PlayerSlot name={playerName(me)} you />
-		</div>
+		{:else}
+			{@const spectatorP2 = gameState.players[1]}
+			{#if spectatorP2}
+				<div class="flex flex-col items-center gap-4">
+					<div class="flex items-end gap-6">
+						<CardZone card={zone(`deck_${spectatorP2}`)?.cards[0] ?? null} back label={$t('war.deck')} count={zone(`deck_${spectatorP2}`)?.cards.length ?? 0} />
+						<CardZone card={zone(`played_${spectatorP2}`)?.cards[0] ?? null} size="lg" label={$t('war.played')} />
+						<CardZone card={zone(`won_${spectatorP2}`)?.cards[0] ?? null} back label={$t('war.won')} count={zone(`won_${spectatorP2}`)?.cards.length ?? 0} countVariant="accent" />
+					</div>
+					<PlayerSlot name={playerName(spectatorP2)} />
+				</div>
+			{/if}
+		{/if}
 
 		<!-- Action -->
 		<div class="mt-2 flex flex-col items-center gap-3">
 			{#if isReviewing}
-				<p
-					class="text-sm font-medium {roundWinnerId === 'tie'
-						? 'text-muted-foreground'
-						: roundWinnerId === me
-							? 'text-accent'
-							: 'text-foreground'}"
-				>
-					{roundWinnerId === 'tie'
-						? $t('war.roundTie')
-						: $t('war.roundWon', { name: playerName(roundWinnerId ?? '') })}
-				</p>
 				{#if isMyTurn && myAction}
 					<Button onclick={() => onAction(myAction)} size="lg">{$t('war.continue')}</Button>
 				{:else}

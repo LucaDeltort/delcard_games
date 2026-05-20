@@ -14,7 +14,7 @@ export default {
 		close: 'Fermer'
 	},
 	home: {
-		subtitle: 'Jeux de cartes entre amis — sans serveur',
+		subtitle: 'Jeux de cartes entre amis - sans pub, sans inscription.',
 		newGame: 'Nouvelle partie',
 		labelGame: 'Jeu',
 		creating: 'Création…',
@@ -56,7 +56,10 @@ export default {
 		rules: 'Règles',
 		cardStyle: 'Style des cartes',
 		preloadingCards: 'Chargement des cartes… ({loaded}/{total})',
-		usePack: 'Utiliser ce paquet'
+		usePack: 'Utiliser ce paquet',
+		spectating: 'Tu regardes — tu joueras à la prochaine partie',
+		waitingToJoin: '{n} en attente',
+		joiningNextGame: 'Rejoindra la prochaine partie'
 	},
 	card: {
 		hidden: 'Carte cachée',
@@ -83,6 +86,7 @@ export default {
 		actionDrawTwoOther: 'Pioche 2 !',
 		actionWildOther: 'Changement de couleur',
 		actionWildDrawFourOther: 'Pioche 4 !',
+		actionDrawAcc: 'Pioche {count} !',
 		chooseColor: 'Choisis une couleur',
 		wins: '{name} gagne !',
 		endTurn: 'Passer',
@@ -150,7 +154,29 @@ export default {
 		reveal: 'Révéler',
 		continue: 'Continuer',
 		roundWon: '{name} remporte ce tour',
+		roundWonMe: 'Gagné !',
+		roundLost: 'Perdu...',
 		roundTie: 'Égalité'
+	},
+	purple: {
+		name: 'Purple',
+		betRed: 'Rouge',
+		betBlack: 'Noir',
+		betPurple: 'Purple',
+		stop: "S'arrêter",
+		continue: 'Continuer',
+		decreaseScore: 'Diminuer',
+		playingBank: 'Banque de Jeu',
+		penaltyBank: 'Score',
+		penalty: 'Pénalité',
+		deck: 'Deck',
+		cards: '{n} cartes',
+		betsProgress: '{current}/{total} paris gagnés',
+		options: {
+			endTurnOnEmptyDeck: 'Mettre fin au tour du joueur quand le deck est vide.',
+			allowDecreaseScore: 'Autoriser la diminution du score',
+			endScore: 'Score de fin de partie'
+		}
 	},
 	fight: {
 		name: 'La Bagarre',
@@ -183,7 +209,13 @@ export default {
 		flashShieldSelf: '{name} change son bouclier',
 		flashShield: '{name} change le bouclier de {target}',
 		flashDamage: '→ {n} dégâts',
-		flashBlocked: '→ Bloqué'
+		flashBlocked: '→ Bloqué',
+		yourTurn: 'À toi !',
+		bonusTurn: 'Tour Bonus !',
+		bannerAttack: 'Attaque !',
+		bannerBlocked: 'Bloqué !',
+		bannerCharge: 'Charge !',
+		bannerShield: 'Bouclier !'
 	},
 	settings: {
 		title: 'Paramètres',

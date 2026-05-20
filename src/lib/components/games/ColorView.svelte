@@ -2,6 +2,14 @@
 import { RotateCcw, RotateCw, Settings as SettingsIcon } from 'lucide-svelte'
 import { cubicOut } from 'svelte/easing'
 import { fade, fly, scale } from 'svelte/transition'
+import type {
+	ColorProp,
+	EntryAnim,
+	ExitAnim,
+	RotAnim,
+	SizeAnim
+} from '$lib/components/GameTitle.svelte'
+import GameTitle from '$lib/components/GameTitle.svelte'
 import RulesDrawer from '$lib/components/RulesDrawer.svelte'
 import { Button } from '$lib/components/ui/button'
 import type { Card, GameStateGeneric } from '$lib/core/types'
@@ -114,6 +122,7 @@ let actionBanner = $state<string | null>(null)
 let bouncingOpponents = $state<Set<string>>(new Set())
 
 // Plain (non-reactive) prev-state trackers — same pattern as drawDelays/prevHandIds
+let _bannerTimer: ReturnType<typeof setTimeout> | null = null
 let _prevTurnPlayerId = ''
 let _prevDiscardTopId: string | null = null
 let _hasPrevSnapshot = false
@@ -134,6 +143,122 @@ const ACTION_KEYS_OTHER: Partial<Record<string, string>> = {
 	Wild: 'color.actionWildOther',
 	WildDrawFour: 'color.actionWildDrawFourOther'
 }
+
+const CARD_COLOR_TO_PROP: Record<CardColor, ColorProp> = {
+	red: 'neon-red',
+	yellow: 'neon-yellow',
+	green: 'neon-green',
+	blue: 'neon-blue'
+}
+
+type BannerStyle = {
+	entry: EntryAnim
+	exit: ExitAnim
+	rotation: RotAnim
+	size: SizeAnim
+	color: ColorProp | null
+}
+const BANNER_STYLES: Record<string, BannerStyle> = {
+	'color.actionSkip': {
+		entry: 'rollIn',
+		exit: 'fadeOut',
+		rotation: 'none',
+		size: 'none',
+		color: null
+	},
+	'color.actionSkipOther': {
+		entry: 'rollIn',
+		exit: 'fadeOut',
+		rotation: 'none',
+		size: 'none',
+		color: null
+	},
+	'color.actionReverse': {
+		entry: 'flipDown',
+		exit: 'shrink',
+		rotation: 'none',
+		size: 'none',
+		color: null
+	},
+	'color.actionReverseOther': {
+		entry: 'flipDown',
+		exit: 'shrink',
+		rotation: 'none',
+		size: 'none',
+		color: null
+	},
+	'color.actionDrawTwo': {
+		entry: 'slideDown',
+		exit: 'explode',
+		rotation: 'wobble',
+		size: 'breathe',
+		color: null
+	},
+	'color.actionDrawTwoOther': {
+		entry: 'slideDown',
+		exit: 'explode',
+		rotation: 'wobble',
+		size: 'breathe',
+		color: null
+	},
+	'color.actionWild': {
+		entry: 'fadeScale',
+		exit: 'fadeOut',
+		rotation: 'sway',
+		size: 'pulse',
+		color: 'rainbow'
+	},
+	'color.actionWildOther': {
+		entry: 'fadeScale',
+		exit: 'fadeOut',
+		rotation: 'sway',
+		size: 'pulse',
+		color: 'rainbow'
+	},
+	'color.actionWildDrawFour': {
+		entry: 'bigEntrance',
+		exit: 'explode',
+		rotation: 'wobble',
+		size: 'pulse',
+		color: 'gold'
+	},
+	'color.actionWildDrawFourOther': {
+		entry: 'bigEntrance',
+		exit: 'explode',
+		rotation: 'wobble',
+		size: 'pulse',
+		color: 'gold'
+	}
+}
+
+const DRAW_SELF_KEYS = new Set(['color.actionDrawTwo', 'color.actionWildDrawFour'])
+const DRAW_OTHER_KEYS = new Set(['color.actionDrawTwoOther', 'color.actionWildDrawFourOther'])
+
+const bannerTitle = $derived(
+	actionBanner
+		? DRAW_SELF_KEYS.has(actionBanner)
+			? `+${gs.pendingDraw}`
+			: DRAW_OTHER_KEYS.has(actionBanner)
+				? $t('color.actionDrawAcc', { count: gs.pendingDraw })
+				: $t(actionBanner)
+		: ''
+)
+
+const bannerProps = $derived(
+	actionBanner
+		? {
+				...(BANNER_STYLES[actionBanner] ?? {
+					entry: 'slideDown' as EntryAnim,
+					exit: 'fadeOut' as ExitAnim,
+					rotation: 'none' as RotAnim,
+					size: 'none' as SizeAnim,
+					color: null
+				}),
+				color: (BANNER_STYLES[actionBanner]?.color ??
+					CARD_COLOR_TO_PROP[gs.currentColor]) as ColorProp
+			}
+		: null
+)
 
 $effect(() => {
 	if (!_hasPrevSnapshot) {
@@ -164,8 +289,12 @@ $effect(() => {
 		const keys = whoJustPlayed === myPlayerId ? ACTION_KEYS : ACTION_KEYS_OTHER
 		const label = keys[discardTop.face] ?? null
 		if (label) {
+			if (_bannerTimer !== null) clearTimeout(_bannerTimer)
 			actionBanner = label
-			setTimeout(() => (actionBanner = null), 1800)
+			_bannerTimer = setTimeout(() => {
+				actionBanner = null
+				_bannerTimer = null
+			}, 1800)
 		}
 		if (whoJustPlayed !== myPlayerId) {
 			opponentPlayCard = cardSrc(discardTop)
@@ -332,6 +461,19 @@ function handleColorPick(color: CardColor) {
 	{/key}
 	</div>
 
+	<!-- Your turn flash -->
+	<div class="pointer-events-none">
+		<GameTitle
+			title={$t('color.yourTurn')}
+			show={showTurnFlash}
+			entry="bigEntrance"
+			exit="shrink"
+			rotation="wobble"
+			size="pulse"
+			color="default"
+		/>
+	</div>
+
 	<!-- My hand -->
 	<div class="border-t border-border bg-card px-4 py-4">
 		<div class="flex flex-wrap justify-center gap-2">
@@ -379,28 +521,19 @@ function handleColorPick(color: CardColor) {
 </div>
 
 <!-- Action banner (Skip!, Reverse!, +2, +4, Color change) -->
-{#if actionBanner}
-	<div
-		transition:fly={{ y: 30, duration: 300 }}
-		class="pointer-events-none fixed inset-x-0 bottom-36 z-40 flex justify-center"
-	>
-		<div class="rounded-full bg-foreground px-8 py-3 text-xl font-bold text-background shadow-2xl">
-			{$t(actionBanner)}
-		</div>
-	</div>
-{/if}
-
-<!-- Your turn flash -->
-{#if showTurnFlash}
-	<div
-		transition:fade={{ duration: 200 }}
-		class="pointer-events-none fixed inset-0 z-40 flex items-center justify-center"
-	>
-		<div class="animate-bounce rounded-2xl bg-primary px-8 py-4 text-2xl font-bold text-primary-foreground shadow-2xl">
-			{$t('color.yourTurn')}
-		</div>
-	</div>
-{/if}
+<div class="pointer-events-none fixed inset-0 z-40 flex items-center justify-center">
+	{#key actionBanner}
+		<GameTitle
+			title={bannerTitle}
+			show={actionBanner !== null}
+			entry={bannerProps?.entry ?? 'slideDown'}
+			exit={bannerProps?.exit ?? 'fadeOut'}
+			rotation={bannerProps?.rotation ?? 'none'}
+			size={bannerProps?.size ?? 'none'}
+			color={bannerProps?.color ?? 'default'}
+		/>
+	{/key}
+</div>
 
 <!-- Challenge +4 overlay -->
 {#if showChallengeOverlay}

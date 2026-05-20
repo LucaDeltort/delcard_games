@@ -28,6 +28,7 @@ export class GameClient {
 	private _lastPongAt = 0
 	private _lastQuality: 'good' | 'warn' | 'poor' | null = null
 	private _lastSeq = -1
+	private _lastState: GameStateGeneric | null = null
 	private _actionQueue: Action[] = []
 	private _onVisible: (() => void) | null = null
 	private _onOnline: (() => void) | null = null
@@ -222,6 +223,7 @@ export class GameClient {
 					this.conn?.send({ type: 'RESYNC' } as ClientMessage)
 				}
 				this._lastSeq = msg.seq
+				this._lastState = msg.state
 				this.onState?.(msg.state)
 				break
 			case 'HOST_GONE':
@@ -265,6 +267,10 @@ export class GameClient {
 
 	get lobbyPlayers(): LobbyPlayer[] {
 		return this._lobbyPlayers
+	}
+
+	get lastState(): GameStateGeneric | null {
+		return this._lastState
 	}
 
 	private startHeartbeat(conn: DataConnection) {
