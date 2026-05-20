@@ -25,8 +25,8 @@ let {
 	onAction: (action: Action) => void
 } = $props()
 
-const me = $derived(gameState.players.find((p) => p === myPlayerId) ?? gameState.players[0])
-const opponent = $derived(gameState.players.find((p) => p !== me) ?? gameState.players[1])
+const me = $derived(gameState.players.find((p) => p === myPlayerId))
+const opponent = $derived(gameState.players.find((p) => p !== myPlayerId) ?? gameState.players[0])
 
 function zone(id: string) {
 	return gameState.zones[id]
@@ -43,6 +43,7 @@ const isReviewing = $derived(gameState.phase === 'reviewing')
 const roundWinnerId = $derived(
 	isReviewing
 		? (() => {
+				if (!me) return null
 				const myCard = zone(`played_${me}`)?.cards[0]
 				const oppCard = zone(`played_${opponent}`)?.cards[0]
 				if (!myCard || !oppCard) return null
@@ -163,15 +164,17 @@ function onKeydown(e: KeyboardEvent) {
 			<div class="h-px flex-1 bg-border"></div>
 		</div>
 
-		<!-- Me -->
-		<div class="flex flex-col items-center gap-4">
-			<div class="flex items-end gap-6">
-				<CardZone card={zone(`deck_${me}`)?.cards[0] ?? null} back label={$t('war.deck')} count={zone(`deck_${me}`)?.cards.length ?? 0} />
-				<CardZone card={zone(`played_${me}`)?.cards[0] ?? null} size="lg" label={$t('war.played')} />
-				<CardZone card={zone(`won_${me}`)?.cards[0] ?? null} back label={$t('war.won')} count={zone(`won_${me}`)?.cards.length ?? 0} countVariant="accent" />
+		<!-- Me (hidden for spectators) -->
+		{#if me}
+			<div class="flex flex-col items-center gap-4">
+				<div class="flex items-end gap-6">
+					<CardZone card={zone(`deck_${me}`)?.cards[0] ?? null} back label={$t('war.deck')} count={zone(`deck_${me}`)?.cards.length ?? 0} />
+					<CardZone card={zone(`played_${me}`)?.cards[0] ?? null} size="lg" label={$t('war.played')} />
+					<CardZone card={zone(`won_${me}`)?.cards[0] ?? null} back label={$t('war.won')} count={zone(`won_${me}`)?.cards.length ?? 0} countVariant="accent" />
+				</div>
+				<PlayerSlot name={playerName(me)} you />
 			</div>
-			<PlayerSlot name={playerName(me)} you />
-		</div>
+		{/if}
 
 		<!-- Action -->
 		<div class="mt-2 flex flex-col items-center gap-3">

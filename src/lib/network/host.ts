@@ -111,7 +111,7 @@ export class GameHost {
 				}
 
 				if (this.state !== null) {
-					if (this.clients.size + 1 >= this.def.maxPlayers) {
+					if (this.state.players.length + this.pendingPlayerIds.size >= this.def.maxPlayers) {
 						conn.send({ type: 'REJECTED', message: get(t)('network.sessionFull') } as HostMessage)
 						setTimeout(() => conn.close(), 300)
 						return
@@ -255,6 +255,7 @@ export class GameHost {
 		const opts = this.state ? { ...this._options, previousState: this.state } : this._options
 		const initial = this.def.setup(playerIds, opts)
 		this.state = initial
+		this.broadcastLobby()
 		this.onState?.(initial)
 		this.broadcastState(initial)
 	}
