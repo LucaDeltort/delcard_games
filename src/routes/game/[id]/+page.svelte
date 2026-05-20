@@ -527,7 +527,16 @@ $effect(() => {
 		</div>
 		<div class="flex gap-2">
 			{#if isHost}
-				<Button onclick={() => get(activeHost)?.startGame()} size="sm">
+				{#if gameMeta && lobbyPlayers.length < gameMeta.minPlayers}
+					<p class="text-xs text-muted-foreground">
+						{$t('game.minPlayersRequired', { n: gameMeta.minPlayers })}
+					</p>
+				{/if}
+				<Button
+					onclick={() => get(activeHost)?.startGame()}
+					disabled={lobbyPlayers.length < (gameMeta?.minPlayers ?? 2)}
+					size="sm"
+				>
 					{$t('game.rematch')}
 				</Button>
 			{/if}
