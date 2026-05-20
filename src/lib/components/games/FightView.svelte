@@ -18,13 +18,15 @@ let {
 	myPlayerId,
 	players,
 	validActions,
-	onAction
+	onAction,
+	isSpectator = false
 }: {
 	state: GameStateGeneric
 	myPlayerId: string
 	players: LobbyPlayer[]
 	validActions: Action[]
 	onAction: (action: Action) => void
+	isSpectator?: boolean
 } = $props()
 
 const gs = $derived(gameState as unknown as FightState)
@@ -283,7 +285,8 @@ onDestroy(() => {
 		<CardZone card={gs.zones.discard?.cards.at(-1) ?? null} label={$t('fight.discard')} />
 	</div>
 
-	<!-- Me -->
+	<!-- Me (hidden for spectators) -->
+	{#if !isSpectator}
 	<div class="flex flex-col items-center gap-3 border-t border-border bg-card/50 px-4 py-4">
 		<p class="text-sm text-foreground">
 			{playerName(myPlayerId)}
@@ -299,10 +302,13 @@ onDestroy(() => {
 			<CardZone card={gs.zones[`charge_${myPlayerId}`]?.cards[0] ?? null} count={(gs.zones[`charge_${myPlayerId}`]?.cards.length ?? 0) > 1 ? gs.zones[`charge_${myPlayerId}`]?.cards.length : undefined} label={$t('fight.charge')} />
 		</div>
 	</div>
+	{/if}
 
 	<!-- Actions -->
 	<footer class="mt-auto border-t border-border bg-card px-4 py-4">
-		{#if !iAmAlive}
+		{#if isSpectator}
+			<!-- spectators have no actions -->
+		{:else if !iAmAlive}
 			<p class="text-sm text-muted-foreground">{$t('fight.youEliminated')}</p>
 		{:else if isMyTurn}
 			<div class="flex flex-col gap-3">

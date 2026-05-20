@@ -447,6 +447,7 @@ $effect(() => {
 		players={enrichedPlayers}
 		{validActions}
 		onAction={submitAction}
+		{isSpectator}
 	/>
 {:else if gameState.activeGameId === 'color'}
 	<ColorView

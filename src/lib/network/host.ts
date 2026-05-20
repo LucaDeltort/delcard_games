@@ -111,7 +111,11 @@ export class GameHost {
 				}
 
 				if (this.state !== null) {
-					if (this.state.players.length + this.pendingPlayerIds.size >= this.def.maxPlayers) {
+					const capacity =
+						this.state.phase === 'gameover'
+							? this.clients.size + 1
+							: this.state.players.length + this.pendingPlayerIds.size
+					if (capacity >= this.def.maxPlayers) {
 						conn.send({ type: 'REJECTED', message: get(t)('network.sessionFull') } as HostMessage)
 						setTimeout(() => conn.close(), 300)
 						return
