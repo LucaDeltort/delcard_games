@@ -25,8 +25,8 @@ let {
 	onAction: (action: Action) => void
 } = $props()
 
-const me = $derived(gameState.players.find((p) => p === myPlayerId) ?? gameState.players[0])
-const opponent = $derived(gameState.players.find((p) => p !== me) ?? gameState.players[1])
+const me = $derived(gameState.players.find((p) => p === myPlayerId))
+const opponent = $derived(gameState.players.find((p) => p !== myPlayerId) ?? gameState.players[0])
 
 function zone(id: string) {
 	return gameState.zones[id]
@@ -43,9 +43,11 @@ const isReviewing = $derived(gameState.phase === 'reviewing')
 const roundWinnerId = $derived(
 	isReviewing
 		? (() => {
-				const myCard = zone(`played_${me}`)?.cards[0]
-				const oppCard = zone(`played_${opponent}`)?.cards[0]
-				if (!myCard || !oppCard) return null
+				const [p0, p1] = gameState.players
+				if (!p0 || !p1) return null
+				const c0 = zone(`played_${p0}`)?.cards[0]
+				const c1 = zone(`played_${p1}`)?.cards[0]
+				if (!c0 || !c1) return null
 				const faceVal: Record<string, number> = {
 					'2': 2,
 					'3': 3,
@@ -61,10 +63,10 @@ const roundWinnerId = $derived(
 					K: 13,
 					A: 14
 				}
-				const myV = faceVal[myCard.face] ?? 0
-				const oppV = faceVal[oppCard.face] ?? 0
-				if (myV === oppV) return 'tie'
-				return myV > oppV ? me : opponent
+				const v0 = faceVal[c0.face] ?? 0
+				const v1 = faceVal[c1.face] ?? 0
+				if (v0 === v1) return 'tie'
+				return v0 > v1 ? p0 : p1
 			})()
 		: null
 )
@@ -79,7 +81,9 @@ const resultTitle = $derived(
 		? $t('war.roundTie')
 		: lastRoundWinnerId === me
 			? $t('war.roundWonMe')
-			: $t('war.roundLost')
+			: me
+				? $t('war.roundLost')
+				: $t('war.roundWon', { name: playerName(lastRoundWinnerId ?? '') })
 )
 const resultProps = $derived(
 	lastRoundWinnerId === 'tie'
@@ -90,7 +94,7 @@ const resultProps = $derived(
 				size: 'none',
 				color: 'fire'
 			} as const)
-		: lastRoundWinnerId === me
+		: lastRoundWinnerId === me || (!me && lastRoundWinnerId !== null)
 			? ({
 					entry: 'bigEntrance',
 					exit: 'explode',
@@ -163,15 +167,29 @@ function onKeydown(e: KeyboardEvent) {
 			<div class="h-px flex-1 bg-border"></div>
 		</div>
 
-		<!-- Me -->
-		<div class="flex flex-col items-center gap-4">
-			<div class="flex items-end gap-6">
-				<CardZone card={zone(`deck_${me}`)?.cards[0] ?? null} back label={$t('war.deck')} count={zone(`deck_${me}`)?.cards.length ?? 0} />
-				<CardZone card={zone(`played_${me}`)?.cards[0] ?? null} size="lg" label={$t('war.played')} />
-				<CardZone card={zone(`won_${me}`)?.cards[0] ?? null} back label={$t('war.won')} count={zone(`won_${me}`)?.cards.length ?? 0} countVariant="accent" />
+		<!-- Me / spectator second player -->
+		{#if me}
+			<div class="flex flex-col items-center gap-4">
+				<div class="flex items-end gap-6">
+					<CardZone card={zone(`deck_${me}`)?.cards[0] ?? null} back label={$t('war.deck')} count={zone(`deck_${me}`)?.cards.length ?? 0} />
+					<CardZone card={zone(`played_${me}`)?.cards[0] ?? null} size="lg" label={$t('war.played')} />
+					<CardZone card={zone(`won_${me}`)?.cards[0] ?? null} back label={$t('war.won')} count={zone(`won_${me}`)?.cards.length ?? 0} countVariant="accent" />
+				</div>
+				<PlayerSlot name={playerName(me)} you />
 			</div>
-			<PlayerSlot name={playerName(me)} you />
-		</div>
+		{:else}
+			{@const spectatorP2 = gameState.players[1]}
+			{#if spectatorP2}
+				<div class="flex flex-col items-center gap-4">
+					<div class="flex items-end gap-6">
+						<CardZone card={zone(`deck_${spectatorP2}`)?.cards[0] ?? null} back label={$t('war.deck')} count={zone(`deck_${spectatorP2}`)?.cards.length ?? 0} />
+						<CardZone card={zone(`played_${spectatorP2}`)?.cards[0] ?? null} size="lg" label={$t('war.played')} />
+						<CardZone card={zone(`won_${spectatorP2}`)?.cards[0] ?? null} back label={$t('war.won')} count={zone(`won_${spectatorP2}`)?.cards.length ?? 0} countVariant="accent" />
+					</div>
+					<PlayerSlot name={playerName(spectatorP2)} />
+				</div>
+			{/if}
+		{/if}
 
 		<!-- Action -->
 		<div class="mt-2 flex flex-col items-center gap-3">

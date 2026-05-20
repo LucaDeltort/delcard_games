@@ -1,7 +1,7 @@
 import type { GameStateGeneric } from '$lib/core/types'
 import type { Action } from '$lib/engine'
 
-export type LobbyPlayer = { id: string; name: string }
+export type LobbyPlayer = { id: string; name: string; pending?: boolean }
 
 export type ClientMessage =
 	| { type: 'JOIN'; playerName: string }

@@ -21,6 +21,7 @@ import { getDeckSlugForType } from '$lib/decks/registry'
 import type { Action } from '$lib/engine'
 import { gameList, games } from '$lib/games/index'
 import { t } from '$lib/i18n'
+import type { LobbyPlayer } from '$lib/network/messages'
 import { loadGameOptions, saveGameOptions } from '$lib/stores/gameOptions'
 import { activeClient, activeHost } from '$lib/stores/session'
 import { settingsOpen } from '$lib/stores/settings'
@@ -30,7 +31,7 @@ const isHost = $page.url.searchParams.get('role') === 'host'
 let resolvedGameId = $state($page.url.searchParams.get('game') ?? '')
 
 let gameState = $state<GameStateGeneric | null>(null)
-let lobbyPlayers = $state<{ id: string; name: string }[]>([])
+let lobbyPlayers = $state<LobbyPlayer[]>([])
 let myPlayerId = $state('')
 let disconnectedMsg = $state('')
 let reconnecting = $state(false)
@@ -62,6 +63,10 @@ $effect(() => {
 const enrichedPlayers = $derived(
 	gameState ? gameState.players.map((id) => ({ id, name: knownNames[id] ?? id })) : lobbyPlayers
 )
+const isSpectator = $derived(
+	!isHost && gameState !== null && !!myPlayerId && !gameState.players.includes(myPlayerId)
+)
+const pendingLobbyPlayers = $derived(lobbyPlayers.filter((p) => p.pending))
 
 $effect(() => {
 	if (!gameState || !myPlayerId) {
@@ -157,6 +162,7 @@ onMount(() => {
 		if (client.gameId) resolvedGameId = client.gameId
 		lobbyOptions = client.options
 		if (client.lobbyPlayers.length > 0) lobbyPlayers = client.lobbyPlayers
+		if (client.lastState) gameState = client.lastState
 	}
 })
 
@@ -266,6 +272,20 @@ $effect(() => {
 			aria-hidden="true"
 		></span>
 		<span class="sr-only">{$t('network.connection')}: {$t(`network.quality.${connectionQuality}`)}</span>
+	</div>
+{/if}
+
+<!-- ── Spectator banner ──────────────────────────────────────── -->
+{#if isSpectator}
+	<div class="fixed inset-x-0 bottom-0 z-40 flex items-center justify-center border-t border-border bg-card/95 px-4 py-3 backdrop-blur-sm">
+		<p class="text-sm text-muted-foreground">{$t('game.spectating')}</p>
+	</div>
+{/if}
+
+<!-- ── Pending players indicator ─────────────────────────────── -->
+{#if !isSpectator && pendingLobbyPlayers.length > 0 && gameState && gameState.phase !== 'gameover'}
+	<div class="fixed bottom-4 left-4 z-40 rounded-lg border border-border bg-card/90 px-3 py-2 text-xs text-muted-foreground backdrop-blur-sm">
+		{$t('game.waitingToJoin', { n: pendingLobbyPlayers.length })}
 	</div>
 {/if}
 
@@ -427,6 +447,7 @@ $effect(() => {
 		players={enrichedPlayers}
 		{validActions}
 		onAction={submitAction}
+		{isSpectator}
 	/>
 {:else if gameState.activeGameId === 'color'}
 	<ColorView
@@ -524,6 +545,11 @@ $effect(() => {
 		<div>
 			<p class="text-xs uppercase tracking-widest text-muted-foreground">{$t('game.over')}</p>
 			<p class="font-heading text-xl text-foreground">{winnerName} — {$t('game.wins')}</p>
+			{#if pendingLobbyPlayers.length > 0}
+				<p class="mt-1 text-xs text-muted-foreground">
+					{pendingLobbyPlayers.map((p) => p.name).join(', ')} — {$t('game.joiningNextGame')}
+				</p>
+			{/if}
 		</div>
 		<div class="flex gap-2">
 			{#if isHost}
