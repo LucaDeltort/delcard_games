@@ -21,6 +21,10 @@ function refillDeckIfNeeded(state: PurpleState, required: number): PurpleState {
 
 	let newCards = [...deckZone.cards]
 	const newZones = { ...state.zones }
+	const newScores = { ...state.scores }
+
+	const turnBank = newZones[`penaltyBank_${state.turnPlayerId}`]
+	newScores[state.turnPlayerId] = (newScores[state.turnPlayerId] || 0) + turnBank.cards.length
 
 	state.players.forEach((pId) => {
 		const pBank = newZones[`penaltyBank_${pId}`]
@@ -30,7 +34,7 @@ function refillDeckIfNeeded(state: PurpleState, required: number): PurpleState {
 
 	newZones['deck'] = { ...deckZone, cards: shuffle(newCards) }
 
-	const newState = { ...state, zones: newZones }
+	const newState = { ...state, zones: newZones, scores: newScores }
 
 	if (state.options.endTurnOnEmptyDeck) {
 		newState.turnPlayerId = nextPlayer(state.players, state.turnPlayerId)
