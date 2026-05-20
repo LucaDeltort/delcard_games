@@ -14,7 +14,7 @@ export default {
 		close: 'Close'
 	},
 	home: {
-		subtitle: 'Card games with friends — no server',
+		subtitle: 'Card games with friends - no ads, no sign-up.',
 		newGame: 'New game',
 		labelGame: 'Game',
 		creating: 'Creating…',

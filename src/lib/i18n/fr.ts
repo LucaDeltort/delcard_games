@@ -14,7 +14,7 @@ export default {
 		close: 'Fermer'
 	},
 	home: {
-		subtitle: 'Jeux de cartes entre amis — sans serveur',
+		subtitle: 'Jeux de cartes entre amis - sans pub, sans inscription.',
 		newGame: 'Nouvelle partie',
 		labelGame: 'Jeu',
 		creating: 'Création…',
