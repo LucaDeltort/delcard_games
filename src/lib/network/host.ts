@@ -25,6 +25,7 @@ export class GameHost {
 	private peer!: Peer
 	private clients = new Map<string, ClientEntry>()
 	private pendingDisconnects = new Map<string, ReturnType<typeof setTimeout>>()
+	private pendingPlayerIds = new Set<string>()
 	private state: GameStateGeneric | null = null
 	private _code: string
 	private hostName: string
@@ -66,7 +67,8 @@ export class GameHost {
 		const hostEntry: LobbyPlayer = { id: this.playerId, name: this.hostName }
 		const clientEntries = Array.from(this.clients.entries()).map(([id, c]) => ({
 			id,
-			name: c.name
+			name: c.name,
+			...(this.pendingPlayerIds.has(id) ? { pending: true } : {})
 		}))
 		return [hostEntry, ...clientEntries]
 	}
@@ -109,8 +111,16 @@ export class GameHost {
 				}
 
 				if (this.state !== null) {
-					conn.send({ type: 'REJECTED', message: get(t)('network.gameInProgress') } as HostMessage)
-					setTimeout(() => conn.close(), 300)
+					if (this.clients.size + 1 >= this.def.maxPlayers) {
+						conn.send({ type: 'REJECTED', message: get(t)('network.sessionFull') } as HostMessage)
+						setTimeout(() => conn.close(), 300)
+						return
+					}
+					this.clients.set(conn.peer, { conn, name: msg.playerName })
+					this.pendingPlayerIds.add(conn.peer)
+					conn.send({ type: 'WELCOME', playerId: conn.peer, gameId: this.def.id } as HostMessage)
+					this.broadcastLobby()
+					this.sendStateTo(conn, this.state)
 					return
 				}
 
@@ -136,10 +146,12 @@ export class GameHost {
 		})
 
 		conn.on('close', () => {
+			const wasPending = this.pendingPlayerIds.has(conn.peer)
 			this.clients.delete(conn.peer)
+			this.pendingPlayerIds.delete(conn.peer)
 			this.broadcastLobby()
 
-			if (!this.state || this.state.phase === 'gameover') return
+			if (wasPending || !this.state || this.state.phase === 'gameover') return
 
 			// Grace period: give the player time to reconnect before processing disconnect
 			const timer = setTimeout(() => {
@@ -226,6 +238,7 @@ export class GameHost {
 		if (!client) return
 		client.conn.send({ type: 'HOST_GONE', message: get(t)('network.kicked') } as HostMessage)
 		this.clients.delete(peerId)
+		this.pendingPlayerIds.delete(peerId)
 		this.broadcastLobby()
 		client.conn.close()
 	}
@@ -237,6 +250,7 @@ export class GameHost {
 
 	/** Start the game. Player order = lobby order (host first). */
 	startGame() {
+		this.pendingPlayerIds.clear()
 		const playerIds = this.lobbyPlayers.map((p) => p.id)
 		const opts = this.state ? { ...this._options, previousState: this.state } : this._options
 		const initial = this.def.setup(playerIds, opts)

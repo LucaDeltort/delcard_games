@@ -56,7 +56,10 @@ export default {
 		rules: 'Rules',
 		cardStyle: 'Card style',
 		preloadingCards: 'Loading cards… ({loaded}/{total})',
-		usePack: 'Use this pack'
+		usePack: 'Use this pack',
+		spectating: "Watching — you'll join the next game",
+		waitingToJoin: '{n} waiting to join',
+		joiningNextGame: 'Joining next game'
 	},
 	card: {
 		hidden: 'Hidden card',
