@@ -188,7 +188,13 @@ export default {
 		flashShieldSelf: '{name} changes their shield',
 		flashShield: "{name} changes {target}'s shield",
 		flashDamage: '→ {n} dmg',
-		flashBlocked: '→ Blocked'
+		flashBlocked: '→ Blocked',
+		yourTurn: 'Your Turn!',
+		bonusTurn: 'Bonus Turn!',
+		bannerAttack: 'Attack!',
+		bannerBlocked: 'Blocked!',
+		bannerCharge: 'Charge!',
+		bannerShield: 'Shield!'
 	},
 	settings: {
 		title: 'Settings',

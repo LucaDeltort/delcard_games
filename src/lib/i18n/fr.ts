@@ -189,7 +189,13 @@ export default {
 		flashShieldSelf: '{name} change son bouclier',
 		flashShield: '{name} change le bouclier de {target}',
 		flashDamage: '→ {n} dégâts',
-		flashBlocked: '→ Bloqué'
+		flashBlocked: '→ Bloqué',
+		yourTurn: 'À toi !',
+		bonusTurn: 'Tour Bonus !',
+		bannerAttack: 'Attaque !',
+		bannerBlocked: 'Bloqué !',
+		bannerCharge: 'Charge !',
+		bannerShield: 'Bouclier !'
 	},
 	settings: {
 		title: 'Paramètres',
