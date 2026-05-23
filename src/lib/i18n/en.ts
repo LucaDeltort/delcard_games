@@ -224,6 +224,7 @@ export default {
 		timeFormatHint: 'Used in match history.',
 		language: 'Language',
 		decks: 'Card decks',
+		changelog: 'Changelog',
 		bugReport: 'Report a bug',
 		proposeCardPack: 'Propose a card pack',
 		proposeGame: 'Propose a game'
