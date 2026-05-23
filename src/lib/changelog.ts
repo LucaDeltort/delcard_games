@@ -3,6 +3,15 @@ type ReleaseNote = { version: string; date: string; items: ReleaseItem[] }
 
 const changelog: ReleaseNote[] = [
 	{
+		version: '0.3.0',
+		date: '2026-05-23',
+		items: [
+			{ fr: "Notes de mise à jour accessibles dans l'app", en: 'In-app release notes viewer' },
+			{ fr: 'Color : nouvelle règle Solo', en: 'Color: new Solo rule' },
+			{ fr: 'Color : variante accumulation croisée', en: 'Color: cross-accumulation rule variant' }
+		]
+	},
+	{
 		version: '0.2.0',
 		date: '2026-05-20',
 		items: [
