@@ -15,6 +15,8 @@ function setup(players = PLAYERS) {
 
 const NO_OPTIONS: ColorOptions = {
 	accumulation: false,
+	crossAccumulation: false,
+	solo: false,
 	cut: false,
 	playAfterDraw: false,
 	drawUntilPlay: false,
@@ -53,7 +55,8 @@ function makeState(
 		drewCardId: null as string | null,
 		penaltyTurn: false,
 		lastSkippedPlayer: null as string | null,
-		pendingChallenge: null as { by: string; hadBluff: boolean } | null
+		pendingChallenge: null as { by: string; hadBluff: boolean } | null,
+		soloAlert: null as { playerId: string; x: number; y: number } | null
 	}
 }
 
@@ -380,7 +383,8 @@ describe('color.applyAction DRAW_CARD', () => {
 			drewCardId: null,
 			penaltyTurn: false,
 			lastSkippedPlayer: null,
-			pendingChallenge: null
+			pendingChallenge: null,
+			soloAlert: null
 		}
 		const next = color.applyAction(state, { type: 'DRAW_CARD', playerId: P1 })
 		expect(next.zones[`hand_${P1}`].cards).toHaveLength(1)

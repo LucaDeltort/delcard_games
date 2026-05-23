@@ -29,6 +29,7 @@ type ColorState = GameStateGeneric & {
 	drewCardId: string | null
 	pendingDraw: number
 	pendingChallenge: { by: string; hadBluff: boolean } | null
+	soloAlert: { playerId: string; x: number; y: number } | null
 }
 
 let {
@@ -78,6 +79,9 @@ const canEndTurn = $derived(validActions.some((a) => a.type === 'END_TURN'))
 const acceptAction = $derived(validActions.find((a) => a.type === 'ACCEPT_PENALTY') ?? null)
 const challengeAction = $derived(validActions.find((a) => a.type === 'CHALLENGE_DRAW_FOUR') ?? null)
 const showChallengeOverlay = $derived(acceptAction !== null || challengeAction !== null)
+const callSoloAction = $derived(validActions.find((a) => a.type === 'CALL_SOLO') ?? null)
+const counterSoloAction = $derived(validActions.find((a) => a.type === 'COUNTER_SOLO') ?? null)
+const soloButtonAction = $derived(callSoloAction ?? counterSoloAction)
 
 const opponents = $derived(gs.players.filter((p) => p !== myPlayerId))
 const mustDraw = $derived(isMyTurn && canDraw && playableCardIds.size === 0 && gs.pendingDraw === 0)
@@ -127,6 +131,8 @@ let _prevTurnPlayerId = ''
 let _prevDiscardTopId: string | null = null
 let _hasPrevSnapshot = false
 const _prevOpponentHandSizes = new Map<string, number>()
+let _prevSoloAlert: { playerId: string; x: number; y: number } | null = null
+let _prevSoloPlayerHandSize = 0
 
 const ACTION_KEYS: Partial<Record<string, string>> = {
 	Skip: 'color.actionSkip',
@@ -228,6 +234,20 @@ const BANNER_STYLES: Record<string, BannerStyle> = {
 		rotation: 'wobble',
 		size: 'pulse',
 		color: 'gold'
+	},
+	'color.soloSaved': {
+		entry: 'bigEntrance',
+		exit: 'explode',
+		rotation: 'wobble',
+		size: 'pulse',
+		color: 'neon-green'
+	},
+	'color.soloTooSlow': {
+		entry: 'glitch',
+		exit: 'blur',
+		rotation: 'none',
+		size: 'none',
+		color: 'neon-red'
 	}
 }
 
@@ -315,6 +335,23 @@ $effect(() => {
 		}
 		_prevOpponentHandSizes.set(pid, size)
 	}
+
+	// Solo flash: detect soloAlert → null transition
+	const currentSolo = gs.soloAlert
+	if (_prevSoloAlert && !currentSolo && gs.phase === 'playing') {
+		const currentHandSize = gs.zones[`hand_${_prevSoloAlert.playerId}`]?.cards.length ?? 0
+		const wasCountered = currentHandSize > _prevSoloPlayerHandSize
+		if (_bannerTimer !== null) clearTimeout(_bannerTimer)
+		actionBanner = wasCountered ? 'color.soloTooSlow' : 'color.soloSaved'
+		_bannerTimer = setTimeout(() => {
+			actionBanner = null
+			_bannerTimer = null
+		}, 1800)
+	}
+	if (currentSolo && !_prevSoloAlert) {
+		_prevSoloPlayerHandSize = gs.zones[`hand_${currentSolo.playerId}`]?.cards.length ?? 0
+	}
+	_prevSoloAlert = currentSolo
 })
 
 function handleCardClick(card: Card) {
@@ -607,3 +644,42 @@ function handleColorPick(color: CardColor) {
 		</div>
 	</div>
 {/if}
+
+{#if gs.soloAlert && soloButtonAction}
+	{@const isMine = gs.soloAlert.playerId === myPlayerId}
+	<div
+		style="position:fixed; left:{gs.soloAlert.x * 100}%; top:{gs.soloAlert.y * 100}%; transform:translate(-50%,-50%); z-index:60;"
+		in:scale={{ duration: 200, start: 0.5 }}
+	>
+		<button
+			onclick={() => onAction(soloButtonAction)}
+			class="solo-btn rounded-full px-5 py-3 text-sm font-bold shadow-lg
+				{isMine ? 'bg-primary text-primary-foreground' : 'bg-destructive text-destructive-foreground'}"
+		>
+			{isMine ? $t('color.solo') : $t('color.counterSolo')}
+		</button>
+	</div>
+{/if}
+
+<style>
+	@keyframes solo-pulse {
+		0%, 100% { transform: scale(1); filter: brightness(1); }
+		50% { transform: scale(1.12); filter: brightness(1.15); }
+	}
+	.solo-btn {
+		animation: solo-pulse 0.85s ease-in-out infinite;
+		cursor: pointer;
+	}
+	.solo-btn:hover {
+		animation: none;
+		transform: scale(1.2);
+		filter: brightness(1.2);
+		transition: transform 0.1s, filter 0.1s;
+	}
+	.solo-btn:active {
+		animation: none;
+		transform: scale(0.88);
+		filter: brightness(0.9);
+		transition: transform 0.08s, filter 0.08s;
+	}
+</style>
