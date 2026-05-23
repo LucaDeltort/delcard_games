@@ -225,6 +225,7 @@ export default {
 		timeFormatHint: "Utilisé dans l'historique des parties.",
 		language: 'Langue',
 		decks: 'Jeux de cartes',
+		changelog: 'Notes de version',
 		bugReport: 'Signaler un bug',
 		proposeCardPack: 'Proposer un jeu de cartes',
 		proposeGame: 'Proposer un jeu'

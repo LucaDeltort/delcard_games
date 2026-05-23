@@ -1,11 +1,14 @@
 <script lang="ts">
 import { Dialog } from 'bits-ui'
-import { Bug, Layers, Lightbulb, X } from 'lucide-svelte'
+import { Bug, Layers, Lightbulb, ScrollText, X } from 'lucide-svelte'
+import { getChangelog } from '$lib/changelog'
 import { Select, SelectContent, SelectItem, SelectTrigger } from '$lib/components/ui/select'
 import { type Locale, locale, t } from '$lib/i18n'
 import { settings, settingsOpen } from '$lib/stores/settings'
 
 const version = __APP_VERSION__
+const changelog = getChangelog()
+let changelogOpen = $state(false)
 
 const langLabels: Record<Locale, string> = { fr: 'Français', en: 'English' }
 
@@ -90,7 +93,51 @@ $effect(() => {
 					<Lightbulb size={14} />
 					{$t('settings.proposeGame')}
 				</a>
-				<span class="text-xs text-muted-foreground/50">v{version}</span>
+				<button
+				onclick={() => (changelogOpen = true)}
+				class="flex items-center gap-2 text-xs text-muted-foreground transition-colors hover:text-foreground"
+			>
+				<ScrollText size={14} />
+				{$t('settings.changelog')}
+			</button>
+			<span class="text-xs text-muted-foreground/50">v{version}</span>
+		</div>
+	</Dialog.Content>
+</Dialog.Portal>
+</Dialog.Root>
+
+<Dialog.Root open={changelogOpen} onOpenChange={(v) => (changelogOpen = v)}>
+	<Dialog.Portal>
+		<Dialog.Overlay class="fixed inset-0 z-[120] bg-black/20" />
+		<Dialog.Content
+			class="fixed inset-y-0 right-0 z-[130] flex w-72 max-w-[85vw] flex-col border-l border-border bg-card shadow-xl focus:outline-none"
+		>
+			<div class="flex items-center justify-between border-b border-border px-4 py-2">
+				<Dialog.Title class="text-xs tracking-widest text-muted-foreground uppercase">{$t('settings.changelog')}</Dialog.Title>
+				<Dialog.Close
+					class="p-2 text-muted-foreground transition-colors hover:text-foreground"
+					aria-label={$t('common.close')}
+				>
+					<X size={16} />
+				</Dialog.Close>
+			</div>
+			<div class="flex flex-1 flex-col gap-6 overflow-y-auto px-4 py-4">
+				{#each changelog as note}
+					<div class="flex flex-col gap-2">
+						<div class="flex items-baseline justify-between">
+							<span class="text-xs font-semibold text-foreground">v{note.version}</span>
+							<span class="text-xs text-muted-foreground/60">{note.date}</span>
+						</div>
+						<ul class="flex flex-col gap-1">
+							{#each note.items as item}
+								<li class="flex items-start gap-2 text-xs text-muted-foreground">
+									<span class="mt-1.5 size-1 shrink-0 rounded-full bg-muted-foreground/40"></span>
+									{$locale === 'fr' ? item.fr : item.en}
+								</li>
+							{/each}
+						</ul>
+					</div>
+				{/each}
 			</div>
 		</Dialog.Content>
 	</Dialog.Portal>
