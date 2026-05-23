@@ -95,9 +95,19 @@ export default {
 		challengeWon: 'Challenge won! {name} draws 4.',
 		challengeLost: 'Challenge failed — you draw 6.',
 		swapWith: 'Swap hands with…',
+		solo: 'Solo!',
+		counterSolo: 'Counter Solo!',
+		soloSaved: 'Saved!',
+		soloTooSlow: 'Too Slow!',
 		options: {
 			accumulation: 'Accumulation',
 			accumulationDesc: 'Stack +2 on +2, or +4 on +4.',
+			crossAccumulation: 'Cross Accumulation',
+			crossAccumulationDesc:
+				'With Accumulation on: stack +4 on +2 (any color), or +2 on +4 if color matches.',
+			solo: 'Solo',
+			soloDesc:
+				'When you drop to 1 card, a Solo button appears — press it before someone Counter-Solos you (+2).',
 			cut: 'Cut',
 			cutDesc: 'Play the identical card to cut in out of turn.',
 			playAfterDraw: 'Play after drawing',
@@ -224,6 +234,7 @@ export default {
 		timeFormatHint: 'Used in match history.',
 		language: 'Language',
 		decks: 'Card decks',
+		changelog: 'Changelog',
 		bugReport: 'Report a bug',
 		proposeCardPack: 'Propose a card pack',
 		proposeGame: 'Propose a game'

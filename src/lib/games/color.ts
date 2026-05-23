@@ -6,6 +6,8 @@ export type CardColor = 'red' | 'yellow' | 'green' | 'blue'
 
 export type ColorOptions = {
 	accumulation: boolean
+	crossAccumulation: boolean
+	solo: boolean
 	cut: boolean
 	playAfterDraw: boolean
 	drawUntilPlay: boolean
@@ -16,6 +18,8 @@ export type ColorOptions = {
 
 const DEFAULT_COLOR_OPTIONS: ColorOptions = {
 	accumulation: false,
+	crossAccumulation: false,
+	solo: false,
 	cut: false,
 	playAfterDraw: false,
 	drawUntilPlay: false,
@@ -28,6 +32,8 @@ function parseOptions(raw?: Record<string, unknown>): ColorOptions {
 	if (!raw) return { ...DEFAULT_COLOR_OPTIONS }
 	return {
 		accumulation: raw.accumulation === true,
+		crossAccumulation: raw.crossAccumulation === true,
+		solo: raw.solo === true,
 		cut: raw.cut === true,
 		playAfterDraw: raw.playAfterDraw === true,
 		drawUntilPlay: raw.drawUntilPlay === true,
@@ -48,6 +54,7 @@ type ColorState = GameStateGeneric & {
 	penaltyTurn: boolean
 	lastSkippedPlayer: string | null
 	pendingChallenge: { by: string; hadBluff: boolean } | null
+	soloAlert: { playerId: string; x: number; y: number } | null
 }
 
 const NUMBER_FACES = new Set(['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'])
@@ -109,6 +116,21 @@ export const colorOptionsSchema: OptionSchema[] = [
 		default: false,
 		label: 'color.options.accumulation',
 		description: 'color.options.accumulationDesc'
+	},
+	{
+		key: 'crossAccumulation',
+		type: 'boolean',
+		default: false,
+		label: 'color.options.crossAccumulation',
+		description: 'color.options.crossAccumulationDesc',
+		disabledIf: 'accumulation'
+	},
+	{
+		key: 'solo',
+		type: 'boolean',
+		default: false,
+		label: 'color.options.solo',
+		description: 'color.options.soloDesc'
 	},
 	{
 		key: 'cut',
@@ -202,7 +224,8 @@ export const color: GameDefinition<ColorState> = {
 			drewCardId: null,
 			penaltyTurn: false,
 			lastSkippedPlayer: null,
-			pendingChallenge: null
+			pendingChallenge: null,
+			soloAlert: null
 		}
 	},
 
@@ -210,12 +233,23 @@ export const color: GameDefinition<ColorState> = {
 		if (state.phase !== 'playing') return []
 		const { options } = state
 
+		// Solo alert: anyone can press their button in addition to normal actions
+		const soloActions: ReturnType<typeof this.getValidActions> = []
+		if (options.solo && state.soloAlert) {
+			if (state.soloAlert.playerId === playerId) {
+				soloActions.push({ type: 'CALL_SOLO', playerId })
+			} else {
+				soloActions.push({ type: 'COUNTER_SOLO', playerId })
+			}
+		}
+
 		// Challenge pending: only challenge target can act
 		if (state.pendingChallenge) {
-			if (playerId !== state.turnPlayerId) return []
+			if (playerId !== state.turnPlayerId) return [...soloActions]
 			return [
 				{ type: 'ACCEPT_PENALTY', playerId },
-				{ type: 'CHALLENGE_DRAW_FOUR', playerId }
+				{ type: 'CHALLENGE_DRAW_FOUR', playerId },
+				...soloActions
 			]
 		}
 
@@ -226,17 +260,17 @@ export const color: GameDefinition<ColorState> = {
 			const drewCard = hand?.cards.find((c) => c.id === state.drewCardId)
 			if (drewCard && canPlay(drewCard, top, state.currentColor)) {
 				const play = { type: 'PLAY_CARD', playerId, payload: { cardId: state.drewCardId } }
-				if (options.drawUntilPlay) return [play]
-				return [play, { type: 'END_TURN', playerId }]
+				if (options.drawUntilPlay) return [play, ...soloActions]
+				return [play, { type: 'END_TURN', playerId }, ...soloActions]
 			}
-			return [{ type: 'END_TURN', playerId }]
+			return [{ type: 'END_TURN', playerId }, ...soloActions]
 		}
 
 		// after penalty draw: can play any card or end turn
 		if (state.penaltyTurn && state.turnPlayerId === playerId) {
 			const hand = state.zones[`hand_${playerId}`]
 			const top = state.zones['discard'].cards[state.zones['discard'].cards.length - 1]
-			if (!top) return [{ type: 'END_TURN', playerId }]
+			if (!top) return [{ type: 'END_TURN', playerId }, ...soloActions]
 			const playable = hand.cards
 				.filter((c) => {
 					if (!canPlay(c, top, state.currentColor)) return false
@@ -244,7 +278,7 @@ export const color: GameDefinition<ColorState> = {
 					return true
 				})
 				.map((c) => ({ type: 'PLAY_CARD', playerId, payload: { cardId: c.id } }))
-			return [...playable, { type: 'END_TURN', playerId }]
+			return [...playable, { type: 'END_TURN', playerId }, ...soloActions]
 		}
 
 		// Cut: out-of-turn play for non-turn players
@@ -261,25 +295,44 @@ export const color: GameDefinition<ColorState> = {
 			if (top) {
 				const cutCards = hand?.cards.filter((c) => c.face === top.face && c.suit === top.suit) ?? []
 				if (cutCards.length > 0) {
-					return cutCards.map((c) => ({ type: 'PLAY_CARD', playerId, payload: { cardId: c.id } }))
+					return [
+						...cutCards.map((c) => ({ type: 'PLAY_CARD', playerId, payload: { cardId: c.id } })),
+						...soloActions
+					]
 				}
 			}
-			return []
+			return [...soloActions]
 		}
 
-		if (state.turnPlayerId !== playerId) return []
+		if (state.turnPlayerId !== playerId) return [...soloActions]
 
 		const hand = state.zones[`hand_${playerId}`]
 		const top = state.zones['discard'].cards[state.zones['discard'].cards.length - 1]
-		if (!top) return []
+		if (!top) return [...soloActions]
 
 		// accumulation pending: only draw or stack matching type
 		if (state.pendingDraw > 0) {
 			const stackableFace = state.pendingDrawType === 'two' ? 'DrawTwo' : 'WildDrawFour'
-			const stackable = hand.cards
-				.filter((c) => c.face === stackableFace)
-				.map((c) => ({ type: 'PLAY_CARD', playerId, payload: { cardId: c.id } }))
-			return [...stackable, { type: 'DRAW_CARD', playerId }]
+			let stackableCards = hand.cards.filter((c) => c.face === stackableFace)
+			if (options.crossAccumulation && options.accumulation) {
+				if (state.pendingDrawType === 'two') {
+					stackableCards = [
+						...stackableCards,
+						...hand.cards.filter((c) => c.face === 'WildDrawFour')
+					]
+				} else {
+					stackableCards = [
+						...stackableCards,
+						...hand.cards.filter((c) => c.face === 'DrawTwo' && c.suit === state.currentColor)
+					]
+				}
+			}
+			const stackable = stackableCards.map((c) => ({
+				type: 'PLAY_CARD',
+				playerId,
+				payload: { cardId: c.id }
+			}))
+			return [...stackable, { type: 'DRAW_CARD', playerId }, ...soloActions]
 		}
 
 		// normal turn
@@ -291,11 +344,24 @@ export const color: GameDefinition<ColorState> = {
 			})
 			.map((c) => ({ type: 'PLAY_CARD', playerId, payload: { cardId: c.id } }))
 
-		return [...playable, { type: 'DRAW_CARD', playerId }]
+		return [...playable, { type: 'DRAW_CARD', playerId }, ...soloActions]
 	},
 
 	applyAction(state, action) {
 		const { options } = state
+
+		// CALL_SOLO: 1-card player saves themselves
+		if (action.type === 'CALL_SOLO') {
+			if (!state.soloAlert || state.soloAlert.playerId !== action.playerId) return state
+			return { ...state, soloAlert: null }
+		}
+
+		// COUNTER_SOLO: another player penalizes the 1-card player
+		if (action.type === 'COUNTER_SOLO') {
+			if (!state.soloAlert || state.soloAlert.playerId === action.playerId) return state
+			const zones = drawCards(state.zones, state.soloAlert.playerId, 2)
+			return { ...state, zones, soloAlert: null }
+		}
 
 		// ACCEPT_PENALTY: challenge target accepts +4
 		if (action.type === 'ACCEPT_PENALTY') {
@@ -455,9 +521,16 @@ export const color: GameDefinition<ColorState> = {
 			if (card.face !== top.face || card.suit !== top.suit) return state
 			if (action.playerId === state.lastSkippedPlayer) return state
 		} else if (state.pendingDraw > 0) {
-			// Accumulation: only allow stacking same draw type
+			// Accumulation: allow same type, or cross type if crossAccumulation + color matches
 			const stackableFace = state.pendingDrawType === 'two' ? 'DrawTwo' : 'WildDrawFour'
-			if (card.face !== stackableFace) return state
+			const isCrossAllowed =
+				options.crossAccumulation &&
+				options.accumulation &&
+				((state.pendingDrawType === 'two' && card.face === 'WildDrawFour') ||
+					(state.pendingDrawType === 'four' &&
+						card.face === 'DrawTwo' &&
+						card.suit === state.currentColor))
+			if (card.face !== stackableFace && !isCrossAllowed) return state
 		} else if (!state.penaltyTurn) {
 			if (!canPlay(card, top, state.currentColor)) return state
 		} else {
@@ -557,7 +630,21 @@ export const color: GameDefinition<ColorState> = {
 			nextTurn = nextInDir(state.players, action.playerId, direction)
 		}
 
-		const handEmpty = zones[`hand_${action.playerId}`].cards.length === 0
+		const handAfter = zones[`hand_${action.playerId}`].cards.length
+		const handEmpty = handAfter === 0
+
+		let newSoloAlert = state.soloAlert
+		if (options.solo) {
+			if (handAfter === 1) {
+				newSoloAlert = {
+					playerId: action.playerId,
+					x: 0.1 + Math.random() * 0.8,
+					y: 0.1 + Math.random() * 0.75
+				}
+			} else if (handEmpty) {
+				newSoloAlert = null
+			}
+		}
 
 		return {
 			...state,
@@ -571,7 +658,8 @@ export const color: GameDefinition<ColorState> = {
 			drewCardId: null,
 			penaltyTurn: newPenaltyTurn,
 			lastSkippedPlayer: newLastSkipped,
-			pendingChallenge: newPendingChallenge
+			pendingChallenge: newPendingChallenge,
+			soloAlert: newSoloAlert
 		}
 	},
 

@@ -95,9 +95,19 @@ export default {
 		challengeWon: 'Contestation réussie ! {name} pioche 4.',
 		challengeLost: 'Contestation échouée — tu pioches 6.',
 		swapWith: 'Échanger avec…',
+		solo: 'Solo !',
+		counterSolo: 'Counter Solo !',
+		soloSaved: 'Sauvé !',
+		soloTooSlow: 'Trop lent !',
 		options: {
 			accumulation: 'Accumulation',
 			accumulationDesc: 'Empile les +2 sur +2, ou les +4 sur +4.',
+			crossAccumulation: 'Accumulation croisée',
+			crossAccumulationDesc:
+				'Avec Accumulation activée : empile un +4 sur un +2 (couleur libre), ou un +2 sur un +4 si la couleur correspond.',
+			solo: 'Solo',
+			soloDesc:
+				"Quand tu n'as plus qu'une carte, un bouton Solo apparaît — appuie dessus avant qu'un adversaire te Counter-Solo (+2).",
 			cut: 'Coupe',
 			cutDesc: "Joue la carte identique pour couper le tour de quelqu'un.",
 			playAfterDraw: 'Jouer après piocher',
@@ -225,6 +235,7 @@ export default {
 		timeFormatHint: "Utilisé dans l'historique des parties.",
 		language: 'Langue',
 		decks: 'Jeux de cartes',
+		changelog: 'Notes de version',
 		bugReport: 'Signaler un bug',
 		proposeCardPack: 'Proposer un jeu de cartes',
 		proposeGame: 'Proposer un jeu'
