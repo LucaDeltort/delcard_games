@@ -94,7 +94,7 @@ $effect(() => {
 					{$t('settings.proposeGame')}
 				</a>
 				<button
-				onclick={() => (changelogOpen = true)}
+				onclick={() => { $settingsOpen = false; changelogOpen = true }}
 				class="flex items-center gap-2 text-xs text-muted-foreground transition-colors hover:text-foreground"
 			>
 				<ScrollText size={14} />

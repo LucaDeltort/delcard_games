@@ -3,7 +3,7 @@ import { X } from 'lucide-svelte'
 import { fly } from 'svelte/transition'
 import { browser } from '$app/environment'
 import { getLatestNote } from '$lib/changelog'
-import { locale } from '$lib/i18n'
+import { locale, t } from '$lib/i18n'
 
 const STORAGE_KEY = 'lastSeenVersion'
 const note = getLatestNote()
@@ -34,7 +34,7 @@ function dismiss() {
 			<button
 				onclick={dismiss}
 				class="p-1 text-muted-foreground transition-colors hover:text-foreground"
-				aria-label="Dismiss"
+				aria-label={$t('common.close')}
 			>
 				<X size={14} />
 			</button>
