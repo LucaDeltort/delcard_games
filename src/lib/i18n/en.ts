@@ -98,6 +98,9 @@ export default {
 		options: {
 			accumulation: 'Accumulation',
 			accumulationDesc: 'Stack +2 on +2, or +4 on +4.',
+			crossAccumulation: 'Cross Accumulation',
+			crossAccumulationDesc:
+				'With Accumulation on: stack +4 on +2 (any color), or +2 on +4 if color matches.',
 			cut: 'Cut',
 			cutDesc: 'Play the identical card to cut in out of turn.',
 			playAfterDraw: 'Play after drawing',

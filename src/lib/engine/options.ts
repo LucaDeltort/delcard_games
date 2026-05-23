@@ -1,5 +1,12 @@
 export type OptionSchema =
-	| { key: string; label: string; description?: string; type: 'boolean'; default: boolean }
+	| {
+			key: string
+			label: string
+			description?: string
+			type: 'boolean'
+			default: boolean
+			disabledIf?: string
+	  }
 	| {
 			key: string
 			label: string

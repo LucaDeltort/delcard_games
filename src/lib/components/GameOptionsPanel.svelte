@@ -21,7 +21,8 @@ let {
 			{#each schema as opt}
 				{#if opt.type === 'boolean'}
 					{@const active = options[opt.key] === true}
-					<div class="flex items-center justify-between rounded-lg border border-border bg-card px-4 py-3">
+					{@const depDisabled = opt.disabledIf ? options[opt.disabledIf] !== true : false}
+					<div class="flex items-center justify-between rounded-lg border border-border bg-card px-4 py-3 {depDisabled ? 'opacity-40' : ''}">
 						<div class="flex flex-col gap-0.5">
 							<span class="text-sm text-foreground">{$t(opt.label)}</span>
 							{#if opt.description}
@@ -29,16 +30,16 @@ let {
 							{/if}
 						</div>
 						<button
-							onclick={() => isHost && onChange(opt.key, !active)}
-							disabled={!isHost}
+							onclick={() => isHost && !depDisabled && onChange(opt.key, !active)}
+							disabled={!isHost || depDisabled}
 							class="ml-4 shrink-0 rounded-full px-3 py-1 text-xs font-medium transition-colors
-								{active
+								{active && !depDisabled
 									? 'bg-primary text-primary-foreground'
 									: 'bg-secondary text-muted-foreground'}
-								{isHost ? 'cursor-pointer hover:opacity-80' : 'cursor-default opacity-60'}"
+								{isHost && !depDisabled ? 'cursor-pointer hover:opacity-80' : 'cursor-default opacity-60'}"
 							aria-pressed={active}
 						>
-							{active ? 'ON' : 'OFF'}
+							{active && !depDisabled ? 'ON' : 'OFF'}
 						</button>
 					</div>
 				{/if}

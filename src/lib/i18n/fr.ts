@@ -98,6 +98,9 @@ export default {
 		options: {
 			accumulation: 'Accumulation',
 			accumulationDesc: 'Empile les +2 sur +2, ou les +4 sur +4.',
+			crossAccumulation: 'Accumulation croisée',
+			crossAccumulationDesc:
+				'Avec Accumulation activée : empile un +4 sur un +2 (couleur libre), ou un +2 sur un +4 si la couleur correspond.',
 			cut: 'Coupe',
 			cutDesc: "Joue la carte identique pour couper le tour de quelqu'un.",
 			playAfterDraw: 'Jouer après piocher',

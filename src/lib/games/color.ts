@@ -6,6 +6,7 @@ export type CardColor = 'red' | 'yellow' | 'green' | 'blue'
 
 export type ColorOptions = {
 	accumulation: boolean
+	crossAccumulation: boolean
 	cut: boolean
 	playAfterDraw: boolean
 	drawUntilPlay: boolean
@@ -16,6 +17,7 @@ export type ColorOptions = {
 
 const DEFAULT_COLOR_OPTIONS: ColorOptions = {
 	accumulation: false,
+	crossAccumulation: false,
 	cut: false,
 	playAfterDraw: false,
 	drawUntilPlay: false,
@@ -28,6 +30,7 @@ function parseOptions(raw?: Record<string, unknown>): ColorOptions {
 	if (!raw) return { ...DEFAULT_COLOR_OPTIONS }
 	return {
 		accumulation: raw.accumulation === true,
+		crossAccumulation: raw.crossAccumulation === true,
 		cut: raw.cut === true,
 		playAfterDraw: raw.playAfterDraw === true,
 		drawUntilPlay: raw.drawUntilPlay === true,
@@ -109,6 +112,14 @@ export const colorOptionsSchema: OptionSchema[] = [
 		default: false,
 		label: 'color.options.accumulation',
 		description: 'color.options.accumulationDesc'
+	},
+	{
+		key: 'crossAccumulation',
+		type: 'boolean',
+		default: false,
+		label: 'color.options.crossAccumulation',
+		description: 'color.options.crossAccumulationDesc',
+		disabledIf: 'accumulation'
 	},
 	{
 		key: 'cut',
@@ -276,9 +287,25 @@ export const color: GameDefinition<ColorState> = {
 		// accumulation pending: only draw or stack matching type
 		if (state.pendingDraw > 0) {
 			const stackableFace = state.pendingDrawType === 'two' ? 'DrawTwo' : 'WildDrawFour'
-			const stackable = hand.cards
-				.filter((c) => c.face === stackableFace)
-				.map((c) => ({ type: 'PLAY_CARD', playerId, payload: { cardId: c.id } }))
+			let stackableCards = hand.cards.filter((c) => c.face === stackableFace)
+			if (options.crossAccumulation && options.accumulation) {
+				if (state.pendingDrawType === 'two') {
+					stackableCards = [
+						...stackableCards,
+						...hand.cards.filter((c) => c.face === 'WildDrawFour')
+					]
+				} else {
+					stackableCards = [
+						...stackableCards,
+						...hand.cards.filter((c) => c.face === 'DrawTwo' && c.suit === state.currentColor)
+					]
+				}
+			}
+			const stackable = stackableCards.map((c) => ({
+				type: 'PLAY_CARD',
+				playerId,
+				payload: { cardId: c.id }
+			}))
 			return [...stackable, { type: 'DRAW_CARD', playerId }]
 		}
 
@@ -455,9 +482,16 @@ export const color: GameDefinition<ColorState> = {
 			if (card.face !== top.face || card.suit !== top.suit) return state
 			if (action.playerId === state.lastSkippedPlayer) return state
 		} else if (state.pendingDraw > 0) {
-			// Accumulation: only allow stacking same draw type
+			// Accumulation: allow same type, or cross type if crossAccumulation + color matches
 			const stackableFace = state.pendingDrawType === 'two' ? 'DrawTwo' : 'WildDrawFour'
-			if (card.face !== stackableFace) return state
+			const isCrossAllowed =
+				options.crossAccumulation &&
+				options.accumulation &&
+				((state.pendingDrawType === 'two' && card.face === 'WildDrawFour') ||
+					(state.pendingDrawType === 'four' &&
+						card.face === 'DrawTwo' &&
+						card.suit === state.currentColor))
+			if (card.face !== stackableFace && !isCrossAllowed) return state
 		} else if (!state.penaltyTurn) {
 			if (!canPlay(card, top, state.currentColor)) return state
 		} else {
