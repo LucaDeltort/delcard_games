@@ -145,7 +145,11 @@ function setupHostCallbacks(host: GameHost) {
 function setupClientCallbacks(client: GameClient) {
 	client.onWelcome = (id) => {
 		myPlayerId = id
-		if (client.gameId) resolvedGameId = client.gameId
+		if (client.gameId) {
+			resolvedGameId = client.gameId
+			const def = games[client.gameId]
+			if (def) client.setDef(def)
+		}
 	}
 	client.onLobby = (players) => {
 		lobbyPlayers = players

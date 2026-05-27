@@ -445,6 +445,10 @@ export class GameClient {
 		return this._lastState
 	}
 
+	setDef(def: GameDefinition<GameStateGeneric>) {
+		this._def = def
+	}
+
 	// ── heartbeat ────────────────────────────────────────────────
 
 	private startHeartbeat(conn: DataConnection) {
