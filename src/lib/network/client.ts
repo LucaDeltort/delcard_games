@@ -1,16 +1,23 @@
 import Peer, { type DataConnection } from 'peerjs'
 import { get } from 'svelte/store'
 import type { GameStateGeneric } from '$lib/core/types'
-import type { Action } from '$lib/engine'
+import type { Action, GameDefinition } from '$lib/engine'
 import { t } from '$lib/i18n'
+import { GameHost, PEER_PREFIX } from './host'
 import type { ClientMessage, HostMessage, LobbyPlayer } from './messages'
 import { getTurnIceServers } from './turn'
 
-const PEER_PREFIX = 'delcard-'
 const RETRY_BACKOFF_MS = [1000, 2000, 4000, 8000, 12000, 20000]
 const MAX_RETRIES = RETRY_BACKOFF_MS.length
 const PING_INTERVAL_MS = 5000
 const PONG_TIMEOUT_MS = 12000
+const MAX_MIGRATION_PROBE = 5
+const MIGRATION_RACE_TIMEOUT_MS = 5000
+const MIGRATION_INDEX_STORAGE_PREFIX = 'delcard-migration-'
+
+export type MigrationResult =
+	| { role: 'host'; host: GameHost }
+	| { role: 'client'; client: GameClient }
 
 export class GameClient {
 	private peer!: Peer
@@ -33,23 +40,45 @@ export class GameClient {
 	private _onVisible: (() => void) | null = null
 	private _onOnline: (() => void) | null = null
 	private _initInProgress = false
+	private _migrationIndex: number
+	private _connectionTargetIndex = -1 // -1 = base code, 0+ = probe m1, m2...
+	private _def: GameDefinition<GameStateGeneric> | null = null
+	private _currentHostPlayerId: string | null = null
 
 	onWelcome?: (playerId: string) => void
 	onLobby?: (players: LobbyPlayer[]) => void
 	onState?: (state: GameStateGeneric) => void
 	onDisconnected?: (message: string) => void
 	onReconnecting?: () => void
+	onMigrating?: () => void
 	onQualityChange?: (quality: 'good' | 'warn' | 'poor') => void
+	onMigration?: (result: MigrationResult) => void
 
-	constructor(code: string, playerName: string) {
+	constructor(
+		code: string,
+		playerName: string,
+		def?: GameDefinition<GameStateGeneric>,
+		startConnectionTargetIndex = -1,
+		resumePlayerId?: string
+	) {
 		this._code = code
 		this._playerName = playerName
+		this._def = def ?? null
+		this._connectionTargetIndex = startConnectionTargetIndex
+		this._playerId = resumePlayerId ?? null
+		this._migrationIndex = this.loadMigrationIndex()
 		this.installVisibilityListeners()
 		this.initPeer()
 	}
 
+	// ── sessionStorage helpers ──────────────────────────────────
+
 	private storageKey(): string {
 		return `delcard-peerid-${this._code}`
+	}
+
+	private migrationStorageKey(): string {
+		return `${MIGRATION_INDEX_STORAGE_PREFIX}${this._code}`
 	}
 
 	private loadStoredPeerId(): string | undefined {
@@ -79,6 +108,34 @@ export class GameClient {
 		}
 	}
 
+	private loadMigrationIndex(): number {
+		if (typeof sessionStorage === 'undefined') return 0
+		try {
+			return parseInt(sessionStorage.getItem(this.migrationStorageKey()) ?? '0', 10) || 0
+		} catch {
+			return 0
+		}
+	}
+
+	private saveMigrationIndex(index: number) {
+		if (typeof sessionStorage === 'undefined') return
+		try {
+			sessionStorage.setItem(this.migrationStorageKey(), String(index))
+		} catch {
+			// ignore
+		}
+	}
+
+	// ── connection target (supports migration probing) ──────────
+
+	private getConnectionTarget(): string {
+		const base = PEER_PREFIX + this._code
+		if (this._connectionTargetIndex < 0) return base
+		return `${base}-m${this._connectionTargetIndex + 1}`
+	}
+
+	// ── peer init ────────────────────────────────────────────────
+
 	private async initPeer() {
 		if (this._initInProgress) return
 		this._initInProgress = true
@@ -107,7 +164,14 @@ export class GameClient {
 					return
 				}
 				if (type === 'peer-unavailable') {
-					this.onDisconnected?.(get(t)('network.hostNotFound'))
+					// Target host peer not found — probe next migration level
+					if (this._connectionTargetIndex < MAX_MIGRATION_PROBE - 1) {
+						this._connectionTargetIndex++
+						this.openConnection()
+					} else {
+						this._connectionTargetIndex = -1 // reset for future use
+						this.onDisconnected?.(get(t)('network.hostNotFound'))
+					}
 				} else if (!this._intentionalClose) {
 					this.onDisconnected?.(get(t)('network.connectionError'))
 				}
@@ -118,11 +182,16 @@ export class GameClient {
 	}
 
 	private openConnection() {
-		const conn = this.peer.connect(PEER_PREFIX + this._code)
+		const target = this.getConnectionTarget()
+		const conn = this.peer.connect(target)
 		this.conn = conn
 
 		conn.on('open', () => {
-			conn.send({ type: 'JOIN', playerName: this._playerName } as ClientMessage)
+			conn.send({
+				type: 'JOIN',
+				playerName: this._playerName,
+				resumePlayerId: this._playerId ?? undefined
+			} as ClientMessage)
 			this.startHeartbeat(conn)
 		})
 
@@ -136,7 +205,13 @@ export class GameClient {
 				this.onReconnecting?.()
 				setTimeout(() => this.tryReconnect(), RETRY_BACKOFF_MS[this._retryCount - 1])
 			} else {
-				this.onDisconnected?.(get(t)('network.connectionLost'))
+				// Retries exhausted — attempt host migration if game was active
+				if (this._lastState && this._lastState.phase !== 'gameover') {
+					this._intentionalClose = true // prevent further reconnect attempts
+					this.attemptMigration(this._migrationIndex + 1)
+				} else {
+					this.onDisconnected?.(get(t)('network.connectionLost'))
+				}
 			}
 		})
 
@@ -210,6 +285,7 @@ export class GameClient {
 				this._retryCount = 0
 				this._playerId = msg.playerId
 				this._gameId = msg.gameId
+				this._currentHostPlayerId = msg.hostPlayerId
 				this.onWelcome?.(msg.playerId)
 				this.flushActionQueue()
 				break
@@ -230,6 +306,12 @@ export class GameClient {
 				this._intentionalClose = true
 				this.clearStoredPeerId()
 				this.onDisconnected?.(msg.message)
+				break
+			case 'MIGRATE_HOST':
+				// Host is gracefully handing off — start migration immediately
+				this._intentionalClose = true // stop retry loop
+				this.stopHeartbeat()
+				this.attemptMigration(msg.migrationIndex)
 				break
 			case 'REJECTED':
 				this._intentionalClose = true
@@ -253,6 +335,96 @@ export class GameClient {
 		}
 	}
 
+	// ── host migration ───────────────────────────────────────────
+
+	async attemptMigration(migrationIndex: number) {
+		if (!this._lastState || !this._def || !this._playerId) {
+			this.onDisconnected?.(get(t)('network.connectionLost'))
+			return
+		}
+
+		// Spectator: not in active players list — skip election, just find the new host
+		if (!this._lastState.players.includes(this._playerId)) {
+			this.saveMigrationIndex(migrationIndex)
+			const newClient = new GameClient(
+				this._code,
+				this._playerName,
+				this._def,
+				migrationIndex - 1,
+				this._playerId
+			)
+			this.removeVisibilityListeners()
+			this.onMigration?.({ role: 'client', client: newClient })
+			return
+		}
+
+		this.onMigrating?.()
+
+		const savedState = this._lastState
+		const savedPlayerId = this._playerId
+		const deadHostPlayerId = this._currentHostPlayerId ?? savedPlayerId
+		const def = this._def
+		const code = this._code
+
+		const iceServers = await getTurnIceServers()
+		const config = iceServers.length ? { config: { iceServers } } : {}
+		const newPeerId = `${PEER_PREFIX}${code}-m${migrationIndex}`
+
+		// Race: try to claim the new host peer ID
+		const winnerPeer = await new Promise<Peer | null>((resolve) => {
+			const racePeer = new Peer(newPeerId, config)
+			const timeout = setTimeout(() => {
+				racePeer.destroy()
+				resolve(null)
+			}, MIGRATION_RACE_TIMEOUT_MS)
+
+			const onOpen = () => {
+				clearTimeout(timeout)
+				racePeer.off('open', onOpen)
+				racePeer.off('error', onError)
+				resolve(racePeer) // won — keep peer alive, pass to GameHost.resume
+			}
+			const onError = () => {
+				clearTimeout(timeout)
+				racePeer.destroy()
+				resolve(null)
+			}
+			racePeer.on('open', onOpen)
+			racePeer.on('error', onError)
+		})
+
+		this.saveMigrationIndex(migrationIndex)
+
+		if (winnerPeer) {
+			// Won the election — become the new host
+			const host = GameHost.resume(
+				code,
+				migrationIndex,
+				savedState,
+				savedPlayerId,
+				deadHostPlayerId,
+				def,
+				this._playerName,
+				winnerPeer
+			)
+			this.removeVisibilityListeners()
+			this.onMigration?.({ role: 'host', host })
+		} else {
+			// Lost the election — connect to the winner as a client
+			const newClient = new GameClient(
+				code,
+				this._playerName,
+				def,
+				migrationIndex - 1,
+				savedPlayerId
+			)
+			this.removeVisibilityListeners()
+			this.onMigration?.({ role: 'client', client: newClient })
+		}
+	}
+
+	// ── getters ──────────────────────────────────────────────────
+
 	get playerId(): string | null {
 		return this._playerId
 	}
@@ -272,6 +444,8 @@ export class GameClient {
 	get lastState(): GameStateGeneric | null {
 		return this._lastState
 	}
+
+	// ── heartbeat ────────────────────────────────────────────────
 
 	private startHeartbeat(conn: DataConnection) {
 		this.stopHeartbeat()
@@ -307,6 +481,8 @@ export class GameClient {
 		}
 		this._lastQuality = null
 	}
+
+	// ── actions ──────────────────────────────────────────────────
 
 	private flushActionQueue() {
 		if (!this.conn || !this.conn.open || this._actionQueue.length === 0) return

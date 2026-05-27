@@ -459,6 +459,8 @@ export default {
 		hostGone: 'Le host a quitté la partie.',
 		kicked: 'Tu as été éjecté par le host.',
 		sessionFull: 'Nombre maximal de joueurs atteint dans la session.',
-		gameInProgress: 'Partie déjà en cours.'
+		gameInProgress: 'Partie déjà en cours.',
+		migrating: "Recherche d'un nouveau host…",
+		migrationFailed: 'Impossible de trouver un nouveau host.'
 	}
 }
