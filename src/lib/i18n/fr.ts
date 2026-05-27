@@ -360,6 +360,15 @@ export default {
 		werewolfDeck: 'Jeu Loup-Garou',
 		errorUnknownType: 'Type de jeu inconnu.'
 	},
+	dice: {
+		title: 'Dés',
+		browse: 'Parcourir',
+		packs: '{n} jeux',
+		by: 'Par {name}',
+		setDefault: 'Définir par défaut',
+		errorUnknown: 'Type de dé inconnu.',
+		sixSided: 'Dé à 6 faces'
+	},
 	network: {
 		connectionLost: 'La connexion avec le host a été perdue.',
 		connectionError: 'Erreur de connexion.',

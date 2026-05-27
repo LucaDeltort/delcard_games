@@ -356,6 +356,15 @@ export default {
 		werewolfDeck: 'Werewolf Deck',
 		errorUnknownType: 'Unknown deck type.'
 	},
+	dice: {
+		title: 'Dice',
+		browse: 'Browse',
+		packs: '{n} packs',
+		by: 'By {name}',
+		setDefault: 'Set as default',
+		errorUnknown: 'Unknown dice type.',
+		sixSided: '6-Sided Die'
+	},
 	network: {
 		connectionLost: 'Connection with host was lost.',
 		connectionError: 'Connection error.',
