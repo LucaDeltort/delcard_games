@@ -150,4 +150,43 @@ async function createGame() {
             />
         </div>
     </a>
+
+    <a
+        href="/dice"
+        class="group relative w-full max-w-4xl overflow-hidden rounded-2xl bg-pink px-8 py-5 transition-all hover:brightness-110"
+    >
+        <div class="relative z-10 flex max-w-[55%] flex-col gap-4">
+            <h2 class="text-4xl text-white sm:text-5xl">{$t("dice.title")}</h2>
+            <span
+                class="inline-flex w-fit items-center gap-2 rounded-xl border-2 border-white/60 px-5 py-2 text-sm font-bold tracking-widest text-white uppercase transition-colors group-hover:border-white group-hover:bg-white/10"
+            >
+                {$t("dice.browse")}
+                <ArrowRight size={14} />
+            </span>
+        </div>
+
+        <div class="absolute right-4 top-1/2 flex -translate-y-1/2 items-center gap-3 sm:right-8">
+            <img
+                src="/dice/D6/classic/4.svg"
+                alt=""
+                aria-hidden="true"
+                draggable="false"
+                class="h-14 w-14 -rotate-15 translate-y-2 rounded-xl shadow-2xl sm:h-16 sm:w-16"
+            />
+            <img
+                src="/dice/D6/classic/2.svg"
+                alt=""
+                aria-hidden="true"
+                draggable="false"
+                class="h-14 w-14 -rotate-[4deg] rounded-xl shadow-2xl sm:h-16 sm:w-16"
+            />
+            <img
+                src="/dice/D6/classic/6.svg"
+                alt=""
+                aria-hidden="true"
+                draggable="false"
+                class="h-14 w-14 rotate-12 -translate-y-2 rounded-xl shadow-2xl sm:h-16 sm:w-16"
+            />
+        </div>
+    </a>
 </main>

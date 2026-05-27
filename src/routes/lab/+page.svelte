@@ -24,5 +24,21 @@
 				>
 			</a>
 		</li>
+		<li>
+			<a href="/lab/dice" class="group flex items-baseline gap-3 text-sm">
+				<span class="font-mono text-primary transition-colors group-hover:text-foreground"
+					>Dice</span
+				>
+				<span class="text-muted-foreground">CSS 3D dice cube with roll animation, pip faces, held state</span>
+			</a>
+		</li>
+		<li>
+			<a href="/lab/dice-viewer" class="group flex items-baseline gap-3 text-sm">
+				<span class="font-mono text-primary transition-colors group-hover:text-foreground"
+					>DiceViewer</span
+				>
+				<span class="text-muted-foreground">Browse registered dice types and packs</span>
+			</a>
+		</li>
 	</ul>
 </main>
