@@ -8,8 +8,8 @@ export const d6Packs: DicePack[] = [
 		ext: '.svg'
 	},
 	{
-		id: 'delcard_dice',
-		name: 'delcard_dice',
+		id: 'deldice',
+		name: 'Deldice',
 		basePath: '/dice/D6/delcard',
 		ext: '.svg'
 	}
