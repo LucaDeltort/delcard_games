@@ -50,8 +50,8 @@ async function createGame() {
 
     <div class="grid w-full max-w-4xl gap-4 sm:grid-cols-2">
         <!-- New game -->
-        <div class="flex flex-col gap-4 rounded-xl border border-border bg-card p-6">
-            <h2 class="text-2xl text-foreground">{$t("home.newGame")}</h2>
+        <div class="game-card game-card--blue flex flex-col gap-4 rounded-2xl border border-border bg-card p-6">
+            <h2 class="text-3xl uppercase tracking-wide text-foreground">{$t("home.newGame")}</h2>
 
             <fieldset class="m-0 flex flex-col gap-2 border-0 p-0">
                 <legend class="mb-2 text-xs tracking-widest text-muted-foreground uppercase">{$t("home.labelGame")}</legend>
@@ -103,13 +103,29 @@ async function createGame() {
         </div>
 
         <!-- Join -->
-        <div class="flex flex-col items-center justify-center gap-4 rounded-xl border border-border bg-card p-6">
-            <div class="text-center">
-                <h2 class="text-2xl text-foreground">{$t("home.joinTitle")}</h2>
-                <p class="mt-2 text-sm text-muted-foreground">{$t("home.joinDesc")}</p>
+        <a href="/join" class="game-card game-card--pink flex flex-col rounded-2xl border border-border bg-card p-6">
+            <h2 class="text-3xl uppercase tracking-wide text-foreground">{$t("home.joinTitle")}</h2>
+            <p class="mt-1 text-sm text-muted-foreground">{$t("home.joinDesc")}</p>
+            <div class="flex flex-1 items-center justify-center py-6">
+                <div class="join-orbit-container">
+                    <div class="join-icon-wrap">
+                        <LogIn size={40} />
+                    </div>
+                    <div class="orbit-card orbit-card--1">
+                        <img src="/ui/button_decks_card_1.svg" alt="" aria-hidden="true" draggable="false" />
+                    </div>
+                    <div class="orbit-card orbit-card--2">
+                        <img src="/ui/button_decks_card_2.svg" alt="" aria-hidden="true" draggable="false" />
+                    </div>
+                    <div class="orbit-card orbit-card--3">
+                        <img src="/ui/button_decks_card_3.svg" alt="" aria-hidden="true" draggable="false" />
+                    </div>
+                </div>
             </div>
-            <Button href="/join" variant="outline" class="w-full">{$t("home.joinBtn")}</Button>
-        </div>
+            <div class="flex justify-end">
+                <span class="browse-pill">{$t("home.joinBtn")} <ArrowRight size={11} /></span>
+            </div>
+        </a>
     </div>
 
     <div class="grid w-full max-w-4xl grid-cols-1 gap-3 sm:grid-cols-2">
@@ -140,6 +156,91 @@ async function createGame() {
 </main>
 
 <style>
+	.game-card {
+		position: relative;
+		transition:
+			transform 240ms cubic-bezier(0.34, 1.56, 0.64, 1),
+			box-shadow 220ms ease,
+			border-color 200ms ease;
+	}
+	.game-card:hover {
+		transform: translateY(-3px);
+		box-shadow: 0 18px 44px rgba(0, 0, 0, 0.55);
+	}
+	.game-card--blue:hover { border-color: rgba(0, 47, 167, 0.75); }
+	.game-card--pink:hover { border-color: rgba(246, 124, 162, 0.55); }
+
+	@keyframes card-tilt {
+		0%, 100% { transform: rotate(-10deg); }
+		50%       { transform: rotate(10deg); }
+	}
+
+	@keyframes card-orbit {
+		from { transform: rotate(0deg) translateX(82px) rotate(0deg); }
+		to   { transform: rotate(360deg) translateX(82px) rotate(-360deg); }
+	}
+
+	.join-orbit-container {
+		position: relative;
+		width: 80px;
+		height: 80px;
+	}
+
+	.join-icon-wrap {
+		position: absolute;
+		inset: 0;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		border-radius: 50%;
+		border: 1px solid rgba(246, 124, 162, 0.2);
+		color: rgba(246, 124, 162, 0.65);
+		box-shadow: 0 0 30px rgba(246, 124, 162, 0.18), inset 0 0 16px rgba(246, 124, 162, 0.04);
+		transition:
+			transform 260ms cubic-bezier(0.34, 1.56, 0.64, 1),
+			box-shadow 220ms ease,
+			color 200ms ease;
+		z-index: 1;
+	}
+	.game-card:hover .join-icon-wrap {
+		transform: scale(1.1);
+		box-shadow: 0 0 44px rgba(246, 124, 162, 0.3), inset 0 0 16px rgba(246, 124, 162, 0.08);
+		color: rgba(246, 124, 162, 0.9);
+	}
+
+	.orbit-card {
+		position: absolute;
+		top: 50%;
+		left: 50%;
+		width: 32px;
+		height: auto;
+		margin-top: -22px;
+		margin-left: -16px;
+		border-radius: 3px;
+		box-shadow: 0 4px 14px rgba(0, 0, 0, 0.55);
+		filter: drop-shadow(0 2px 6px rgba(246, 124, 162, 0.25));
+		animation: card-orbit 9s linear infinite;
+	}
+	.orbit-card img {
+		display: block;
+		width: 100%;
+		border-radius: 3px;
+		animation: card-tilt 2.8s ease-in-out infinite;
+	}
+	.orbit-card--1 { animation-delay: 0s; }
+	.orbit-card--2 { animation-delay: -3s; }
+	.orbit-card--3 { animation-delay: -6s; }
+	.orbit-card--1 img { animation-delay: 0s; }
+	.orbit-card--2 img { animation-delay: -1s; }
+	.orbit-card--3 img { animation-delay: -2s; }
+
+	@media (prefers-reduced-motion: reduce) {
+		.orbit-card { animation: none; }
+		.orbit-card--1 { transform: rotate(0deg)   translateX(82px) rotate(0deg); }
+		.orbit-card--2 { transform: rotate(120deg) translateX(82px) rotate(-120deg); }
+		.orbit-card--3 { transform: rotate(240deg) translateX(82px) rotate(-240deg); }
+	}
+
 	.browse-card {
 		position: relative;
 		transition:
