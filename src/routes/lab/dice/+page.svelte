@@ -89,10 +89,7 @@ function clearFolder() {
 </script>
 
 <main class="min-h-dvh p-8 text-foreground">
-	<h1 class="font-heading mb-2 text-4xl">Dice</h1>
-	<p class="mb-12 text-sm text-muted-foreground">
-		<a href="/lab" class="underline">← lab</a>
-	</p>
+	<h1 class="font-heading mb-12 text-4xl">Dice</h1>
 
 	<!-- Single die -->
 	<section class="mb-14">
