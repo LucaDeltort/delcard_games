@@ -55,6 +55,7 @@ export default {
 		hiddenCards: 'cartes cachées',
 		rules: 'Règles',
 		cardStyle: 'Style des cartes',
+		diceStyle: 'Style des dés',
 		preloadingCards: 'Chargement des cartes… ({loaded}/{total})',
 		usePack: 'Utiliser ce paquet',
 		spectating: 'Tu regardes — tu joueras à la prochaine partie',

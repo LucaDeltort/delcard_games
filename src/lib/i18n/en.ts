@@ -55,6 +55,7 @@ export default {
 		hiddenCards: 'hidden cards',
 		rules: 'Rules',
 		cardStyle: 'Card style',
+		diceStyle: 'Dice style',
 		preloadingCards: 'Loading cards… ({loaded}/{total})',
 		usePack: 'Use this pack',
 		spectating: "Watching — you'll join the next game",

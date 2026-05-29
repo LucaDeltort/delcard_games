@@ -3,6 +3,7 @@ import { Check, ChevronLeft, ChevronRight } from 'lucide-svelte'
 import { fly } from 'svelte/transition'
 import { Button } from '$lib/components/ui/button'
 import { getDiceBySlug } from '$lib/dice/registry'
+import { t } from '$lib/i18n'
 import { dicePacks, resolvePackFor } from '$lib/stores/dicePacks'
 import Dice from './Dice.svelte'
 
@@ -48,7 +49,7 @@ function usePack() {
 
 {#if packs.length > 1}
 	<div class="w-full max-w-xs">
-		<p class="mb-3 text-sm tracking-widest text-muted-foreground uppercase">Dice Style</p>
+		<p class="mb-3 text-sm tracking-widest text-muted-foreground uppercase">{$t('game.diceStyle')}</p>
 		<div class="flex items-center gap-4">
 			<button
 				onclick={prev}
@@ -112,7 +113,7 @@ function usePack() {
 				class="h-7 px-3 text-xs"
 			>
 				<Check size={12} />
-				Use Pack
+				{$t('game.usePack')}
 			</Button>
 		</div>
 	</div>
