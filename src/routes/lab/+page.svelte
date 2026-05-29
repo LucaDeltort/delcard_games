@@ -75,13 +75,7 @@ const entries = [
 
 <main class="min-h-dvh text-foreground">
 	<!-- Header -->
-	<header class="header-glow border-b border-border px-6 pb-10 pt-12 sm:px-12">
-		<nav class="mb-6 font-mono text-[10px] tracking-[0.2em] text-muted-foreground">
-			<a href="/" class="transition-colors hover:text-foreground">HOME</a>
-			<span class="mx-2 opacity-40">/</span>
-			<span class="text-foreground">LAB</span>
-		</nav>
-
+	<header class="header-glow border-b border-border px-6 pb-10 pt-6 sm:px-12">
 		<h1 class="font-heading text-[clamp(4.5rem,14vw,11rem)] leading-none tracking-tight">
 			LAB<span class="cursor text-primary">_</span>
 		</h1>
