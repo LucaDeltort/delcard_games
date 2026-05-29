@@ -173,9 +173,9 @@ async function createGame() {
             </div>
         </a>
 
-        <div
-            class="browse-card browse-card--pink browse-card--disabled flex flex-col overflow-hidden rounded-2xl border border-border bg-card"
-            aria-disabled="true"
+        <a
+            href="/dice"
+            class="browse-card browse-card--pink flex flex-col overflow-hidden rounded-2xl border border-border bg-card"
         >
             <div class="card-images flex flex-1 items-end justify-center gap-3 px-6 pt-8 pb-2">
                 <img
@@ -202,9 +202,9 @@ async function createGame() {
             </div>
             <div class="flex items-end justify-between gap-3 px-6 py-5">
                 <h2 class="font-heading text-4xl leading-none tracking-wide">{$t("dice.title")}</h2>
-                <span class="browse-pill browse-pill--soon shrink-0">coming soon</span>
+                <span class="browse-pill shrink-0">{$t("dice.browse")} <ArrowRight size={11} /></span>
             </div>
-        </div>
+        </a>
     </div>
 </main>
 
@@ -394,15 +394,6 @@ async function createGame() {
         transform: rotate(13deg) translateY(1px);
     }
 
-    .browse-card--disabled {
-        opacity: 0.55;
-        cursor: not-allowed;
-    }
-    .browse-card--disabled:hover {
-        transform: none;
-        box-shadow: none;
-        border-color: var(--color-border);
-    }
     .browse-pill {
         display: inline-flex;
         align-items: center;
@@ -417,14 +408,6 @@ async function createGame() {
         color: rgba(255, 255, 255, 0.45);
         transition: all 180ms ease;
         white-space: nowrap;
-    }
-    .browse-pill--soon {
-        font-style: italic;
-        letter-spacing: 0.05em;
-        text-transform: none;
-        font-weight: 400;
-        color: rgba(255, 255, 255, 0.3);
-        border-color: rgba(255, 255, 255, 0.08);
     }
     .browse-card:hover .browse-pill {
         border-color: rgba(255, 255, 255, 0.32);

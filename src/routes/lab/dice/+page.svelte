@@ -1,4 +1,5 @@
 <script lang="ts">
+import { onDestroy } from 'svelte'
 import Dice from '$lib/components/Dice.svelte'
 
 // Single die demo
@@ -86,6 +87,12 @@ function clearFolder() {
 	customFaceSrcs = undefined
 	customFolderName = ''
 }
+
+onDestroy(() => {
+	if (customFaceSrcs) {
+		Object.values(customFaceSrcs).forEach((url) => URL.revokeObjectURL(url as string))
+	}
+})
 </script>
 
 <main class="min-h-dvh p-8 text-foreground">

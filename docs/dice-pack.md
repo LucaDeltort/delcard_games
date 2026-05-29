@@ -116,9 +116,9 @@ dice: {
 }
 ```
 
-This is the only code change required. The `/dice` listing, `/dice/d8` face grid, pack switcher, and `DicePackPicker` all update automatically.
+The `/dice` listing, `/dice/d8` face grid, pack switcher, and `DicePackPicker` all update automatically for routing and UI.
 
-> **Note:** `Dice.svelte` currently implements a CSS 3D cube (6-face geometry only). A D8 or other non-cube geometry requires a separate component.
+> **Note:** `Dice.svelte` currently implements a CSS 3D cube (6-face geometry only). A D8 or other non-cube geometry requires a **separate renderer component** — the automatic updates above cover routing and data only, not rendering.
 
 ---
 
@@ -134,7 +134,6 @@ This is the only code change required. The `/dice` listing, `/dice/d8` face grid
 | `src/lib/components/DicePackPicker.svelte` | In-game pack picker carousel |
 | `src/routes/dice/` | User-facing pack browser |
 | `src/routes/lab/dice/` | Lab demo (roll animation, held state) |
-| `src/routes/lab/dice-viewer/` | Lab pack browser |
 | `static/dice/` | SVG assets |
 
 ---
