@@ -38,7 +38,7 @@ export function checkWin(state: WerewolfState): 'villagers' | 'werewolves' | 'lo
 export function applyDeaths(
 	state: WerewolfState,
 	victims: string[]
-): { alive: string[]; deaths: string[]; hunter: string | null } {
+): { alive: string[]; deaths: string[]; hunters: string[] } {
 	const dead = new Set<string>()
 	const queue = victims.filter((v) => state.alive.includes(v))
 	while (queue.length) {
@@ -52,8 +52,36 @@ export function applyDeaths(
 	}
 	const deaths = [...dead]
 	const alive = state.alive.filter((p) => !dead.has(p))
-	const hunter = deaths.find((p) => state.roles[p] === 'hunter' && !state.powersLost) ?? null
-	return { alive, deaths, hunter }
+	// Every dead hunter owes a shot — a single resolution can kill more than one
+	// (e.g. two hunters who are also lovers), so surface them all, not just the first.
+	const hunters = deaths.filter((p) => state.roles[p] === 'hunter' && !state.powersLost)
+	return { alive, deaths, hunters }
+}
+
+/**
+ * Hand off to the next queued hunter's shot, or — if the deaths so far already
+ * decide the game, or no hunter is waiting — run the normal end-of-resolution
+ * transition. Always re-checks the win condition first so a winning shot ends
+ * the game instead of stalling on a second hunter that no longer matters.
+ */
+export function pauseNextHunterOrFinalize(
+	state: WerewolfState,
+	hunterQueue: string[],
+	nextPhase: 'day' | 'night',
+	now: number
+): WerewolfState {
+	if (checkWin(state) || hunterQueue.length === 0) {
+		return finalizeTransition({ ...state, pendingHunter: null, hunterQueue: [] }, nextPhase, now)
+	}
+	const durationMs = state.options.roleTimerSeconds * 1000
+	return {
+		...state,
+		pendingHunter: hunterQueue[0],
+		hunterQueue: hunterQueue.slice(1),
+		pendingTransition: nextPhase,
+		phaseEndTime: now + durationMs,
+		phaseDurationMs: durationMs
+	}
 }
 
 /**
@@ -103,26 +131,16 @@ export function finishResolution(
 	nextPhase: 'day' | 'night',
 	now: number
 ): WerewolfState {
-	const { alive, deaths, hunter } = applyDeaths(state, victims)
+	const { alive, deaths, hunters } = applyDeaths(state, victims)
 	const s: WerewolfState = { ...state, alive, lastEliminated: deaths }
-	if (hunter) {
-		const durationMs = state.options.roleTimerSeconds * 1000
-		return {
-			...s,
-			pendingHunter: hunter,
-			pendingTransition: nextPhase,
-			phaseEndTime: now + durationMs,
-			phaseDurationMs: durationMs
-		}
-	}
-	return finalizeTransition(s, nextPhase, now)
+	return pauseNextHunterOrFinalize(s, hunters, nextPhase, now)
 }
 
 export function resumeAfterHunter(state: WerewolfState, now: number): WerewolfState {
 	const nextPhase = state.pendingTransition
-	const s: WerewolfState = { ...state, pendingHunter: null, pendingTransition: null }
+	const s: WerewolfState = { ...state, pendingHunter: null, hunterQueue: [], pendingTransition: null }
 	if (!nextPhase) return s
-	return finalizeTransition(s, nextPhase, now)
+	return pauseNextHunterOrFinalize(s, state.hunterQueue, nextPhase, now)
 }
 
 /** Dying mayor appoints a successor (or NEXT_PHASE skips it), then continue. */

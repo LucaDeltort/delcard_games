@@ -4,6 +4,7 @@ import { enterNight, resolveMayorElection, startDayVoting } from './phases'
 import {
 	applyDeaths,
 	checkWin,
+	pauseNextHunterOrFinalize,
 	resolveDay,
 	resolveMayorSuccession,
 	resolveNight,
@@ -147,6 +148,7 @@ export const werewolf: GameDefinition<WerewolfState> = {
 			mayor: null,
 			mayorElectionDone: false,
 			pendingHunter: null,
+			hunterQueue: [],
 			pendingTransition: null,
 			pendingMayor: null,
 			pendingMayorTransition: null,
@@ -272,22 +274,17 @@ export const werewolf: GameDefinition<WerewolfState> = {
 			if (state.pendingHunter !== action.playerId) return state
 			const target = payload?.target
 			if (!target || !state.alive.includes(target)) return state
-			const { alive, deaths, hunter } = applyDeaths(state, [target])
+			const nextPhase = state.pendingTransition
+			if (!nextPhase) return state
+			const { alive, deaths, hunters } = applyDeaths(state, [target])
 			const s: WerewolfState = {
 				...state,
 				alive,
 				lastEliminated: [...state.lastEliminated, ...deaths]
 			}
-			if (hunter) {
-				const durationMs = state.options.roleTimerSeconds * 1000
-				return {
-					...s,
-					pendingHunter: hunter,
-					phaseEndTime: now + durationMs,
-					phaseDurationMs: durationMs
-				}
-			}
-			return resumeAfterHunter(s, now)
+			// This shot may itself kill more hunters (lover chains) — queue them
+			// behind any already waiting, then hand off or end the game.
+			return pauseNextHunterOrFinalize(s, [...state.hunterQueue, ...hunters], nextPhase, now)
 		}
 
 		if (action.type === 'NEXT_PHASE') {
@@ -339,9 +336,16 @@ export const werewolf: GameDefinition<WerewolfState> = {
 		const now = Date.now()
 		const players = state.players.filter((p) => p !== playerId)
 		const readyPlayers = state.readyPlayers.filter((p) => p !== playerId)
-		// applyDeaths chains lovers and surfaces a hunter that needs to shoot —
+		// applyDeaths chains lovers and surfaces hunters that need to shoot —
 		// drop these on the floor and we silently lose a forced death + a shot.
-		const { alive, deaths, hunter } = applyDeaths(state, [playerId])
+		const { alive, deaths, hunters } = applyDeaths(state, [playerId])
+		// A hunter mid-shot keeps shooting; the disconnector can't.
+		const activeHunter = state.pendingHunter === playerId ? null : state.pendingHunter
+		// Surviving, still-connected hunters that owe a shot: those already queued
+		// plus any this disconnect just surfaced, minus the one already shooting.
+		const queued = [...state.hunterQueue, ...hunters].filter(
+			(h) => h !== playerId && h !== activeHunter && players.includes(h)
+		)
 		const base: WerewolfState = {
 			...state,
 			alive,
@@ -350,19 +354,31 @@ export const werewolf: GameDefinition<WerewolfState> = {
 			turnPlayerId: players[0] ?? state.turnPlayerId,
 			lastEliminated: deaths,
 			lovers: state.lovers && state.lovers.includes(playerId) ? null : state.lovers,
-			pendingHunter: state.pendingHunter === playerId ? null : state.pendingHunter,
+			pendingHunter: activeHunter,
+			hunterQueue: queued,
 			mayor: state.mayor === playerId ? null : state.mayor,
 			pendingMayor: state.pendingMayor === playerId ? null : state.pendingMayor
 		}
 		const win = checkWin(base)
 		if (win)
-			return { ...base, phase: 'gameover', winTeam: win, phaseEndTime: null, phaseDurationMs: null }
-		// A disconnecting player's lover-chained hunter still gets a final shot.
-		if (hunter && players.includes(hunter)) {
+			return {
+				...base,
+				phase: 'gameover',
+				winTeam: win,
+				pendingHunter: null,
+				hunterQueue: [],
+				phaseEndTime: null,
+				phaseDurationMs: null
+			}
+		// Leave an in-progress shot alone; queued hunters wait their turn after it.
+		if (activeHunter) return base
+		// Otherwise promote the first surviving hunter to take their final shot.
+		if (queued.length > 0) {
 			const durationMs = state.options.roleTimerSeconds * 1000
 			return {
 				...base,
-				pendingHunter: hunter,
+				pendingHunter: queued[0],
+				hunterQueue: queued.slice(1),
 				pendingTransition: state.phase === 'night' ? 'night' : 'day',
 				phaseEndTime: now + durationMs,
 				phaseDurationMs: durationMs

@@ -70,6 +70,9 @@ export type WerewolfState = GameStateGeneric & {
 
 	// reactive death follow-up
 	pendingHunter: string | null
+	// hunters that died in the same resolution and still owe a shot, behind the
+	// one currently shooting (pendingHunter). Drained one at a time.
+	hunterQueue: string[]
 	pendingTransition: 'day' | 'night' | null
 	pendingMayor: string | null
 	pendingMayorTransition: 'day' | 'night' | null

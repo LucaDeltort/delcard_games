@@ -578,6 +578,72 @@ describe('werewolf roles: special behaviours', () => {
 		expect(next.alive).not.toContain(P1)
 		expect(next.pendingHunter).toBeNull()
 	})
+
+	it('hunter shot that wins the game ends it even when it chains to another hunter', () => {
+		const state = started(
+			{ [P1]: 'werewolf', [P2]: 'hunter', [P3]: 'hunter', [P4]: 'villager' },
+			{
+				phase: 'day',
+				pendingHunter: P2,
+				pendingTransition: 'night',
+				alive: [P1, P2, P3, P4],
+				lovers: [P1, P3]
+			}
+		)
+		// P2 shoots the last wolf P1; P1's lover P3 (also a hunter) dies in the
+		// chain, but the village has already won — no second shot is queued.
+		const next = werewolf.applyAction(state, {
+			type: 'HUNTER_SHOOT',
+			playerId: P2,
+			payload: { target: P1 }
+		})
+		expect(next.phase).toBe('gameover')
+		expect(next.winTeam).toBe('villagers')
+		expect(next.pendingHunter).toBeNull()
+	})
+
+	it('two hunters dying in one resolution each get a shot', () => {
+		const P5 = 'p5'
+		const P6 = 'p6'
+		const six = [P1, P2, P3, P4, P5, P6]
+		const base = werewolf.setup(six)
+		const state: WerewolfState = {
+			...base,
+			roles: {
+				[P1]: 'werewolf',
+				[P2]: 'hunter',
+				[P3]: 'hunter',
+				[P4]: 'villager',
+				[P5]: 'villager',
+				[P6]: 'villager'
+			},
+			readyPlayers: [...six],
+			nightStep: 'wolves',
+			lovers: [P2, P3],
+			nightVotes: { [P1]: P2 }
+		}
+		// Wolves kill hunter P2; the lover-chain kills hunter P3. Both owe a shot.
+		const afterNight = werewolf.applyAction(state, { type: 'NEXT_PHASE', playerId: P1 })
+		expect(afterNight.alive).not.toContain(P2)
+		expect(afterNight.alive).not.toContain(P3)
+		expect(afterNight.pendingHunter).toBe(P2)
+		expect(afterNight.hunterQueue).toEqual([P3])
+		// First hunter shoots a villager; the queue promotes the second hunter.
+		const afterFirst = werewolf.applyAction(afterNight, {
+			type: 'HUNTER_SHOOT',
+			playerId: P2,
+			payload: { target: P4 }
+		})
+		expect(afterFirst.pendingHunter).toBe(P3)
+		expect(afterFirst.hunterQueue).toEqual([])
+		// Second hunter takes the last queued shot; no hunter remains afterwards.
+		const afterSecond = werewolf.applyAction(afterFirst, {
+			type: 'HUNTER_SHOOT',
+			playerId: P3,
+			payload: { target: P5 }
+		})
+		expect(afterSecond.pendingHunter).toBeNull()
+	})
 })
 
 describe('werewolf mayor extras', () => {
