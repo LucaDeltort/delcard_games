@@ -21,3 +21,24 @@ Not linked from the main app, but always accessible at `/lab`.
 | Route | Component | What it shows |
 |-------|-----------|---------------|
 | `/lab/game-title` | `GameTitle.svelte` | Entry, exit, rotation, size, color animations |
+| `/lab/sandbox` | menu | Game sandbox picker (`/lab/sandbox/<game>`) |
+
+## Sandbox (`/lab/sandbox/<game>`)
+
+Develop and debug game views without spinning up a multi-tab P2P session. Each sandbox page mounts the real game view against a local, fully-editable state — no network, no host.
+
+Shared shell: `src/lib/sandbox/SandboxShell.svelte`. Per-game wiring lives under `src/routes/lab/sandbox/<game>/+page.svelte` and is intentionally thin (~15 lines).
+
+What the shell gives you:
+
+- Seat switcher to view the game as any player.
+- A live JSON editor of the current state — edit, click **Apply JSON**, the state updates.
+- Optional **Controls** component slot for game-specific buttons (e.g. kill/revive a player, jump to a night step). See `WerewolfControls.svelte`.
+- Action log and "you are about to send" preview.
+
+To add a new game sandbox:
+
+1. Create `src/lib/sandbox/<game>-sandbox.ts` exporting `createSandboxState(count, options?)`.
+2. (Optional) Create `src/lib/sandbox/<Game>Controls.svelte` for game-specific buttons.
+3. Create `src/routes/lab/sandbox/<game>/+page.svelte` wiring `SandboxShell` to the view, the state factory, and the controls component.
+4. Add the route to the picker (`src/routes/lab/sandbox/+page.svelte`).

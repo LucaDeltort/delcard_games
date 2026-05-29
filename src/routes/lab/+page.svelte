@@ -24,5 +24,11 @@
 				>
 			</a>
 		</li>
+		<li>
+			<a href="/lab/sandbox" class="group flex items-baseline gap-3 text-sm">
+				<span class="font-mono text-primary transition-colors group-hover:text-foreground">Sandbox</span>
+				<span class="text-muted-foreground">Preview a game UI with live, editable state — no host, no peers</span>
+			</a>
+		</li>
 	</ul>
 </main>

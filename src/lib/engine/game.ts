@@ -44,6 +44,29 @@ export type GameDefinition<S extends GameStateGeneric> = {
 	 * a generic gameover when remaining players drop below minPlayers.
 	 */
 	onPlayerDisconnect?: (state: S, playerId: string) => S
+
+	/**
+	 * Called in the lobby whenever an option changes or player count changes.
+	 * Return a patch object — keys to override in the current options.
+	 * Used to cascade dependent option changes (e.g. auto-composition).
+	 */
+	onOptionsChange?: (
+		options: Record<string, unknown>,
+		playerCount: number
+	) => Record<string, unknown>
+
+	/**
+	 * Return false to disable the start button.
+	 * Only called when player count already meets minPlayers.
+	 */
+	canStart?: (options: Record<string, unknown>, playerCount: number) => boolean
+
+	/**
+	 * If the current state has a timed phase, return the action the host should
+	 * auto-submit and when (ms from now). Called by the host after every state
+	 * update. Return null to cancel any pending timer.
+	 */
+	scheduleAction?: (state: S) => { action: Action; delayMs: number } | null
 }
 
 /** Returns the ID of the player after `currentId` in a circular list. */

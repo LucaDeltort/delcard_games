@@ -9,9 +9,11 @@ import fightRules from './rules/fight.json'
 import presidentsRules from './rules/presidents.json'
 import purpleRules from './rules/purple.json'
 import warRules from './rules/war.json'
+import werewolfRules from './rules/werewolf.json'
 import { war } from './war'
+import { werewolf } from './werewolf/werewolf'
 
-export const games = { war, fight, color, presidents, purple } as unknown as Record<
+export const games = { war, fight, color, presidents, purple, werewolf } as unknown as Record<
 	string,
 	GameDefinition<GameStateGeneric>
 >
@@ -29,5 +31,6 @@ export const gameRules: Record<string, { en: string; fr: string }> = {
 	war: warRules,
 	fight: fightRules,
 	presidents: presidentsRules,
-	purple: purpleRules
+	purple: purpleRules,
+	werewolf: werewolfRules
 }

@@ -6,6 +6,7 @@ export type OptionSchema =
 			type: 'boolean'
 			default: boolean
 			disabledIf?: string
+			disabledWhen?: { key: string; value: unknown }
 	  }
 	| {
 			key: string
@@ -14,6 +15,7 @@ export type OptionSchema =
 			type: 'select'
 			default: string
 			choices: { value: string; label: string }[]
+			disabledWhen?: { key: string; value: unknown }
 	  }
 	| {
 			key: string
@@ -23,6 +25,8 @@ export type OptionSchema =
 			default: number
 			min: number
 			max: number
+			step?: number
+			disabledWhen?: { key: string; value: unknown }
 	  }
 
 export function defaultOptions(schema: OptionSchema[]): Record<string, unknown> {
