@@ -88,11 +88,8 @@ function resetExit(i: number) {
 }
 </script>
 
-<main class="min-h-dvh bg-background p-8 text-foreground">
-	<h1 class="font-heading mb-2 text-4xl">GameTitle</h1>
-	<p class="mb-12 text-sm text-muted-foreground">
-		<a href="/lab" class="underline">← lab</a>
-	</p>
+<main class="min-h-dvh p-8 text-foreground">
+	<h1 class="font-heading mb-12 text-4xl">GameTitle</h1>
 
 	<!-- Interactive -->
 	<section class="mb-16">

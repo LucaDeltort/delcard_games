@@ -55,6 +55,7 @@ export default {
 		hiddenCards: 'cartes cachées',
 		rules: 'Règles',
 		cardStyle: 'Style des cartes',
+		diceStyle: 'Style des dés',
 		preloadingCards: 'Chargement des cartes… ({loaded}/{total})',
 		usePack: 'Utiliser ce paquet',
 		spectating: 'Tu regardes — tu joueras à la prochaine partie',
@@ -359,6 +360,15 @@ export default {
 		colorDeck: 'Jeu de cartes Color',
 		werewolfDeck: 'Jeu Loup-Garou',
 		errorUnknownType: 'Type de jeu inconnu.'
+	},
+	dice: {
+		title: 'Dés',
+		browse: 'Parcourir',
+		packs: '{n} jeux',
+		by: 'Par {name}',
+		setDefault: 'Définir par défaut',
+		errorUnknown: 'Type de dé inconnu.',
+		sixSided: 'Dé à 6 faces'
 	},
 	network: {
 		connectionLost: 'La connexion avec le host a été perdue.',
