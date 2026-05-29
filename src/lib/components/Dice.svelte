@@ -76,12 +76,12 @@ $effect(() => {
 	const keyframes: Keyframe[] = [
 		{ transform: currentTransform, offset: 0 },
 		{
-			transform: cubeTransform(randBetween(360, 540), randBetween(360, 540)),
+			transform: cubeTransform(randBetween(90, 180), randBetween(90, 180)),
 			offset: 0.35,
 			easing: 'ease-in'
 		},
 		{
-			transform: cubeTransform(randBetween(540, 900), randBetween(540, 900)),
+			transform: cubeTransform(randBetween(180, 360), randBetween(180, 360)),
 			offset: 0.7,
 			easing: 'ease-out'
 		},
