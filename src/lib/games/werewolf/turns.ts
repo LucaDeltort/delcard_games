@@ -206,7 +206,7 @@ class SeerTurn extends NightTurn {
 	}
 
 	isComplete(state: WerewolfState): boolean {
-		return state.seerReveal !== undefined
+		return state.seerReveal !== null
 	}
 
 	validActions(state: WerewolfState, playerId: string): Action[] {
@@ -257,14 +257,14 @@ export function nextActiveStep(
 	return null
 }
 
-export function startStep(state: WerewolfState, key: NightStepKey): WerewolfState {
+export function startStep(state: WerewolfState, key: NightStepKey, now: number): WerewolfState {
 	const turn = turnByKey(key)
 	const durationMs = turn ? turn.timerMs(state) : state.options.roleTimerSeconds * 1000
 	return {
 		...state,
 		phase: 'night',
 		nightStep: key,
-		phaseEndTime: Date.now() + durationMs,
+		phaseEndTime: now + durationMs,
 		phaseDurationMs: durationMs
 	}
 }

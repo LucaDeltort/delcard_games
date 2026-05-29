@@ -77,7 +77,7 @@ To add a new role:
 1. Append an entry to `ROLE_DEFS` in `roles.ts` (key, countKey, weight, default/min/max).
 2. Add the matching `<key>Count: number` field on `WerewolfOptions` (`types.ts`).
 3. Add i18n strings (`role<Key>`, `desc.<key>`, `options.<key>Count`).
-4. Drop a card asset in `static/cards/Werewolf/Thiercelieux/card_<key>.png` and add the key to `WEREWOLF_CARD_FACES` (`src/lib/decks/WerewolfDeck/cards.ts`).
+4. Drop a card asset in `static/cards/Werewolf/thiercelieux/card_<key>.png` and add the key to `WEREWOLF_CARD_FACES` (`src/lib/decks/WerewolfDeck/cards.ts`).
 5. If the role acts at night: add a `Turn` subclass in `turns.ts` (extending `NightTurn`), append it to `TURNS` in the right night order, and add `phase<Key>` i18n.
 6. If the role has a reactive death effect: extend `applyDeaths` / `finishResolution` (`resolution.ts`).
 

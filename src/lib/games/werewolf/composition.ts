@@ -1,9 +1,13 @@
 import { ROLE_DEFS, SPECIAL_ROLES } from './roles'
 import type { Role, RoleCountsOnly, WerewolfOptions } from './types'
 
-/** Balance score window inside which a randomly drawn composition is accepted. */
-const SCORE_MIN = -2
-const SCORE_MAX = 2
+/**
+ * Balance score window inside which a composition is accepted. Tuned so the
+ * greedy fallback can always land in window for the supported player range
+ * (4–16) — the wolf weight (-6) cannot be offset within ±2 at higher counts.
+ */
+const SCORE_MIN = -3
+const SCORE_MAX = 3
 const MAX_ATTEMPTS = 500
 
 const SPECIAL_WEIGHTS = SPECIAL_ROLES.map((r) => [r.countKey, r.weight] as const)
@@ -53,11 +57,36 @@ export function autoComposition(n: number): RoleCountsOnly {
 		if (total >= SCORE_MIN && total <= SCORE_MAX) return composition
 	}
 
-	const fallback = emptyCounts()
-	fallback.werewolfCount = wolves
-	fallback.seerCount = nonWolfSlots >= 1 ? 1 : 0
-	fallback.villagerCount = Math.max(0, nonWolfSlots - fallback.seerCount)
-	return fallback
+	return fallbackComposition(wolves, nonWolfSlots)
+}
+
+/**
+ * Deterministic balancer: greedily adds the lightest positive-weight special
+ * that doesn't push score past SCORE_MAX until score sits in window. Ensures
+ * the fallback itself satisfies the same balance contract as random picks.
+ */
+function fallbackComposition(wolves: number, nonWolfSlots: number): RoleCountsOnly {
+	const composition = emptyCounts()
+	composition.werewolfCount = wolves
+	let remaining = nonWolfSlots
+	const positives = [...SPECIAL_WEIGHTS].filter(([, w]) => w > 0).sort((a, b) => a[1] - b[1])
+	while (remaining > 0) {
+		const trial = { ...composition, villagerCount: remaining } as RoleCountsOnly
+		const s = score(trial)
+		if (s >= SCORE_MIN && s <= SCORE_MAX) break
+		const next = positives.find(([key, weight]) => {
+			if (composition[key] > 0) return false
+			return (
+				score({ ...composition, [key]: 1, villagerCount: remaining - 1 } as RoleCountsOnly) <=
+				SCORE_MAX
+			)
+		})
+		if (!next) break
+		composition[next[0]] = 1
+		remaining--
+	}
+	composition.villagerCount = remaining
+	return composition
 }
 
 export function assignRoles(players: string[], options: WerewolfOptions): Record<string, Role> {

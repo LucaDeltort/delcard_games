@@ -53,7 +53,7 @@ export type WerewolfState = GameStateGeneric & {
 	witchKillTarget: string | null
 	witchSavedVictim: boolean
 	witchActed: boolean
-	seerReveal?: { target: string; role: Role }
+	seerReveal: { target: string; role: Role } | null
 
 	// persistent across the game
 	lovers: [string, string] | null
@@ -75,6 +75,6 @@ export type WerewolfState = GameStateGeneric & {
 	pendingMayorTransition: 'day' | 'night' | null
 
 	lastEliminated: string[]
-	winTeam?: 'villagers' | 'werewolves' | 'lovers'
+	winTeam: 'villagers' | 'werewolves' | 'lovers' | null
 	options: WerewolfOptions
 }

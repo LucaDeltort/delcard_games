@@ -60,7 +60,11 @@ export function applyDeaths(
  * After deaths are applied and any hunter shot resolved, check for game end,
  * then pause for mayor succession if the mayor just died, else move on.
  */
-export function finalizeTransition(s: WerewolfState, nextPhase: 'day' | 'night'): WerewolfState {
+export function finalizeTransition(
+	s: WerewolfState,
+	nextPhase: 'day' | 'night',
+	now: number
+): WerewolfState {
 	const win = checkWin(s)
 	if (win)
 		return {
@@ -86,17 +90,18 @@ export function finalizeTransition(s: WerewolfState, nextPhase: 'day' | 'night')
 			...s,
 			pendingMayor: s.mayor,
 			pendingMayorTransition: nextPhase,
-			phaseEndTime: Date.now() + durationMs,
+			phaseEndTime: now + durationMs,
 			phaseDurationMs: durationMs
 		}
 	}
-	return nextPhase === 'day' ? enterDay(s) : enterNight({ ...s, round: s.round + 1 })
+	return nextPhase === 'day' ? enterDay(s, now) : enterNight({ ...s, round: s.round + 1 }, now)
 }
 
 export function finishResolution(
 	state: WerewolfState,
 	victims: string[],
-	nextPhase: 'day' | 'night'
+	nextPhase: 'day' | 'night',
+	now: number
 ): WerewolfState {
 	const { alive, deaths, hunter } = applyDeaths(state, victims)
 	const s: WerewolfState = { ...state, alive, lastEliminated: deaths }
@@ -106,45 +111,45 @@ export function finishResolution(
 			...s,
 			pendingHunter: hunter,
 			pendingTransition: nextPhase,
-			phaseEndTime: Date.now() + durationMs,
+			phaseEndTime: now + durationMs,
 			phaseDurationMs: durationMs
 		}
 	}
-	return finalizeTransition(s, nextPhase)
+	return finalizeTransition(s, nextPhase, now)
 }
 
-export function resumeAfterHunter(state: WerewolfState): WerewolfState {
+export function resumeAfterHunter(state: WerewolfState, now: number): WerewolfState {
 	const nextPhase = state.pendingTransition
 	const s: WerewolfState = { ...state, pendingHunter: null, pendingTransition: null }
 	if (!nextPhase) return s
-	return finalizeTransition(s, nextPhase)
+	return finalizeTransition(s, nextPhase, now)
 }
 
 /** Dying mayor appoints a successor (or NEXT_PHASE skips it), then continue. */
 export function resolveMayorSuccession(
 	state: WerewolfState,
-	successor: string | null
+	successor: string | null,
+	now: number
 ): WerewolfState {
 	const nextPhase = state.pendingMayorTransition
 	const mayor = successor && state.alive.includes(successor) ? successor : null
 	const s: WerewolfState = { ...state, mayor, pendingMayor: null, pendingMayorTransition: null }
 	if (!nextPhase) return s
-	return finalizeTransition(s, nextPhase)
+	return finalizeTransition(s, nextPhase, now)
 }
 
-export function resolveNight(state: WerewolfState): WerewolfState {
+export function resolveNight(state: WerewolfState, now: number): WerewolfState {
 	const wolfTarget = majority(state.nightVotes)
 	let elderShieldUsed = state.elderShieldUsed
 	const victims: string[] = []
 	if (wolfTarget && state.alive.includes(wolfTarget)) {
-		const saved = state.protectedId === wolfTarget || state.witchSavedVictim
-		if (!saved) {
-			if (state.roles[wolfTarget] === 'elder' && !elderShieldUsed && !state.powersLost) {
-				elderShieldUsed = true
-			} else {
-				victims.push(wolfTarget)
-			}
-		}
+		// Elder's shield is consumed by the first wolf hit, whether or not the
+		// witch/defender also saves them on the same night (Thiercelieux rule).
+		const isElderFirstHit =
+			state.roles[wolfTarget] === 'elder' && !elderShieldUsed && !state.powersLost
+		if (isElderFirstHit) elderShieldUsed = true
+		const saved = state.protectedId === wolfTarget || state.witchSavedVictim || isElderFirstHit
+		if (!saved) victims.push(wolfTarget)
 	}
 	if (
 		state.witchKillTarget &&
@@ -158,10 +163,10 @@ export function resolveNight(state: WerewolfState): WerewolfState {
 		elderShieldUsed,
 		defenderLast: state.protectedId ?? state.defenderLast
 	}
-	return finishResolution(base, victims, 'day')
+	return finishResolution(base, victims, 'day', now)
 }
 
-export function resolveDay(state: WerewolfState): WerewolfState {
+export function resolveDay(state: WerewolfState, now: number): WerewolfState {
 	const victims: string[] = []
 	let idiotRevealed = state.idiotRevealed
 	let powersLost = state.powersLost
@@ -180,5 +185,5 @@ export function resolveDay(state: WerewolfState): WerewolfState {
 		}
 	}
 	const base: WerewolfState = { ...state, idiotRevealed, powersLost }
-	return finishResolution(base, victims, 'night')
+	return finishResolution(base, victims, 'night', now)
 }

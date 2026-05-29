@@ -4,7 +4,7 @@ export const werewolfDeckPacks: CardPack[] = [
 	{
 		id: 'thiercelieux',
 		name: 'Thiercelieux',
-		basePath: '/cards/Werewolf/Thiercelieux',
+		basePath: '/cards/Werewolf/thiercelieux',
 		ext: '.png'
 	}
 ]

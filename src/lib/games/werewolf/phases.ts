@@ -2,7 +2,7 @@ import { firstActiveStep, startStep } from './turns'
 import type { WerewolfState } from './types'
 import { majority } from './votes'
 
-export function enterNight(state: WerewolfState): WerewolfState {
+export function enterNight(state: WerewolfState, now: number): WerewolfState {
 	const fresh: WerewolfState = {
 		...state,
 		phase: 'night',
@@ -11,14 +11,14 @@ export function enterNight(state: WerewolfState): WerewolfState {
 		witchKillTarget: null,
 		witchSavedVictim: false,
 		witchActed: false,
-		seerReveal: undefined
+		seerReveal: null
 	}
 	const first = firstActiveStep(fresh)
-	if (!first) return enterDay(fresh)
-	return startStep(fresh, first)
+	if (!first) return enterDay(fresh, now)
+	return startStep(fresh, first, now)
 }
 
-export function enterDay(state: WerewolfState): WerewolfState {
+export function enterDay(state: WerewolfState, now: number): WerewolfState {
 	// First day with the mayor option on: elect a mayor before discussion.
 	if (state.options.mayorEnabled && state.mayor === null && !state.mayorElectionDone) {
 		const durationMs = state.options.voteTimerSeconds * 1000
@@ -29,14 +29,14 @@ export function enterDay(state: WerewolfState): WerewolfState {
 			daySubPhase: 'electing',
 			dayVotes: {},
 			mayorVotes: {},
-			phaseEndTime: Date.now() + durationMs,
+			phaseEndTime: now + durationMs,
 			phaseDurationMs: durationMs
 		}
 	}
-	return startDayTalking(state)
+	return startDayTalking(state, now)
 }
 
-export function startDayTalking(state: WerewolfState): WerewolfState {
+export function startDayTalking(state: WerewolfState, now: number): WerewolfState {
 	const durationMs = state.options.talkTimerSeconds * 1000
 	return {
 		...state,
@@ -44,23 +44,23 @@ export function startDayTalking(state: WerewolfState): WerewolfState {
 		nightStep: null,
 		daySubPhase: 'talking',
 		dayVotes: {},
-		phaseEndTime: Date.now() + durationMs,
+		phaseEndTime: now + durationMs,
 		phaseDurationMs: durationMs
 	}
 }
 
-export function resolveMayorElection(state: WerewolfState): WerewolfState {
+export function resolveMayorElection(state: WerewolfState, now: number): WerewolfState {
 	const elected = majority(state.mayorVotes)
 	const mayor = elected && state.alive.includes(elected) ? elected : null
-	return startDayTalking({ ...state, mayor, mayorElectionDone: true })
+	return startDayTalking({ ...state, mayor, mayorElectionDone: true }, now)
 }
 
-export function startDayVoting(state: WerewolfState): WerewolfState {
+export function startDayVoting(state: WerewolfState, now: number): WerewolfState {
 	const durationMs = state.options.voteTimerSeconds * 1000
 	return {
 		...state,
 		daySubPhase: 'voting',
-		phaseEndTime: Date.now() + durationMs,
+		phaseEndTime: now + durationMs,
 		phaseDurationMs: durationMs
 	}
 }

@@ -116,6 +116,8 @@ export const werewolf: GameDefinition<WerewolfState> = {
 		return {
 			players,
 			zones: {},
+			// turnPlayerId is required by GameStateGeneric but unused by Werewolf —
+			// active player is derived from phase + nightStep + roles instead.
 			turnPlayerId: players[0],
 			phase: 'night',
 			nightStep: null,
@@ -134,6 +136,7 @@ export const werewolf: GameDefinition<WerewolfState> = {
 			witchKillTarget: null,
 			witchSavedVictim: false,
 			witchActed: false,
+			seerReveal: null,
 			lovers: null,
 			defenderLast: null,
 			witchSaveUsed: false,
@@ -148,6 +151,7 @@ export const werewolf: GameDefinition<WerewolfState> = {
 			pendingMayor: null,
 			pendingMayorTransition: null,
 			lastEliminated: [],
+			winTeam: null,
 			options: opts
 		}
 	},
@@ -166,6 +170,9 @@ export const werewolf: GameDefinition<WerewolfState> = {
 	},
 
 	getValidActions(state, playerId) {
+		// Stale/spectator peers must not be able to push actions — would let
+		// PLAYER_READY cross the all-ready threshold with unknown IDs.
+		if (!state.players.includes(playerId)) return []
 		if (state.phase === 'gameover') return []
 
 		const role = state.roles[playerId]
@@ -212,13 +219,18 @@ export const werewolf: GameDefinition<WerewolfState> = {
 	},
 
 	applyAction(state, action) {
+		// Capture wall-clock time exactly once per action so every helper that
+		// stamps phaseEndTime shares the same `now` — keeps applyAction pure
+		// from the caller's perspective (one Date.now() per invocation).
+		const now = Date.now()
 		const payload = action.payload as { target?: string } | undefined
 
 		if (action.type === 'PLAYER_READY') {
+			if (!state.players.includes(action.playerId)) return state
 			if (state.readyPlayers.includes(action.playerId)) return state
 			const readyPlayers = [...state.readyPlayers, action.playerId]
 			if (readyPlayers.length < state.players.length) return { ...state, readyPlayers }
-			return enterNight({ ...state, readyPlayers })
+			return enterNight({ ...state, readyPlayers }, now)
 		}
 
 		// Night-turn actions are owned by their role's Turn class.
@@ -230,7 +242,7 @@ export const werewolf: GameDefinition<WerewolfState> = {
 			if (!turn.isComplete(next)) return next
 			// Turn finished — advance immediately instead of waiting on the timer.
 			const further = nextActiveStep(next, next.nightStep)
-			return further ? startStep(next, further) : resolveNight(next)
+			return further ? startStep(next, further, now) : resolveNight(next, now)
 		}
 
 		if (action.type === 'DAY_VOTE') {
@@ -253,7 +265,7 @@ export const werewolf: GameDefinition<WerewolfState> = {
 			if (state.pendingMayor !== action.playerId) return state
 			const target = payload?.target
 			if (!target || !state.alive.includes(target)) return state
-			return resolveMayorSuccession(state, target)
+			return resolveMayorSuccession(state, target, now)
 		}
 
 		if (action.type === 'HUNTER_SHOOT') {
@@ -271,26 +283,26 @@ export const werewolf: GameDefinition<WerewolfState> = {
 				return {
 					...s,
 					pendingHunter: hunter,
-					phaseEndTime: Date.now() + durationMs,
+					phaseEndTime: now + durationMs,
 					phaseDurationMs: durationMs
 				}
 			}
-			return resumeAfterHunter(s)
+			return resumeAfterHunter(s, now)
 		}
 
 		if (action.type === 'NEXT_PHASE') {
 			if (action.playerId !== state.players[0]) return state
-			if (state.pendingHunter) return resumeAfterHunter(state)
-			if (state.pendingMayor) return resolveMayorSuccession(state, null)
+			if (state.pendingHunter) return resumeAfterHunter(state, now)
+			if (state.pendingMayor) return resolveMayorSuccession(state, null, now)
 			if (state.phase === 'night') {
 				const next = nextActiveStep(state, state.nightStep)
-				if (next) return startStep(state, next)
-				return resolveNight(state)
+				if (next) return startStep(state, next, now)
+				return resolveNight(state, now)
 			}
 			if (state.phase === 'day') {
-				if (state.daySubPhase === 'electing') return resolveMayorElection(state)
-				if (state.daySubPhase === 'talking') return startDayVoting(state)
-				return resolveDay(state)
+				if (state.daySubPhase === 'electing') return resolveMayorElection(state, now)
+				if (state.daySubPhase === 'talking') return startDayVoting(state, now)
+				return resolveDay(state, now)
 			}
 			return state
 		}
@@ -324,15 +336,19 @@ export const werewolf: GameDefinition<WerewolfState> = {
 
 	onPlayerDisconnect(state, playerId) {
 		if (state.phase === 'gameover') return state
+		const now = Date.now()
 		const players = state.players.filter((p) => p !== playerId)
 		const readyPlayers = state.readyPlayers.filter((p) => p !== playerId)
-		const { alive } = applyDeaths(state, [playerId])
+		// applyDeaths chains lovers and surfaces a hunter that needs to shoot —
+		// drop these on the floor and we silently lose a forced death + a shot.
+		const { alive, deaths, hunter } = applyDeaths(state, [playerId])
 		const base: WerewolfState = {
 			...state,
 			alive,
 			players,
 			readyPlayers,
 			turnPlayerId: players[0] ?? state.turnPlayerId,
+			lastEliminated: deaths,
 			lovers: state.lovers && state.lovers.includes(playerId) ? null : state.lovers,
 			pendingHunter: state.pendingHunter === playerId ? null : state.pendingHunter,
 			mayor: state.mayor === playerId ? null : state.mayor,
@@ -341,9 +357,20 @@ export const werewolf: GameDefinition<WerewolfState> = {
 		const win = checkWin(base)
 		if (win)
 			return { ...base, phase: 'gameover', winTeam: win, phaseEndTime: null, phaseDurationMs: null }
+		// A disconnecting player's lover-chained hunter still gets a final shot.
+		if (hunter && players.includes(hunter)) {
+			const durationMs = state.options.roleTimerSeconds * 1000
+			return {
+				...base,
+				pendingHunter: hunter,
+				pendingTransition: state.phase === 'night' ? 'night' : 'day',
+				phaseEndTime: now + durationMs,
+				phaseDurationMs: durationMs
+			}
+		}
 		// disconnect may complete the all-ready gate before the game has started
 		if (!state.phaseEndTime && players.length > 0 && readyPlayers.length >= players.length) {
-			return enterNight(base)
+			return enterNight(base, now)
 		}
 		return base
 	}

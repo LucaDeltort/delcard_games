@@ -1,5 +1,16 @@
 <script lang="ts">
-import { Eye, EyeOff, Heart, LayoutList, Settings as SettingsIcon, X } from 'lucide-svelte'
+import {
+	Crown,
+	Eye,
+	EyeOff,
+	Heart,
+	LayoutList,
+	Moon,
+	Scale,
+	Settings as SettingsIcon,
+	Sun,
+	X
+} from 'lucide-svelte'
 import { fade, fly } from 'svelte/transition'
 import PlayingCard from '$lib/components/PlayingCard.svelte'
 import RulesDrawer from '$lib/components/RulesDrawer.svelte'
@@ -293,18 +304,18 @@ const centerState = $derived(
 							: 'day-voting'
 )
 
-const centerImg = $derived(
+const CenterIcon = $derived(
 	s.phase === 'gameover'
-		? ''
+		? null
 		: isMayorMoment
-			? '/werewolf/mayor.svg'
+			? Crown
 			: isNightlike
 				? isMyTurn
-					? '/werewolf/eye.svg'
-					: '/werewolf/moon.svg'
+					? Eye
+					: Moon
 				: s.daySubPhase === 'talking'
-					? '/werewolf/sun.svg'
-					: '/werewolf/balance.svg'
+					? Sun
+					: Scale
 )
 
 const subPhaseLabel = $derived(
@@ -492,8 +503,9 @@ const gameRoles = $derived.by(() => {
 						{/if}
 						<div class="absolute left-1/2 top-1/2 h-11 w-11 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white"></div>
 					</div>
-					{#if centerImg}
-						<img src={centerImg} alt={s.phase} class="relative z-10 h-8 w-8 object-contain" />
+					{#if CenterIcon}
+						{@const Icon = CenterIcon}
+						<Icon class="relative z-10 h-8 w-8 text-foreground" />
 					{/if}
 				{/if}
 			</div>
@@ -566,7 +578,10 @@ const gameRoles = $derived.by(() => {
 							{/if}
 							<div class="absolute left-1/2 top-1/2 h-16 w-16 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white"></div>
 						</div>
-						<img src={centerImg} alt={s.phase} class="relative z-10 h-10 w-10 object-contain" />
+						{#if CenterIcon}
+							{@const Icon = CenterIcon}
+							<Icon class="relative z-10 h-10 w-10 text-foreground" />
+						{/if}
 						{#if s.phase === 'day' && s.daySubPhase === 'voting'}
 							<span class="absolute -bottom-5 tabular-nums text-xs font-medium text-muted-foreground">{dayVoteCount}/{s.alive.length}</span>
 						{/if}
