@@ -183,12 +183,31 @@ export const yourDeckPacks: CardPack[] = [
 
 File naming is free-form — just be consistent within a pack so the UI can resolve card paths.
 
-### 5 — Register in the deck viewer
+### 5 — Declare deck metadata
+
+Each deck owns its own visual metadata (currently: card sizes). Create `src/lib/decks/<YourDeckType>/metadata.ts`:
+
+```typescript
+import type { DeckMetadata } from '$lib/decks/types'
+
+export const yourDeckMetadata: DeckMetadata = {
+  sizes: {
+    sm: 'w-[52px] h-[73px]',
+    md: 'w-[72px] h-[101px]',
+    lg: 'w-[96px] h-[134px]'
+  }
+}
+```
+
+`PlayingCard.svelte` reads this through the registry — no per-deck branching in the component. Use whatever Tailwind size classes match your card aspect ratio (portrait 5:7, square, landscape, etc.).
+
+### 6 — Register in the deck viewer
 
 Open `src/lib/decks/registry.ts` and add one entry to `deckRegistry`:
 
 ```typescript
 import { createYourDeck } from '$lib/decks/YourDeckType/cards'
+import { yourDeckMetadata } from '$lib/decks/YourDeckType/metadata'
 import { yourDeckPacks, defaultYourDeckPack } from '$lib/decks/YourDeckType/packs'
 
 export const deckRegistry: DeckTypeEntry[] = [
@@ -196,11 +215,13 @@ export const deckRegistry: DeckTypeEntry[] = [
   {
     slug: 'your-deck',          // URL slug: /decks/your-deck
     name: 'Your Deck',          // display name
+    nameKey: 'decks.yourDeck',  // i18n key
     packs: yourDeckPacks,
     defaultPackId: defaultYourDeckPack.id,
+    metadata: yourDeckMetadata,
     createCards: () => createYourDeck(),
   },
 ]
 ```
 
-This is the only UI change required. The `/decks` listing, `/decks/your-deck` card grid, pack switcher, and default-pack persistence all update automatically.
+This is the only UI change required. The `/decks` listing, `/decks/your-deck` card grid, pack switcher, default-pack persistence, and `PlayingCard` sizing all update automatically.

@@ -10,3 +10,13 @@ export type CardPack = {
 	ext?: string // file extension, default '.png'
 	cardSrc?: (card: Card, basePath: string, ext: string) => string
 }
+
+export type DeckSizeClasses = {
+	sm: string
+	md: string
+	lg: string
+}
+
+export type DeckMetadata = {
+	sizes: DeckSizeClasses
+}

@@ -10,14 +10,18 @@ import { settingsOpen } from '$lib/stores/settings'
 
 let { children } = $props()
 
-const isGamePage = $derived($page.url.pathname.startsWith('/game/'))
+// Full-bleed pages (real game + sandbox game views) render their own full-height
+// layout, so the shared footer/buttons are hidden to avoid overflow scroll.
+const isImmersive = $derived(
+	$page.url.pathname.startsWith('/game/') || /^\/lab\/sandbox\/[^/]+$/.test($page.url.pathname)
+)
 </script>
 
 <svelte:head>
     <title>{$t("common.appTitle")}</title>
     <link rel="icon" href={favicon} />
 </svelte:head>
-{#if !isGamePage}
+{#if !isImmersive}
 	<button
 		onclick={() => ($settingsOpen = true)}
 		class="fixed right-4 z-50 rounded-md border border-border bg-card px-3 py-2 text-muted-foreground transition-colors hover:text-foreground"
@@ -28,18 +32,18 @@ const isGamePage = $derived($page.url.pathname.startsWith('/game/'))
 	</button>
 {/if}
 <SettingsModal />
-{#if !isGamePage}
+{#if !isImmersive}
 	<WhatsNew />
 {/if}
 <div class="flex min-h-dvh flex-col">
     {@render children()}
-    {#if !isGamePage}
+    {#if !isImmersive}
     <footer class="py-4 text-center text-xs text-muted-foreground">
         © 2026 Luca Deltort — MIT License
     </footer>
     {/if}
 </div>
-{#if !isGamePage}
+{#if !isImmersive}
     <div
         class="pointer-events-none fixed right-4 flex items-center gap-2"
         style="bottom: calc(1rem + env(safe-area-inset-bottom))"

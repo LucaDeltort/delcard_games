@@ -31,6 +31,7 @@ export class GameHost {
 	private hostName: string
 	private _stateSeq = 0
 	private _options: Record<string, unknown> = {}
+	private _autoTimer: ReturnType<typeof setTimeout> | null = null
 
 	onReady?: () => void
 	onLobbyChange?: (players: LobbyPlayer[]) => void
@@ -60,6 +61,10 @@ export class GameHost {
 
 	updateOption(key: string, value: unknown) {
 		this._options = { ...this._options, [key]: value }
+		if (this.def.onOptionsChange) {
+			const patch = this.def.onOptionsChange(this._options, this.lobbyPlayers.length)
+			if (Object.keys(patch).length > 0) this._options = { ...this._options, ...patch }
+		}
 		this.broadcastLobby()
 	}
 
@@ -195,6 +200,7 @@ export class GameHost {
 		this.state = next
 		this.onState?.(next)
 		this.broadcastState(next)
+		this.scheduleAutoAction(next)
 	}
 
 	private handleAction(playerId: string, action: Action) {
@@ -214,9 +220,30 @@ export class GameHost {
 		this.state = next
 		this.onState?.(next)
 		this.broadcastState(next)
+		this.scheduleAutoAction(next)
+	}
+
+	private scheduleAutoAction(state: GameStateGeneric) {
+		if (this._autoTimer !== null) {
+			clearTimeout(this._autoTimer)
+			this._autoTimer = null
+		}
+		const sched = this.def.scheduleAction?.(state)
+		if (!sched) return
+		this._autoTimer = setTimeout(
+			() => {
+				this._autoTimer = null
+				this.handleAction(sched.action.playerId, sched.action)
+			},
+			Math.max(0, sched.delayMs)
+		)
 	}
 
 	private broadcastLobby() {
+		if (!this.state && this.def.onOptionsChange) {
+			const patch = this.def.onOptionsChange(this._options, this.lobbyPlayers.length)
+			if (Object.keys(patch).length > 0) this._options = { ...this._options, ...patch }
+		}
 		const msg: HostMessage = { type: 'LOBBY', players: this.lobbyPlayers, options: this._options }
 		this.broadcast(msg)
 		this.onLobbyChange?.(this.lobbyPlayers)
@@ -262,6 +289,7 @@ export class GameHost {
 		this.broadcastLobby()
 		this.onState?.(initial)
 		this.broadcastState(initial)
+		this.scheduleAutoAction(initial)
 	}
 
 	/** Re-open the PeerJS signaling socket if mobile suspend killed it. */
@@ -272,6 +300,10 @@ export class GameHost {
 	}
 
 	close(message?: string) {
+		if (this._autoTimer !== null) {
+			clearTimeout(this._autoTimer)
+			this._autoTimer = null
+		}
 		for (const timer of this.pendingDisconnects.values()) clearTimeout(timer)
 		this.pendingDisconnects.clear()
 		this.broadcast({ type: 'HOST_GONE', message: message ?? get(t)('network.hostGone') })

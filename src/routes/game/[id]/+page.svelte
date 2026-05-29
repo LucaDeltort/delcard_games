@@ -15,6 +15,7 @@ import FightView from '$lib/components/games/FightView.svelte'
 import PresidentsView from '$lib/components/games/PresidentsView.svelte'
 import PurpleView from '$lib/components/games/PurpleView.svelte'
 import WarView from '$lib/components/games/WarView.svelte'
+import WerewolfView from '$lib/components/games/WerewolfView.svelte'
 import RulesDrawer from '$lib/components/RulesDrawer.svelte'
 import { Button } from '$lib/components/ui/button'
 import type { GameStateGeneric } from '$lib/core/types'
@@ -22,6 +23,7 @@ import { getDeckSlugForType } from '$lib/decks/registry'
 import type { Action } from '$lib/engine'
 import { gameList, games } from '$lib/games/index'
 import type { PurpleState } from '$lib/games/purple'
+import type { WerewolfState } from '$lib/games/werewolf/werewolf'
 import { t } from '$lib/i18n'
 import type { LobbyPlayer } from '$lib/network/messages'
 import { loadGameOptions, saveGameOptions } from '$lib/stores/gameOptions'
@@ -413,14 +415,18 @@ $effect(() => {
 		<DeckPackPicker {deckSlug} />
 
 		{#if isHost}
-			{#if gameMeta && lobbyPlayers.length < gameMeta.minPlayers}
+			{@const notEnoughPlayers = !!gameMeta && lobbyPlayers.length < gameMeta.minPlayers}
+			{@const optionsInvalid = !notEnoughPlayers && gameDef?.canStart != null && !gameDef.canStart(lobbyOptions, lobbyPlayers.length)}
+			{#if notEnoughPlayers}
 				<p class="text-xs text-muted-foreground">
 					{$t('game.minPlayersRequired', { n: gameMeta.minPlayers })}
 				</p>
+			{:else if optionsInvalid}
+				<p class="text-xs text-muted-foreground">{$t('game.optionsInvalid')}</p>
 			{/if}
 			<Button
 				onclick={startGame}
-				disabled={!gameMeta || lobbyPlayers.length < (gameMeta?.minPlayers ?? 2)}
+				disabled={!gameMeta || notEnoughPlayers || optionsInvalid}
 				class="w-full max-w-xs"
 			>
 				{$t('game.start')}
@@ -472,6 +478,15 @@ $effect(() => {
 {:else if gameState.activeGameId === 'purple'}
 	<PurpleView
 		state={gameState as PurpleState}
+		{myPlayerId}
+		players={enrichedPlayers}
+		{validActions}
+		onAction={submitAction}
+		{deckSlug}
+	/>
+{:else if gameState.activeGameId === 'werewolf'}
+	<WerewolfView
+		state={gameState as WerewolfState}
 		{myPlayerId}
 		players={enrichedPlayers}
 		{validActions}
@@ -564,14 +579,18 @@ $effect(() => {
 		</div>
 		<div class="flex gap-2">
 			{#if isHost}
-				{#if gameMeta && lobbyPlayers.length < gameMeta.minPlayers}
+				{@const notEnoughPlayers2 = !!gameMeta && lobbyPlayers.length < gameMeta.minPlayers}
+				{@const optionsInvalid2 = !notEnoughPlayers2 && gameDef?.canStart != null && !gameDef.canStart(lobbyOptions, lobbyPlayers.length)}
+				{#if notEnoughPlayers2}
 					<p class="text-xs text-muted-foreground">
 						{$t('game.minPlayersRequired', { n: gameMeta.minPlayers })}
 					</p>
+				{:else if optionsInvalid2}
+					<p class="text-xs text-muted-foreground">{$t('game.optionsInvalid')}</p>
 				{/if}
 				<Button
 					onclick={() => get(activeHost)?.startGame()}
-					disabled={!gameMeta || lobbyPlayers.length < gameMeta.minPlayers}
+					disabled={!gameMeta || notEnoughPlayers2 || optionsInvalid2}
 					size="sm"
 				>
 					{$t('game.rematch')}

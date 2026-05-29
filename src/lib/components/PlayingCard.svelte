@@ -1,8 +1,15 @@
 <script lang="ts">
 import type { Card } from '$lib/core/types'
 import { cardSrc } from '$lib/decks/preload'
+import { getDeckBySlug } from '$lib/decks/registry'
 import { t } from '$lib/i18n'
 import { deckPacks, resolvePackFor } from '$lib/stores/deckPacks'
+
+const FALLBACK_SIZES = {
+	sm: 'w-[52px] h-[73px]',
+	md: 'w-[72px] h-[101px]',
+	lg: 'w-[96px] h-[134px]'
+}
 
 let {
 	card = null,
@@ -16,11 +23,7 @@ let {
 	deckSlug?: string
 } = $props()
 
-const sizes = {
-	sm: 'w-[52px] h-[73px]',
-	md: 'w-[72px] h-[101px]',
-	lg: 'w-[96px] h-[134px]'
-}
+const sizes = $derived(getDeckBySlug(deckSlug)?.metadata.sizes ?? FALLBACK_SIZES)
 
 const src = $derived.by(() => {
 	const pack = resolvePackFor($deckPacks, deckSlug)
