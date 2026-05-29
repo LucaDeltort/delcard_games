@@ -120,6 +120,18 @@ type GameDefinition<S> = {
 - `DeckTheme` = visual assets, separate from type, interchangeable
 - Folders: `src/lib/decks/<type>/`
 
+## Dice System
+
+- `DiceTypeEntry` = die shape + face count (e.g. D6) with `slug`, `nameKey`, `faceCount`, `packs`
+- `DicePack` = visual assets, interchangeable per type — same pattern as `CardPack`
+- Registry: `src/lib/dice/registry.ts` → `diceRegistry`, `getDiceBySlug`, `resolveDicePack`
+- Store: `src/lib/stores/dicePacks.ts` → persists user pack selection in localStorage
+- Component: `Dice.svelte` — CSS 3D cube, reads store by default; `packId` prop overrides
+- Picker: `DicePackPicker.svelte` — carousel, mirrors `DeckPackPicker`
+- Folders: `src/lib/dice/<DiceType>/` + assets in `static/dice/<DiceType>/<packId>/`
+- File naming: `1.svg`–`N.svg` (one per face value)
+- Full doc: `docs/dice-pack.md`
+
 ## Commit Convention
 
 Format: `type(scope): subject`
@@ -146,8 +158,11 @@ src/lib/
   network/    # host.ts + client.ts (PeerJS wrappers)
   games/      # one folder per game
   decks/      # one folder per deck type
+  dice/       # one folder per dice type
 src/routes/
   /           # home, create a game
   /join       # join via code
   /game/[id]  # game room
+  /decks      # card pack browser
+  /dice       # dice pack browser
 ```
