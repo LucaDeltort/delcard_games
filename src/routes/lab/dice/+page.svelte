@@ -69,9 +69,9 @@ function onFolderPick(e: Event) {
 
 	const srcs: FaceSrcs = {}
 	for (const file of files) {
-		const base = file.name.replace(/\.svg$/i, '')
-		const face = parseInt(base, 10) as 1 | 2 | 3 | 4 | 5 | 6
-		if (face >= 1 && face <= 6) {
+		const match = /^([1-6])\.svg$/i.exec(file.name)
+		if (match) {
+			const face = parseInt(match[1], 10) as 1 | 2 | 3 | 4 | 5 | 6
 			srcs[face] = URL.createObjectURL(file)
 		}
 	}
