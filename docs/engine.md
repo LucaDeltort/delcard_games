@@ -76,7 +76,7 @@ type Action = {
 ## The GameDefinition interface
 
 ```typescript
-type DeckType = 'FrenchDeckWithJoker' | 'FrenchDeckWithoutJoker' | 'ColorDeck';
+type DeckType = 'FrenchDeckWithJoker' | 'FrenchDeckWithoutJoker' | 'ColorDeck' | 'WerewolfDeck';
 
 type GameDefinition<S extends GameStateGeneric> = {
 	id: string;
@@ -85,7 +85,7 @@ type GameDefinition<S extends GameStateGeneric> = {
 	minPlayers: number;
 	maxPlayers: number;
 
-	setup: (players: string[]) => S;
+	setup: (players: string[], options?: Record<string, unknown>) => S;
 	getValidActions: (state: S, playerId: string) => Action[];
 	applyAction: (state: S, action: Action) => S;
 	isOver: (state: S) => boolean;
@@ -95,6 +95,11 @@ type GameDefinition<S extends GameStateGeneric> = {
 	// Return a state that continues (player removed/skipped) or ends the game.
 	// Omit to fall back to a generic gameover when players drop below minPlayers.
 	onPlayerDisconnect?: (state: S, playerId: string) => S;
+
+	// Optional. Lets the host schedule an automatic action (e.g. timeout-driven
+	// phase advance). Called after every state update; return null when no
+	// timer is pending. See Werewolf for a worked example.
+	scheduleAction?: (state: S) => { action: Action; delayMs: number } | null;
 };
 ```
 
@@ -230,6 +235,7 @@ All utilities are exported from `$lib/engine`.
 - `'FrenchDeckWithJoker'` — 54 cards (52 + 2 jokers)
 - `'FrenchDeckWithoutJoker'` — 52 standard cards
 - `'ColorDeck'` — 108 Color cards (colored numbers, action cards, wilds)
+- `'WerewolfDeck'` — square role cards (one face per implemented role)
 
 To add a completely new deck type, see [card-pack.md](card-pack.md#creating-a-new-deck-type).
 
@@ -246,6 +252,8 @@ To add a completely new deck type, see [card-pack.md](card-pack.md#creating-a-ne
 - [War rules and implementation notes](games/war.md)
 - [The Fight (La Bagarre) rules and implementation notes](games/fight.md)
 - [Color rules and implementation notes](games/color.md)
+- [Purple rules and implementation notes](games/purple.md)
+- [Werewolf rules and implementation notes](games/werewolf.md)
 
 ---
 

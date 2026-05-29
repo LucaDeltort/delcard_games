@@ -1,9 +1,14 @@
 import type { Card, DeckType } from '$lib/core/types'
 import { createColorDeck } from '$lib/decks/ColorDeck/cards'
+import { colorDeckMetadata } from '$lib/decks/ColorDeck/metadata'
 import { colorDeckPacks, defaultColorDeckPack } from '$lib/decks/ColorDeck/packs'
 import { createFrenchDeck } from '$lib/decks/FrenchDeck/cards'
+import { frenchDeckMetadata } from '$lib/decks/FrenchDeck/metadata'
 import { defaultFrenchDeckPack, frenchDeckPacks } from '$lib/decks/FrenchDeck/packs'
-import type { CardPack } from '$lib/decks/types'
+import type { CardPack, DeckMetadata } from '$lib/decks/types'
+import { createWerewolfDeck } from '$lib/decks/WerewolfDeck/cards'
+import { werewolfDeckMetadata } from '$lib/decks/WerewolfDeck/metadata'
+import { defaultWerewolfDeckPack, werewolfDeckPacks } from '$lib/decks/WerewolfDeck/packs'
 
 export type DeckTypeEntry = {
 	slug: string
@@ -11,13 +16,15 @@ export type DeckTypeEntry = {
 	nameKey: string
 	packs: CardPack[]
 	defaultPackId: string
+	metadata: DeckMetadata
 	createCards: () => Card[]
 }
 
 const DECK_TYPE_SLUGS: Record<DeckType, string> = {
 	FrenchDeckWithJoker: 'french-deck',
 	FrenchDeckWithoutJoker: 'french-deck',
-	ColorDeck: 'color-deck'
+	ColorDeck: 'color-deck',
+	WerewolfDeck: 'werewolf-deck'
 }
 
 export function getDeckSlugForType(deckType: DeckType): string {
@@ -31,6 +38,7 @@ export const deckRegistry: DeckTypeEntry[] = [
 		nameKey: 'decks.frenchDeck',
 		packs: frenchDeckPacks,
 		defaultPackId: defaultFrenchDeckPack.id,
+		metadata: frenchDeckMetadata,
 		createCards: () => createFrenchDeck(true)
 	},
 	{
@@ -39,7 +47,17 @@ export const deckRegistry: DeckTypeEntry[] = [
 		nameKey: 'decks.colorDeck',
 		packs: colorDeckPacks,
 		defaultPackId: defaultColorDeckPack.id,
+		metadata: colorDeckMetadata,
 		createCards: () => createColorDeck()
+	},
+	{
+		slug: 'werewolf-deck',
+		name: 'Werewolf Deck',
+		nameKey: 'decks.werewolfDeck',
+		packs: werewolfDeckPacks,
+		defaultPackId: defaultWerewolfDeckPack.id,
+		metadata: werewolfDeckMetadata,
+		createCards: () => createWerewolfDeck()
 	}
 ]
 

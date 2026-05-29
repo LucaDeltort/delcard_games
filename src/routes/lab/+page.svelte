@@ -9,6 +9,11 @@ const entries = [
 		label: 'GameTitle',
 		href: '/lab/game-title',
 		description: 'Entry / exit / rotation / size / color animations for game title screens'
+	},
+	{
+		label: 'Sandbox',
+		href: '/lab/sandbox',
+		description: 'Preview a game UI with live, editable state — no host, no peers'
 	}
 ].sort((a, b) => a.label.localeCompare(b.label))
 </script>
