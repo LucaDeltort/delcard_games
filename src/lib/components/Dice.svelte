@@ -109,7 +109,7 @@ onDestroy(() => {
 	class="dice-scene"
 	class:held
 	role="img"
-	aria-label="Die showing {value}"
+	aria-label="Die showing {value}{held ? ', held' : ''}"
 	aria-live="polite"
 >
 	<div class="dice-cube" bind:this={diceEl}>
