@@ -138,7 +138,12 @@ export function finishResolution(
 
 export function resumeAfterHunter(state: WerewolfState, now: number): WerewolfState {
 	const nextPhase = state.pendingTransition
-	const s: WerewolfState = { ...state, pendingHunter: null, hunterQueue: [], pendingTransition: null }
+	const s: WerewolfState = {
+		...state,
+		pendingHunter: null,
+		hunterQueue: [],
+		pendingTransition: null
+	}
 	if (!nextPhase) return s
 	return pauseNextHunterOrFinalize(s, state.hunterQueue, nextPhase, now)
 }
