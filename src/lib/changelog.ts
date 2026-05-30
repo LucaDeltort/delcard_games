@@ -3,6 +3,15 @@ type ReleaseNote = { version: string; date: string; items: ReleaseItem[] }
 
 const changelog: ReleaseNote[] = [
 	{
+		version: '0.4.0',
+		date: '2026-05-29',
+		items: [
+			{ fr: 'Nouveau jeu : Loup-Garou', en: 'New game: Werewolf' },
+			{ fr: 'Visualiseur de dés avec pack Delcard', en: 'Dice viewer with Delcard pack' },
+			{ fr: "Refonte de la page d'accueil et du Laboratoire", en: 'Home page and Lab redesign' }
+		]
+	},
+	{
 		version: '0.3.0',
 		date: '2026-05-23',
 		items: [
