@@ -195,6 +195,7 @@ export const yams: GameDefinition<YamsState> = {
 	},
 
 	applyAction(state, action) {
+		if (state.phase === 'gameover') return state
 		if (action.playerId !== state.turnPlayerId) return state
 
 		if (action.type === 'ROLL') {
@@ -248,7 +249,7 @@ export const yams: GameDefinition<YamsState> = {
 	getWinner(state) {
 		if (state.phase !== 'gameover') return null
 		return state.players.reduce((best, p) =>
-			grandTotal(state.scores[p]) >= grandTotal(state.scores[best]) ? p : best
+			grandTotal(state.scores[p]) > grandTotal(state.scores[best]) ? p : best
 		)
 	},
 
@@ -261,7 +262,7 @@ export const yams: GameDefinition<YamsState> = {
 			return { ...state, players: remaining, scores: newScores, phase: 'gameover' }
 		}
 		const newTurn =
-			state.turnPlayerId === playerId ? nextPlayer(remaining, playerId) : state.turnPlayerId
+			state.turnPlayerId === playerId ? nextPlayer(state.players, playerId) : state.turnPlayerId
 		const advancedTurn = state.turnPlayerId === playerId
 		return {
 			...state,
