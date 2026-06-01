@@ -1,7 +1,7 @@
 <script lang="ts">
 import PurpleView from '$lib/components/games/PurpleView.svelte'
-import type { PurpleState } from '$lib/games/purple'
-import { purple } from '$lib/games/purple'
+import type { PurpleState } from '$lib/games/purple/purple'
+import { purple } from '$lib/games/purple/purple'
 import { makePlayers, nameFor } from '$lib/sandbox/players'
 import SandboxShell from '$lib/sandbox/SandboxShell.svelte'
 
