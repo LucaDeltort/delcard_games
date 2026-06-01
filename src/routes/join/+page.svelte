@@ -1,4 +1,5 @@
 <script lang="ts">
+import { Club, Diamond, Heart, Spade } from 'lucide-svelte'
 import { get } from 'svelte/store'
 import { browser } from '$app/environment'
 import { goto } from '$app/navigation'
@@ -65,7 +66,7 @@ async function joinGame() {
 />
 
 <main class="join-root">
-	<div class="bg-spade" aria-hidden="true">♠</div>
+	<div class="bg-spade" aria-hidden="true"><Spade style="width:100%;height:100%" /></div>
 	<div class="bg-glow" aria-hidden="true"></div>
 
 	<div class="join-grid">
@@ -77,10 +78,10 @@ async function joinGame() {
 				{$t('join.brandLine1')}<br />{$t('join.brandLine2')}
 			</p>
 			<div class="suits-row" aria-hidden="true">
-				<span class="suit-blue">♠</span>
-				<span class="suit-red">♥</span>
-				<span class="suit-blue">♦</span>
-				<span class="suit-red">♣</span>
+				<Spade size={20} class="suit-blue" />
+				<Heart size={20} class="suit-red" />
+				<Diamond size={20} class="suit-blue" />
+				<Club size={20} class="suit-red" />
 			</div>
 		</aside>
 
@@ -142,7 +143,8 @@ async function joinGame() {
 	/* Large ghosted spade — atmospheric background element */
 	.bg-spade {
 		position: absolute;
-		font-size: min(70vw, 60vh);
+		width: min(70vw, 60vh);
+		height: min(70vw, 60vh);
 		color: white;
 		opacity: 0.025;
 		pointer-events: none;
@@ -150,8 +152,6 @@ async function joinGame() {
 		left: -8%;
 		top: 50%;
 		transform: translateY(-50%);
-		line-height: 1;
-		font-family: Georgia, serif;
 	}
 
 	/* Subtle blue radial glow from right */
@@ -243,7 +243,7 @@ async function joinGame() {
 	.suits-row {
 		display: flex;
 		gap: 1rem;
-		font-size: 1.25rem;
+		align-items: center;
 		margin-top: 0.5rem;
 	}
 

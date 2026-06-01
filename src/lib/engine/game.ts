@@ -16,7 +16,8 @@ export type Action = {
 export type GameDefinition<S extends GameStateGeneric> = {
 	id: string
 	name: string
-	deckType: DeckType
+	deckType?: DeckType
+	diceSlug?: string
 	minPlayers: number
 	maxPlayers: number
 	optionsSchema?: OptionSchema[]

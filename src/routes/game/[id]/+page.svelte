@@ -1,6 +1,15 @@
 <script lang="ts">
 import { Dialog } from 'bits-ui'
-import { Loader2, Settings as SettingsIcon, SlidersHorizontal, X } from 'lucide-svelte'
+import {
+	Club,
+	Diamond,
+	Heart,
+	Loader2,
+	Settings as SettingsIcon,
+	SlidersHorizontal,
+	Spade,
+	X
+} from 'lucide-svelte'
 import { onDestroy, onMount } from 'svelte'
 import { get } from 'svelte/store'
 import { fade, fly } from 'svelte/transition'
@@ -9,6 +18,7 @@ import { beforeNavigate, goto } from '$app/navigation'
 import { page } from '$app/stores'
 import ConfirmDialog from '$lib/components/ConfirmDialog.svelte'
 import DeckPackPicker from '$lib/components/DeckPackPicker.svelte'
+import DicePackPicker from '$lib/components/DicePackPicker.svelte'
 import GameOptionsPanel from '$lib/components/GameOptionsPanel.svelte'
 import ColorView from '$lib/components/games/ColorView.svelte'
 import FightView from '$lib/components/games/FightView.svelte'
@@ -16,6 +26,7 @@ import PresidentsView from '$lib/components/games/PresidentsView.svelte'
 import PurpleView from '$lib/components/games/PurpleView.svelte'
 import WarView from '$lib/components/games/WarView.svelte'
 import WerewolfView from '$lib/components/games/WerewolfView.svelte'
+import YamsView from '$lib/components/games/YamsView.svelte'
 import RulesDrawer from '$lib/components/RulesDrawer.svelte'
 import Seo from '$lib/components/Seo.svelte'
 import { Button } from '$lib/components/ui/button'
@@ -56,6 +67,7 @@ const gameDef = $derived(games[resolvedGameId])
 const deckSlug = $derived(
 	getDeckSlugForType(games[resolvedGameId]?.deckType ?? 'FrenchDeckWithoutJoker')
 )
+const gameDiceSlug = $derived(games[resolvedGameId]?.diceSlug ?? null)
 
 let lobbyOptions = $state<Record<string, unknown>>({})
 
@@ -329,7 +341,7 @@ $effect(() => {
 		<SettingsIcon size={16} />
 	</button>
 
-	<div class="lobby-bg-club" aria-hidden="true">♣</div>
+	<div class="lobby-bg-club" aria-hidden="true"><Club style="width:100%;height:100%" /></div>
 	<div class="lobby-bg-glow" aria-hidden="true"></div>
 
 	<main class="lobby-root">
@@ -338,10 +350,10 @@ $effect(() => {
 				<span class="lobby-eyebrow">{$t('game.roomCode')}</span>
 				<h1 class="lobby-code">{code}</h1>
 				<div class="lobby-suits" aria-hidden="true">
-					<span class="suit-blue">♠</span>
-					<span class="suit-red">♥</span>
-					<span class="suit-blue">♦</span>
-					<span class="suit-red">♣</span>
+					<Spade size={20} class="suit-blue" />
+					<Heart size={20} class="suit-red" />
+					<Diamond size={20} class="suit-blue" />
+					<Club size={20} class="suit-red" />
 				</div>
 				<button type="button" onclick={copyShareLink} class="lobby-share-btn">
 					{#key codeCopied}
@@ -425,7 +437,11 @@ $effect(() => {
 					</Dialog.Root>
 				{/if}
 
-				<DeckPackPicker {deckSlug} />
+				{#if gameDiceSlug}
+					<DicePackPicker diceSlug={gameDiceSlug} />
+				{:else}
+					<DeckPackPicker {deckSlug} />
+				{/if}
 
 				{#if isHost}
 					{@const notEnoughPlayers = !!gameMeta && lobbyPlayers.length < gameMeta.minPlayers}
@@ -505,6 +521,14 @@ $effect(() => {
 		{validActions}
 		onAction={submitAction}
 		{deckSlug}
+	/>
+{:else if gameState.activeGameId === 'yams'}
+	<YamsView
+		state={gameState}
+		{myPlayerId}
+		players={enrichedPlayers}
+		{validActions}
+		onAction={submitAction}
 	/>
 	<!-- ── Game (generic fallback) ───────────────────────────────── -->
 {:else}
@@ -632,7 +656,8 @@ $effect(() => {
 	/* ── Lobby atmospheric background ── */
 	.lobby-bg-club {
 		position: fixed;
-		font-size: min(70vw, 60vh);
+		width: min(70vw, 60vh);
+		height: min(70vw, 60vh);
 		color: white;
 		opacity: 0.025;
 		pointer-events: none;
@@ -640,8 +665,6 @@ $effect(() => {
 		right: -8%;
 		top: 50%;
 		transform: translateY(-50%);
-		line-height: 1;
-		font-family: Georgia, serif;
 		z-index: 0;
 	}
 
@@ -725,7 +748,7 @@ $effect(() => {
 	.lobby-suits {
 		display: flex;
 		gap: 1rem;
-		font-size: 1.25rem;
+		align-items: center;
 	}
 
 
