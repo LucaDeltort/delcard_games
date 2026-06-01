@@ -70,23 +70,23 @@ async function joinGame() {
 
 	<div class="join-grid">
 		<aside class="brand-side">
-			<span class="eyebrow">PRIVATE TABLE</span>
+			<span class="eyebrow">{$t('join.eyebrow')}</span>
 			<img src={logo} alt="Delcard" class="brand-logo" />
 			<h1 class="brand-title">DELCARD</h1>
 			<p class="brand-sub">
-				Card games with friends.<br />No sign-up. No server.
+				{$t('join.brandLine1')}<br />{$t('join.brandLine2')}
 			</p>
 			<div class="suits-row" aria-hidden="true">
-				<span class="suit-black">♠</span>
+				<span class="suit-blue">♠</span>
 				<span class="suit-red">♥</span>
-				<span class="suit-red">♦</span>
-				<span class="suit-black">♣</span>
+				<span class="suit-blue">♦</span>
+				<span class="suit-red">♣</span>
 			</div>
 		</aside>
 
 		<section class="form-panel">
 			<div class="form-header">
-				<span class="form-tag">ENTER</span>
+				<span class="form-tag">{$t('join.tagEnter')}</span>
 				<h2 class="form-title">{$t('join.title')}</h2>
 				<p class="form-desc">{$t('join.desc')}</p>
 			</div>
@@ -247,9 +247,9 @@ async function joinGame() {
 		margin-top: 0.5rem;
 	}
 
-	.suit-black {
-		color: var(--muted-foreground);
-		opacity: 0.6;
+	.suit-blue {
+		color: #4a6ee0;
+		opacity: 0.65;
 	}
 
 	.suit-red {

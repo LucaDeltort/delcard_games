@@ -14,7 +14,10 @@ export default {
 		close: 'Fermer'
 	},
 	home: {
-		subtitle: 'Jeux de cartes entre amis - sans pub, sans inscription.',
+		eyebrow: 'Jeux de cartes entre amis. Sans inscription. Sans serveur.',
+		tagHost: 'HÔTE',
+		tagGuest: 'INVITÉ',
+		newBadge: 'Nouveau',
 		newGame: 'Nouvelle partie',
 		labelGame: 'Jeu',
 		creating: 'Création…',
@@ -24,6 +27,10 @@ export default {
 		joinBtn: 'Rejoindre une partie'
 	},
 	join: {
+		eyebrow: 'TABLE PRIVÉE',
+		tagEnter: 'ENTRER',
+		brandLine1: 'Jeux de cartes entre amis.',
+		brandLine2: 'Sans inscription. Sans serveur.',
 		title: 'Rejoindre une partie',
 		desc: "Entre le code partagé par l'hôte.",
 		labelCode: 'Code',
