@@ -1,9 +1,16 @@
 <script lang="ts">
 import { ArrowLeft, ChevronRight } from 'lucide-svelte'
+import Seo from '$lib/components/Seo.svelte'
 import { deckRegistry } from '$lib/decks/registry'
 import { t } from '$lib/i18n'
 import { deckPacks, resolvePackFor } from '$lib/stores/deckPacks'
 </script>
+
+<Seo
+	title="Card Decks — Delcard"
+	description="Browse card deck styles for your games — pick your look."
+	canonical="/decks"
+/>
 
 <div class="mx-auto w-full max-w-5xl flex-1 px-4 py-8">
 	<div class="mb-6">

@@ -49,7 +49,7 @@ The first player to empty their hand wins.
 
 ## Implementation notes
 
-Source: [`src/lib/games/color.ts`](../../src/lib/games/color.ts)
+Source: [`src/lib/games/color/color.ts`](../../src/lib/games/color/color.ts)
 
 ### State type
 

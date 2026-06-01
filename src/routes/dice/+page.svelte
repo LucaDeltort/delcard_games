@@ -1,10 +1,17 @@
 <script lang="ts">
 import { ArrowLeft, ChevronRight } from 'lucide-svelte'
 import Dice from '$lib/components/Dice.svelte'
+import Seo from '$lib/components/Seo.svelte'
 import { diceRegistry } from '$lib/dice/registry'
 import { t } from '$lib/i18n'
 import { dicePacks, resolvePackFor } from '$lib/stores/dicePacks'
 </script>
+
+<Seo
+	title="Dice — Delcard"
+	description="Browse dice styles for your games — classic and custom packs."
+	canonical="/dice"
+/>
 
 <div class="mx-auto w-full max-w-5xl flex-1 px-4 py-8">
 	<div class="mb-6">

@@ -70,7 +70,7 @@ After the exchange, **Asshole leads** the first trick.
 
 ## Implementation notes
 
-Source: [`src/lib/games/presidents.ts`](../../src/lib/games/presidents.ts)
+Source: [`src/lib/games/presidents/presidents.ts`](../../src/lib/games/presidents/presidents.ts)
 
 **Zones:** `hand_<pid>` (fan, private) per player + `pile` (public).
 

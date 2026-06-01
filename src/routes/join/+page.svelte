@@ -3,6 +3,7 @@ import { get } from 'svelte/store'
 import { browser } from '$app/environment'
 import { goto } from '$app/navigation'
 import { page } from '$app/stores'
+import Seo from '$lib/components/Seo.svelte'
 import { Button } from '$lib/components/ui/button'
 import { Input } from '$lib/components/ui/input'
 import { t } from '$lib/i18n'
@@ -55,6 +56,12 @@ async function joinGame() {
 	goto(`/game/${trimmedCode}?name=${encodeURIComponent(trimmedName)}`)
 }
 </script>
+
+<Seo
+	title="Join a game — Delcard"
+	description="Enter your game code to join a friend's card game instantly."
+	canonical="/join"
+/>
 
 <main class="flex min-h-dvh flex-col items-center justify-center gap-12 px-4">
 	<header class="text-center">
