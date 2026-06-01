@@ -1,6 +1,7 @@
 <script lang="ts">
 const games = [
-	{ id: 'werewolf', name: 'Loup-Garou', ready: true },
+	{ id: 'war', name: 'War', ready: true },
+	{ id: 'werewolf', name: 'Werewolf', ready: true },
 	{ id: 'purple', name: 'Purple', ready: true }
 ]
 </script>
