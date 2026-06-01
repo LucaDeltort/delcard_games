@@ -17,6 +17,7 @@ import PurpleView from '$lib/components/games/PurpleView.svelte'
 import WarView from '$lib/components/games/WarView.svelte'
 import WerewolfView from '$lib/components/games/WerewolfView.svelte'
 import RulesDrawer from '$lib/components/RulesDrawer.svelte'
+import Seo from '$lib/components/Seo.svelte'
 import { Button } from '$lib/components/ui/button'
 import type { GameStateGeneric } from '$lib/core/types'
 import { getDeckSlugForType } from '$lib/decks/registry'
@@ -250,6 +251,13 @@ $effect(() => {
 	}
 })
 </script>
+
+<Seo
+	title="Game — Delcard"
+	description="Live card game session."
+	canonical="/game"
+	noindex={true}
+/>
 
 <!-- ── Reconnecting overlay ──────────────────────────────────── -->
 {#if reconnecting}

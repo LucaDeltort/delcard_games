@@ -1,6 +1,7 @@
 <script lang="ts">
 import { ArrowLeft, Check, Flag } from 'lucide-svelte'
 import { page } from '$app/stores'
+import Seo from '$lib/components/Seo.svelte'
 import { cardSrc, preloadPack } from '$lib/decks/preload'
 import { getDeckBySlug } from '$lib/decks/registry'
 import { t } from '$lib/i18n'
@@ -52,6 +53,13 @@ async function switchPack(packId: string) {
 	loading = false
 }
 </script>
+
+<Seo
+	title={entry ? `${entry.name} — Delcard` : 'Deck — Delcard'}
+	description={entry ? `Browse ${entry.name} card packs and styles.` : ''}
+	canonical="/decks/{slug}"
+	noindex={!entry}
+/>
 
 <div class="mx-auto w-full max-w-5xl flex-1 px-4 py-8">
 	<div class="mb-6">

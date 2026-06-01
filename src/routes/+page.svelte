@@ -5,6 +5,7 @@ import { browser } from '$app/environment'
 import { goto } from '$app/navigation'
 import logo from '$lib/assets/logo.svg'
 import RulesDrawer from '$lib/components/RulesDrawer.svelte'
+import Seo from '$lib/components/Seo.svelte'
 import { Button } from '$lib/components/ui/button'
 import { Input } from '$lib/components/ui/input'
 import { gameList } from '$lib/games/index'
@@ -40,6 +41,12 @@ async function createGame() {
 	goto(`/game/${host.code}?role=host&game=${selectedGame}&name=${encodeURIComponent(trimmedName)}`)
 }
 </script>
+
+<Seo
+	title="Delcard — Card games with friends"
+	description="Play War, Presidents, Werewolf and more with friends — free, no sign-up, peer-to-peer."
+	canonical="/"
+/>
 
 <main class="flex flex-1 flex-col items-center justify-center gap-8 px-4 pb-14 pt-4">
     <header class="text-center">

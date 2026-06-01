@@ -2,6 +2,7 @@
 import { ArrowLeft, Check, Flag } from 'lucide-svelte'
 import { page } from '$app/stores'
 import Dice from '$lib/components/Dice.svelte'
+import Seo from '$lib/components/Seo.svelte'
 import { getDiceBySlug } from '$lib/dice/registry'
 import { t } from '$lib/i18n'
 import { dicePacks, resolvePackFor } from '$lib/stores/dicePacks'
@@ -18,6 +19,13 @@ $effect(() => {
 	previewPackId = null
 })
 </script>
+
+<Seo
+	title={entry ? `${entry.name} — Delcard` : 'Dice — Delcard'}
+	description={entry ? `Browse ${entry.name} dice packs and styles.` : ''}
+	canonical="/dice/{slug}"
+	noindex={!entry}
+/>
 
 <div class="mx-auto w-full max-w-5xl flex-1 px-4 py-8">
 	<div class="mb-6">
