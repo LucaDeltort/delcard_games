@@ -51,6 +51,8 @@ export default {
 		waitingStart: 'En attente du démarrage…',
 		leaveGame: 'Quitter',
 		confirmLeave: 'Quitter la partie ?',
+		roomCode: 'CODE DE SALLE',
+		kickPlayer: 'Exclure {name}',
 		confirmKick: 'Exclure {name} ?',
 		over: 'Partie terminée',
 		wins: 'remporte la partie',

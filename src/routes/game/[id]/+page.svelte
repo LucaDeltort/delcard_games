@@ -335,7 +335,7 @@ $effect(() => {
 	<main class="lobby-root">
 		<div class="lobby-grid">
 			<aside class="lobby-brand">
-				<span class="lobby-eyebrow">ROOM CODE</span>
+				<span class="lobby-eyebrow">{$t('game.roomCode')}</span>
 				<h1 class="lobby-code">{code}</h1>
 				<div class="lobby-suits" aria-hidden="true">
 					<span class="suit-blue">♠</span>
@@ -378,7 +378,7 @@ $effect(() => {
 								<button
 									onclick={() => (kickTarget = player)}
 									class="player-kick"
-									aria-label="Kick {player.name}"
+									aria-label={$t('game.kickPlayer', { name: player.name })}
 								>
 									<X size={14} />
 								</button>

@@ -51,6 +51,8 @@ export default {
 		waitingStart: 'Waiting for host to start…',
 		leaveGame: 'Leave',
 		confirmLeave: 'Leave the game?',
+		roomCode: 'ROOM CODE',
+		kickPlayer: 'Kick {name}',
 		confirmKick: 'Kick {name}?',
 		over: 'Game over',
 		wins: 'wins the game',
