@@ -1,5 +1,5 @@
 <script lang="ts">
-import { ArrowRight, LogIn } from 'lucide-svelte'
+import { ArrowRight, Club, Diamond, Heart, LogIn, Spade } from 'lucide-svelte'
 import { get } from 'svelte/store'
 import { browser } from '$app/environment'
 import { goto } from '$app/navigation'
@@ -56,10 +56,10 @@ async function createGame() {
 		<img src={logo} alt="Delcard" class="hero-logo" />
 		<h1 class="hero-title">DELCARD</h1>
 		<div class="suits-row" aria-hidden="true">
-			<span class="suit-blue">♠</span>
-			<span class="suit-red">♥</span>
-			<span class="suit-blue">♦</span>
-			<span class="suit-red">♣</span>
+			<Spade size={14} class="suit-blue" />
+			<Heart size={14} class="suit-red" />
+			<Diamond size={14} class="suit-blue" />
+			<Club size={14} class="suit-red" />
 		</div>
 		<span class="hero-eyebrow">{$t('home.eyebrow')}</span>
 	</header>
@@ -283,9 +283,8 @@ async function createGame() {
 	.suits-row {
 		display: flex;
 		gap: 0.75rem;
-		font-size: 0.85rem;
+		align-items: center;
 		margin-top: 0.6rem;
-		letter-spacing: 0.15em;
 	}
 
 
