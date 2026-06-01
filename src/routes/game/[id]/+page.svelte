@@ -328,123 +328,127 @@ $effect(() => {
 	>
 		<SettingsIcon size={16} />
 	</button>
-	<main class="flex min-h-dvh flex-col items-center justify-center gap-10 px-4">
-		<header class="flex flex-col items-center text-center">
-			<div class="flex items-center gap-2">
-				<p class="text-sm tracking-widest text-muted-foreground uppercase">
-					{gameMeta ? $t(`${gameMeta.id}.name`) : 'Partie'}
-				</p>
-				{#if gameMeta}
-					<RulesDrawer gameId={gameMeta.id} />
+
+	<div class="lobby-bg-club" aria-hidden="true">♣</div>
+	<div class="lobby-bg-glow" aria-hidden="true"></div>
+
+	<main class="lobby-root">
+		<div class="lobby-grid">
+			<aside class="lobby-brand">
+				<span class="lobby-eyebrow">ROOM CODE</span>
+				<h1 class="lobby-code">{code}</h1>
+				<div class="lobby-suits" aria-hidden="true">
+					<span class="suit-blue">♠</span>
+					<span class="suit-red">♥</span>
+					<span class="suit-blue">♦</span>
+					<span class="suit-red">♣</span>
+				</div>
+				<button onclick={copyShareLink} class="lobby-share-btn">
+					{#key codeCopied}
+						<span class="inline-block" in:fade={{ duration: 200 }}>
+							{codeCopied ? $t('game.linkCopied') : $t('game.copyLink')}
+						</span>
+					{/key}
+				</button>
+			</aside>
+
+			<section class="lobby-panel">
+				<div class="lobby-panel-head">
+					<span class="lobby-tag">{$t('game.players', { n: lobbyPlayers.length })}</span>
+					<div class="lobby-title-row">
+						<h2 class="lobby-title">
+							{gameMeta ? $t(`${gameMeta.id}.name`) : '—'}
+						</h2>
+						{#if gameMeta}
+							<RulesDrawer gameId={gameMeta.id} />
+						{/if}
+					</div>
+				</div>
+
+				<ul class="lobby-roster">
+					{#each lobbyPlayers as player, i}
+						<li class="lobby-player {player.id === myPlayerId ? 'lobby-player--me' : ''}">
+							<span class="player-icon {i === 0 ? 'player-icon--host' : ''}">
+								{i === 0 ? '★' : '·'}
+							</span>
+							<span class="player-name">{player.name}</span>
+							{#if player.id === myPlayerId}
+								<span class="player-you">{$t('common.you')}</span>
+							{:else if isHost}
+								<button
+									onclick={() => (kickTarget = player)}
+									class="player-kick"
+									aria-label="Kick {player.name}"
+								>
+									<X size={14} />
+								</button>
+							{/if}
+						</li>
+					{/each}
+				</ul>
+
+				{#if gameDef?.optionsSchema?.length}
+					<Dialog.Root>
+						<Dialog.Trigger
+							class="flex w-full items-center justify-center gap-2 rounded-lg border border-border bg-transparent px-4 py-3 text-sm text-foreground transition-colors hover:border-primary"
+						>
+							<SlidersHorizontal size={14} />
+							{$t('game.rules')}
+						</Dialog.Trigger>
+						<Dialog.Portal>
+							<Dialog.Overlay class="fixed inset-0 z-[100] bg-black/20" />
+							<Dialog.Content
+								class="fixed inset-y-0 right-0 z-[110] flex w-72 max-w-[85vw] flex-col border-l border-border bg-card shadow-xl focus:outline-none"
+							>
+								<div class="flex items-center justify-between border-b border-border px-4 py-2">
+									<Dialog.Title class="text-xs tracking-widest text-muted-foreground uppercase">
+										{$t('game.rules')}
+									</Dialog.Title>
+									<Dialog.Close
+										class="p-2 text-muted-foreground transition-colors hover:text-foreground"
+										aria-label={$t('common.close')}
+									>
+										<X size={16} />
+									</Dialog.Close>
+								</div>
+								<div class="flex-1 overflow-y-auto px-4 py-4">
+									<GameOptionsPanel
+										schema={gameDef.optionsSchema}
+										options={lobbyOptions}
+										{isHost}
+										onChange={updateOption}
+									/>
+								</div>
+							</Dialog.Content>
+						</Dialog.Portal>
+					</Dialog.Root>
 				{/if}
-			</div>
-			<h1 class="font-heading text-7xl tracking-wide text-foreground">{code}</h1>
-		</header>
 
-		<button
-			onclick={copyShareLink}
-			class="rounded-lg border border-border bg-card px-4 py-2 text-sm text-muted-foreground transition-colors hover:border-primary hover:text-foreground"
-		>
-			{#key codeCopied}
-				<span class="inline-block" in:fade={{ duration: 200 }}>
-					{codeCopied ? $t('game.linkCopied') : $t('game.copyLink')}
-				</span>
-			{/key}
-		</button>
+				<DeckPackPicker {deckSlug} />
 
-		<div class="w-full max-w-xs">
-			<p class="mb-3 text-xs tracking-widest text-muted-foreground uppercase">
-				{$t('game.players', { n: lobbyPlayers.length })}
-			</p>
-			<ul class="flex flex-col gap-2">
-				{#each lobbyPlayers as player, i}
-					<li
-						class="flex items-center gap-3 rounded-lg border border-border bg-card px-4 py-3 text-sm"
+				{#if isHost}
+					{@const notEnoughPlayers = !!gameMeta && lobbyPlayers.length < gameMeta.minPlayers}
+					{@const optionsInvalid = !notEnoughPlayers && gameDef?.canStart != null && !gameDef.canStart(lobbyOptions, lobbyPlayers.length)}
+					{#if notEnoughPlayers}
+						<p class="lobby-hint">{$t('game.minPlayersRequired', { n: gameMeta.minPlayers })}</p>
+					{:else if optionsInvalid}
+						<p class="lobby-hint">{$t('game.optionsInvalid')}</p>
+					{/if}
+					<Button
+						onclick={startGame}
+						disabled={!gameMeta || notEnoughPlayers || optionsInvalid}
+						class="w-full"
 					>
-						{#if i === 0}
-							<span class="text-accent">★</span>
-						{:else}
-							<span class="text-muted-foreground">·</span>
-						{/if}
-						<span class="flex-1 text-foreground">{player.name}</span>
-						{#if player.id === myPlayerId}
-							<span class="text-xs text-muted-foreground">{$t('common.you')}</span>
-						{:else if isHost}
-							<button
-								onclick={() => (kickTarget = player)}
-								class="p-2 text-muted-foreground transition-colors hover:text-destructive"
-								aria-label="Kick {player.name}"
-							>
-								<X size={16} />
-							</button>
-						{/if}
-					</li>
-				{/each}
-			</ul>
+						{$t('game.start')}
+					</Button>
+				{:else}
+					<p class="lobby-waiting">{$t('game.waitingStart')}</p>
+					<Button onclick={() => goto('/')} variant="outline" class="w-full">
+						{$t('game.leaveGame')}
+					</Button>
+				{/if}
+			</section>
 		</div>
-
-		{#if gameDef?.optionsSchema?.length}
-			<Dialog.Root>
-				<Dialog.Trigger
-					class="flex w-full max-w-xs items-center justify-center gap-2 rounded-lg border border-border bg-card px-4 py-3 text-sm text-foreground transition-colors hover:border-primary"
-				>
-					<SlidersHorizontal size={14} />
-					{$t('game.rules')}
-				</Dialog.Trigger>
-				<Dialog.Portal>
-					<Dialog.Overlay class="fixed inset-0 z-[100] bg-black/20" />
-					<Dialog.Content
-						class="fixed inset-y-0 right-0 z-[110] flex w-72 max-w-[85vw] flex-col border-l border-border bg-card shadow-xl focus:outline-none"
-					>
-						<div class="flex items-center justify-between border-b border-border px-4 py-2">
-							<Dialog.Title class="text-xs tracking-widest text-muted-foreground uppercase">
-								{$t('game.rules')}
-							</Dialog.Title>
-							<Dialog.Close
-								class="p-2 text-muted-foreground transition-colors hover:text-foreground"
-								aria-label={$t('common.close')}
-							>
-								<X size={16} />
-							</Dialog.Close>
-						</div>
-						<div class="flex-1 overflow-y-auto px-4 py-4">
-							<GameOptionsPanel
-								schema={gameDef.optionsSchema}
-								options={lobbyOptions}
-								{isHost}
-								onChange={updateOption}
-							/>
-						</div>
-					</Dialog.Content>
-				</Dialog.Portal>
-			</Dialog.Root>
-		{/if}
-
-		<DeckPackPicker {deckSlug} />
-
-		{#if isHost}
-			{@const notEnoughPlayers = !!gameMeta && lobbyPlayers.length < gameMeta.minPlayers}
-			{@const optionsInvalid = !notEnoughPlayers && gameDef?.canStart != null && !gameDef.canStart(lobbyOptions, lobbyPlayers.length)}
-			{#if notEnoughPlayers}
-				<p class="text-xs text-muted-foreground">
-					{$t('game.minPlayersRequired', { n: gameMeta.minPlayers })}
-				</p>
-			{:else if optionsInvalid}
-				<p class="text-xs text-muted-foreground">{$t('game.optionsInvalid')}</p>
-			{/if}
-			<Button
-				onclick={startGame}
-				disabled={!gameMeta || notEnoughPlayers || optionsInvalid}
-				class="w-full max-w-xs"
-			>
-				{$t('game.start')}
-			</Button>
-		{:else}
-			<p class="text-sm text-muted-foreground">{$t('game.waitingStart')}</p>
-			<Button onclick={() => goto('/')} variant="outline" class="w-full max-w-xs">
-				{$t('game.leaveGame')}
-			</Button>
-		{/if}
 	</main>
 
 	<!-- ── Game ───────────────────────────────────────────────────── -->
@@ -622,3 +626,294 @@ $effect(() => {
 	onConfirm={confirmKick}
 	onCancel={() => (kickTarget = null)}
 />
+
+<style>
+	/* ── Lobby atmospheric background ── */
+	.lobby-bg-club {
+		position: fixed;
+		font-size: min(70vw, 60vh);
+		color: white;
+		opacity: 0.025;
+		pointer-events: none;
+		user-select: none;
+		right: -8%;
+		top: 50%;
+		transform: translateY(-50%);
+		line-height: 1;
+		font-family: Georgia, serif;
+		z-index: 0;
+	}
+
+	.lobby-bg-glow {
+		position: fixed;
+		inset: 0;
+		background: radial-gradient(ellipse 60% 50% at 20% 50%, oklch(0.2 0.04 264 / 0.45), transparent);
+		pointer-events: none;
+		z-index: 0;
+	}
+
+	/* ── Root ── */
+	.lobby-root {
+		position: relative;
+		z-index: 1;
+		flex: 1;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		padding: 2rem 1.5rem;
+	}
+
+	/* ── Two-column grid ── */
+	.lobby-grid {
+		display: grid;
+		grid-template-columns: 1fr;
+		gap: 2.5rem;
+		width: 100%;
+		max-width: 860px;
+		min-width: 0;
+	}
+
+	@media (min-width: 768px) {
+		.lobby-grid {
+			grid-template-columns: 1fr 1fr;
+			gap: 5rem;
+			align-items: center;
+		}
+	}
+
+	/* ── Brand side (left) ── */
+	.lobby-brand {
+		display: flex;
+		flex-direction: column;
+		gap: 1.25rem;
+		animation: lobby-fade-up 0.6s ease both;
+		animation-delay: 0.05s;
+	}
+
+	@media (max-width: 767px) {
+		.lobby-brand {
+			text-align: center;
+			align-items: center;
+		}
+	}
+
+	.lobby-eyebrow {
+		display: inline-flex;
+		align-items: center;
+		font-size: 0.625rem;
+		font-weight: 700;
+		letter-spacing: 0.3em;
+		color: var(--primary);
+		border: 1px solid oklch(0.37 0.222 264 / 0.4);
+		background: oklch(0.37 0.222 264 / 0.08);
+		padding: 0.25rem 0.75rem;
+		border-radius: 999px;
+		width: fit-content;
+	}
+
+	.lobby-code {
+		font-family: var(--font-heading);
+		font-size: clamp(4rem, 16vw, 8rem);
+		line-height: 1;
+		letter-spacing: 0.12em;
+		color: var(--foreground);
+		margin: 0;
+		text-shadow: 0 0 120px rgba(0, 47, 167, 0.45);
+	}
+
+	.lobby-suits {
+		display: flex;
+		gap: 1rem;
+		font-size: 1.25rem;
+	}
+
+	.suit-blue {
+		color: #4a6ee0;
+		opacity: 0.65;
+	}
+
+	.suit-red {
+		color: #c0392b;
+		opacity: 0.55;
+	}
+
+	.lobby-share-btn {
+		display: inline-flex;
+		align-items: center;
+		gap: 5px;
+		font-size: 0.65rem;
+		font-weight: 600;
+		letter-spacing: 0.1em;
+		text-transform: uppercase;
+		padding: 5px 12px;
+		border-radius: 99px;
+		border: 1px solid rgba(255, 255, 255, 0.14);
+		color: rgba(255, 255, 255, 0.45);
+		background: transparent;
+		cursor: pointer;
+		transition: all 180ms ease;
+		width: fit-content;
+	}
+
+	.lobby-share-btn:hover {
+		border-color: rgba(255, 255, 255, 0.32);
+		color: rgba(255, 255, 255, 0.82);
+		background: rgba(255, 255, 255, 0.06);
+	}
+
+	/* ── Panel (right) ── */
+	.lobby-panel {
+		display: flex;
+		flex-direction: column;
+		gap: 1.5rem;
+		background: var(--card);
+		border: 1px solid var(--border);
+		border-radius: 1rem;
+		padding: 2rem;
+		min-width: 0;
+		animation: lobby-fade-up 0.6s ease both;
+		animation-delay: 0.15s;
+		box-shadow:
+			0 0 0 1px oklch(0.37 0.222 264 / 0.08),
+			0 24px 48px oklch(0 0 0 / 0.3);
+		position: relative;
+		overflow: hidden;
+	}
+
+	.lobby-panel::before {
+		content: '';
+		position: absolute;
+		top: 0;
+		left: 0;
+		right: 0;
+		height: 40%;
+		background: radial-gradient(ellipse at 50% 0%, rgba(0, 47, 167, 0.18) 0%, transparent 70%);
+		pointer-events: none;
+	}
+
+	.lobby-panel-head {
+		display: flex;
+		flex-direction: column;
+		gap: 0.25rem;
+		position: relative;
+	}
+
+	.lobby-tag {
+		font-size: 0.625rem;
+		font-weight: 700;
+		letter-spacing: 0.35em;
+		text-transform: uppercase;
+		color: var(--primary);
+		margin-bottom: 0.25rem;
+	}
+
+	.lobby-title-row {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+	}
+
+	.lobby-title {
+		font-family: var(--font-heading);
+		font-size: 2rem;
+		letter-spacing: 0.04em;
+		text-transform: uppercase;
+		color: var(--foreground);
+		margin: 0;
+		line-height: 1;
+	}
+
+	/* ── Player roster ── */
+	.lobby-roster {
+		display: flex;
+		flex-direction: column;
+		gap: 0.3rem;
+		list-style: none;
+		padding: 0;
+		margin: 0;
+	}
+
+	.lobby-player {
+		display: flex;
+		align-items: center;
+		gap: 0.75rem;
+		padding: 0.65rem 0.9rem;
+		border-radius: 0.5rem;
+		border: 1px solid transparent;
+		background: oklch(1 0 0 / 0.02);
+		transition: border-color 150ms ease;
+	}
+
+	.lobby-player--me {
+		border-color: rgba(0, 47, 167, 0.3);
+		background: rgba(0, 47, 167, 0.06);
+	}
+
+	.player-icon {
+		font-size: 0.8rem;
+		color: var(--muted-foreground);
+		width: 1rem;
+		text-align: center;
+		flex-shrink: 0;
+	}
+
+	.player-icon--host {
+		color: var(--accent);
+	}
+
+	.player-name {
+		flex: 1;
+		font-family: var(--font-heading);
+		font-size: 1rem;
+		letter-spacing: 0.03em;
+		color: var(--foreground);
+	}
+
+	.player-you {
+		font-size: 0.65rem;
+		letter-spacing: 0.08em;
+		color: var(--muted-foreground);
+	}
+
+	.player-kick {
+		color: var(--muted-foreground);
+		background: none;
+		border: none;
+		cursor: pointer;
+		padding: 0.25rem;
+		display: flex;
+		align-items: center;
+		transition: color 150ms ease;
+	}
+
+	.player-kick:hover {
+		color: var(--destructive);
+	}
+
+	/* ── Status hints ── */
+	.lobby-hint {
+		font-size: 0.75rem;
+		color: var(--muted-foreground);
+		margin: 0;
+		text-align: center;
+	}
+
+	.lobby-waiting {
+		font-size: 0.875rem;
+		color: var(--muted-foreground);
+		margin: 0;
+		text-align: center;
+	}
+
+	/* ── Entrance animations ── */
+	@keyframes lobby-fade-up {
+		from {
+			opacity: 0;
+			transform: translateY(1.25rem);
+		}
+		to {
+			opacity: 1;
+			transform: translateY(0);
+		}
+	}
+</style>
