@@ -14,7 +14,10 @@ export default {
 		close: 'Close'
 	},
 	home: {
-		subtitle: 'Card games with friends - no ads, no sign-up.',
+		eyebrow: 'Card games with friends. No sign-up. No server.',
+		tagHost: 'HOST',
+		tagGuest: 'GUEST',
+		newBadge: 'New',
 		newGame: 'New game',
 		labelGame: 'Game',
 		creating: 'Creating…',
@@ -24,6 +27,10 @@ export default {
 		joinBtn: 'Join a game'
 	},
 	join: {
+		eyebrow: 'PRIVATE TABLE',
+		tagEnter: 'ENTER',
+		brandLine1: 'Card games with friends.',
+		brandLine2: 'No sign-up. No server.',
 		title: 'Join a game',
 		desc: 'Enter the code shared by the host.',
 		labelCode: 'Code',
@@ -44,6 +51,8 @@ export default {
 		waitingStart: 'Waiting for host to start…',
 		leaveGame: 'Leave',
 		confirmLeave: 'Leave the game?',
+		roomCode: 'ROOM CODE',
+		kickPlayer: 'Kick {name}',
 		confirmKick: 'Kick {name}?',
 		over: 'Game over',
 		wins: 'wins the game',
