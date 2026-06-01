@@ -247,15 +247,6 @@ async function joinGame() {
 		margin-top: 0.5rem;
 	}
 
-	.suit-blue {
-		color: #4a6ee0;
-		opacity: 0.65;
-	}
-
-	.suit-red {
-		color: #c0392b;
-		opacity: 0.55;
-	}
 
 	/* ── Form panel ── */
 

@@ -288,14 +288,6 @@ async function createGame() {
 		letter-spacing: 0.15em;
 	}
 
-	.suit-blue {
-		color: #4a6ee0;
-		opacity: 0.65;
-	}
-	.suit-red {
-		color: #c0392b;
-		opacity: 0.55;
-	}
 
 	/* ── Actions grid ── */
 	.actions-grid {

@@ -727,15 +727,6 @@ $effect(() => {
 		font-size: 1.25rem;
 	}
 
-	.suit-blue {
-		color: #4a6ee0;
-		opacity: 0.65;
-	}
-
-	.suit-red {
-		color: #c0392b;
-		opacity: 0.55;
-	}
 
 	.lobby-share-btn {
 		display: inline-flex;
