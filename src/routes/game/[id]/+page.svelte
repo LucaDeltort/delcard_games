@@ -343,7 +343,7 @@ $effect(() => {
 					<span class="suit-blue">♦</span>
 					<span class="suit-red">♣</span>
 				</div>
-				<button onclick={copyShareLink} class="lobby-share-btn">
+				<button type="button" onclick={copyShareLink} class="lobby-share-btn">
 					{#key codeCopied}
 						<span class="inline-block" in:fade={{ duration: 200 }}>
 							{codeCopied ? $t('game.linkCopied') : $t('game.copyLink')}
@@ -376,6 +376,7 @@ $effect(() => {
 								<span class="player-you">{$t('common.you')}</span>
 							{:else if isHost}
 								<button
+									type="button"
 									onclick={() => (kickTarget = player)}
 									class="player-kick"
 									aria-label={$t('game.kickPlayer', { name: player.name })}

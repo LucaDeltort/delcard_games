@@ -364,6 +364,11 @@ async function createGame() {
 		border-color: rgba(246, 124, 162, 0.45);
 	}
 
+	.panel--join:focus-visible {
+		outline: 2px solid oklch(0.74 0.135 354 / 0.7);
+		outline-offset: 2px;
+	}
+
 	/* ── Panel header ── */
 	.panel-head {
 		display: flex;
@@ -441,6 +446,12 @@ async function createGame() {
 		border-color: oklch(1 0 0 / 0.1);
 		color: var(--foreground);
 		background: oklch(1 0 0 / 0.03);
+	}
+
+	.game-row:focus-within {
+		border-color: oklch(0.55 0.222 264 / 0.6);
+		outline: 2px solid oklch(0.55 0.222 264 / 0.4);
+		outline-offset: 1px;
 	}
 
 	.game-row--on {

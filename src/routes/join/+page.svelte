@@ -119,7 +119,7 @@ async function joinGame() {
 			{/if}
 
 			<div class="form-actions">
-				<button class="btn-join" onclick={joinGame} disabled={joining}>
+				<button type="button" class="btn-join" onclick={joinGame} disabled={joining}>
 					{joining ? $t('join.connecting') : $t('join.joinBtn')}
 				</button>
 				<Button href="/" variant="ghost" class="w-full">{$t('join.back')}</Button>
