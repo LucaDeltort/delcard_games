@@ -1,5 +1,6 @@
 <script lang="ts">
 import { Settings as SettingsIcon } from 'lucide-svelte'
+import { onDestroy } from 'svelte'
 import Dice from '$lib/components/Dice.svelte'
 import RulesDrawer from '$lib/components/RulesDrawer.svelte'
 import { Button } from '$lib/components/ui/button'
@@ -40,10 +41,9 @@ function playerName(id: string): string {
 const isMyTurn = $derived(s.turnPlayerId === myPlayerId)
 const hasRolled = $derived(s.rollsRemaining < 3)
 const canRoll = $derived(validActions.some((a) => a.type === 'ROLL'))
-const canScore = $derived(validActions.some((a) => a.type === 'SCORE'))
-
 let rollingDice = $state([false, false, false, false, false])
 let rollTimer: ReturnType<typeof setTimeout> | null = null
+onDestroy(() => clearTimeout(rollTimer ?? undefined))
 
 function canToggleHold(index: number): boolean {
 	return validActions.some(
