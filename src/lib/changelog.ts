@@ -3,6 +3,20 @@ type ReleaseNote = { version: string; date: string; items: ReleaseItem[] }
 
 const changelog: ReleaseNote[] = [
 	{
+		version: '0.7.0',
+		date: '2026-06-01',
+		items: [
+			{
+				fr: 'War : refonte visuelle thème champ de bataille',
+				en: 'War: battlefield visual redesign'
+			},
+			{
+				fr: 'La Bagarre : refonte visuelle thème arène sombre',
+				en: 'The Fight: dark arena visual redesign'
+			}
+		]
+	},
+	{
 		version: '0.6.0',
 		date: '2026-06-01',
 		items: [
