@@ -3,6 +3,20 @@ type ReleaseNote = { version: string; date: string; items: ReleaseItem[] }
 
 const changelog: ReleaseNote[] = [
 	{
+		version: '0.5.0',
+		date: '2026-06-01',
+		items: [
+			{
+				fr: 'Meilleurs aperçus lors du partage de liens',
+				en: 'Better link previews when sharing'
+			},
+			{
+				fr: 'Sitemap et robots.txt pour une meilleure découvrabilité',
+				en: 'Sitemap and robots.txt for better discoverability'
+			}
+		]
+	},
+	{
 		version: '0.4.0',
 		date: '2026-05-29',
 		items: [
