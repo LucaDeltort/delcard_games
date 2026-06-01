@@ -79,7 +79,7 @@ When you eliminate a player, **immediately take one extra action**.
 
 ## Implementation notes
 
-Source: [`src/lib/games/fight.ts`](../../src/lib/games/fight.ts)
+Source: [`src/lib/games/fight/fight.ts`](../../src/lib/games/fight/fight.ts)
 
 **HP tracking.** HP is stored as a plain number in `state.hp` rather than as cards in a zone. The physical card-based HP display is a tabletop token mechanic; digitally, the number is sufficient.
 

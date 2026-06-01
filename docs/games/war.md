@@ -27,7 +27,7 @@
 
 ## Implementation notes
 
-Source: [`src/lib/games/war.ts`](../../src/lib/games/war.ts)
+Source: [`src/lib/games/war/war.ts`](../../src/lib/games/war/war.ts)
 
 **Zones per player:** `deck_<pid>` (hidden), `played_<pid>` (public), `won_<pid>` (hidden).
 

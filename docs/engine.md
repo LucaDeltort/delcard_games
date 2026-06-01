@@ -111,7 +111,7 @@ type GameDefinition<S extends GameStateGeneric> = {
 
 War is the simplest game in the repository. Reading its source alongside this walkthrough is the fastest way to understand the engine.
 
-Source: [`src/lib/games/war.ts`](../src/lib/games/war.ts)
+Source: [`src/lib/games/war/war.ts`](../src/lib/games/war/war.ts)
 
 ### 1 — Define the state type
 
@@ -270,7 +270,7 @@ Edit `src/lib/games/index.ts`.
 **Add the import and map entry:**
 
 ```typescript
-import { myGame } from './my-game'
+import { myGame } from './my-game/my-game'
 
 export const games = { war, fight, myGame } as unknown as Record<string, GameDefinition<GameStateGeneric>>
 ```
@@ -367,7 +367,7 @@ The `activeGameId` string must match the `id` field on your `GameDefinition`.
 
 ### 5 — Write tests
 
-Create `src/lib/games/my-game.test.ts`. Use vitest — see `war.test.ts` and `fight.test.ts` for patterns.
+Create `src/lib/games/my-game/my-game.test.ts`. Use vitest — see `war/war.test.ts` and `fight/fight.test.ts` for patterns.
 
 Minimum coverage:
 

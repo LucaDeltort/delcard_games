@@ -54,7 +54,7 @@ The goal is to have the **lowest** permanent score when the game ends.
 
 ## Implementation notes
 
-Source: [`src/lib/games/purple.ts`](../../src/lib/games/purple.ts)
+Source: [`src/lib/games/purple/purple.ts`](../../src/lib/games/purple/purple.ts)
 
 ### State type
 
