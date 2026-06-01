@@ -3,6 +3,19 @@ type ReleaseNote = { version: string; date: string; items: ReleaseItem[] }
 
 const changelog: ReleaseNote[] = [
 	{
+		version: '0.6.0',
+		date: '2026-06-01',
+		items: [
+			{ fr: "Refonte de la page d'accueil", en: 'Home page redesign' },
+			{ fr: 'Refonte de la page Rejoindre', en: 'Join page redesign' },
+			{ fr: 'Refonte du salon de jeu', en: 'Lobby redesign' },
+			{
+				fr: 'Accessibilité : focus clavier et labels localisés',
+				en: 'Accessibility: keyboard focus and localized labels'
+			}
+		]
+	},
+	{
 		version: '0.5.0',
 		date: '2026-06-01',
 		items: [
