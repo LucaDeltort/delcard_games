@@ -302,6 +302,32 @@ export default {
 				'When the village votes to eliminate you, your identity is revealed and you can no longer vote — but you stay alive.'
 		}
 	},
+	yams: {
+		name: 'Yams',
+		yourTurn: 'Your turn!',
+		rollsLeft: '{n} rolls left',
+		roll: 'Roll',
+		held: 'Held',
+		score: 'Score',
+		upperSection: 'Upper section',
+		lowerSection: 'Lower section',
+		upperTotal: 'Upper total',
+		upperBonus: 'Bonus (+35 if ≥ 63)',
+		total: 'Total',
+		ones: 'Ones',
+		twos: 'Twos',
+		threes: 'Threes',
+		fours: 'Fours',
+		fives: 'Fives',
+		sixes: 'Sixes',
+		threeOfAKind: 'Three of a Kind',
+		fourOfAKind: 'Four of a Kind',
+		fullHouse: 'Full House',
+		smallStraight: 'Small Straight',
+		largeStraight: 'Large Straight',
+		yams: 'Yams',
+		chance: 'Chance'
+	},
 	fight: {
 		name: 'The Fight',
 		bonusKill: 'Kill — bonus action!',

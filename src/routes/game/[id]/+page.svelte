@@ -9,6 +9,7 @@ import { beforeNavigate, goto } from '$app/navigation'
 import { page } from '$app/stores'
 import ConfirmDialog from '$lib/components/ConfirmDialog.svelte'
 import DeckPackPicker from '$lib/components/DeckPackPicker.svelte'
+import DicePackPicker from '$lib/components/DicePackPicker.svelte'
 import GameOptionsPanel from '$lib/components/GameOptionsPanel.svelte'
 import ColorView from '$lib/components/games/ColorView.svelte'
 import FightView from '$lib/components/games/FightView.svelte'
@@ -16,6 +17,7 @@ import PresidentsView from '$lib/components/games/PresidentsView.svelte'
 import PurpleView from '$lib/components/games/PurpleView.svelte'
 import WarView from '$lib/components/games/WarView.svelte'
 import WerewolfView from '$lib/components/games/WerewolfView.svelte'
+import YamsView from '$lib/components/games/YamsView.svelte'
 import RulesDrawer from '$lib/components/RulesDrawer.svelte'
 import Seo from '$lib/components/Seo.svelte'
 import { Button } from '$lib/components/ui/button'
@@ -56,6 +58,7 @@ const gameDef = $derived(games[resolvedGameId])
 const deckSlug = $derived(
 	getDeckSlugForType(games[resolvedGameId]?.deckType ?? 'FrenchDeckWithoutJoker')
 )
+const gameDiceSlug = $derived(games[resolvedGameId]?.diceSlug ?? null)
 
 let lobbyOptions = $state<Record<string, unknown>>({})
 
@@ -425,7 +428,11 @@ $effect(() => {
 					</Dialog.Root>
 				{/if}
 
-				<DeckPackPicker {deckSlug} />
+				{#if gameDiceSlug}
+					<DicePackPicker diceSlug={gameDiceSlug} />
+				{:else}
+					<DeckPackPicker {deckSlug} />
+				{/if}
 
 				{#if isHost}
 					{@const notEnoughPlayers = !!gameMeta && lobbyPlayers.length < gameMeta.minPlayers}
@@ -505,6 +512,14 @@ $effect(() => {
 		{validActions}
 		onAction={submitAction}
 		{deckSlug}
+	/>
+{:else if gameState.activeGameId === 'yams'}
+	<YamsView
+		state={gameState}
+		{myPlayerId}
+		players={enrichedPlayers}
+		{validActions}
+		onAction={submitAction}
 	/>
 	<!-- ── Game (generic fallback) ───────────────────────────────── -->
 {:else}

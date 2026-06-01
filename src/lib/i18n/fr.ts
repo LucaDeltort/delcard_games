@@ -306,6 +306,32 @@ export default {
 				'Lorsque le village vote pour vous éliminer, votre identité est révélée et vous ne pouvez plus voter — mais vous restez en vie.'
 		}
 	},
+	yams: {
+		name: 'Yams',
+		yourTurn: 'À toi !',
+		rollsLeft: '{n} lancer(s) restant',
+		roll: 'Lancer',
+		held: 'Gardé',
+		score: 'Marquer',
+		upperSection: 'Section haute',
+		lowerSection: 'Section basse',
+		upperTotal: 'Total section haute',
+		upperBonus: 'Bonus (+35 si ≥ 63)',
+		total: 'Total',
+		ones: 'As',
+		twos: 'Deux',
+		threes: 'Trois',
+		fours: 'Quatre',
+		fives: 'Cinq',
+		sixes: 'Six',
+		threeOfAKind: 'Brelan',
+		fourOfAKind: 'Carré',
+		fullHouse: 'Full',
+		smallStraight: 'Petite Suite',
+		largeStraight: 'Grande Suite',
+		yams: 'Yams',
+		chance: 'Chance'
+	},
 	fight: {
 		name: 'La Bagarre',
 		bonusKill: 'Meurtre — action bonus !',
