@@ -43,6 +43,20 @@ const hasRolled = $derived(s.rollsRemaining < 3)
 const canRoll = $derived(validActions.some((a) => a.type === 'ROLL'))
 let rollingDice = $state([false, false, false, false, false])
 let rollTimer: ReturnType<typeof setTimeout> | null = null
+let prevRollsRemaining = s.rollsRemaining
+
+$effect(() => {
+	const curr = s.rollsRemaining
+	if (curr < prevRollsRemaining) {
+		rollingDice = s.held.map((h) => !h)
+		clearTimeout(rollTimer ?? undefined)
+		rollTimer = setTimeout(() => {
+			rollingDice = [false, false, false, false, false]
+		}, 1200)
+	}
+	prevRollsRemaining = curr
+})
+
 onDestroy(() => clearTimeout(rollTimer ?? undefined))
 
 function canToggleHold(index: number): boolean {
@@ -58,11 +72,6 @@ function canScoreCategory(cat: CategoryId): boolean {
 }
 
 function roll() {
-	rollingDice = s.held.map((h) => !h)
-	if (rollTimer) clearTimeout(rollTimer)
-	rollTimer = setTimeout(() => {
-		rollingDice = [false, false, false, false, false]
-	}, 1200)
 	onAction({ type: 'ROLL', playerId: myPlayerId })
 }
 
