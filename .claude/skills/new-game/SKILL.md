@@ -80,13 +80,46 @@ Add to `games` object and `gameRules` record.
 
 The component receives these props — pass them as design context to the skill:
 ```typescript
-const { state, validActions, onAction, currentPlayerId } = $props<{
-  state: <Name>State
+let {
+  state: gameState,
+  myPlayerId,
+  players,
+  validActions,
+  onAction,
+  isSpectator = false,
+  deckSlug
+}: {
+  state: GameStateGeneric
+  myPlayerId: string
+  players: LobbyPlayer[]
   validActions: Action[]
   onAction: (action: Action) => void
-  currentPlayerId: string
-}>()
+  isSpectator?: boolean
+  deckSlug?: string
+} = $props()
 ```
+
+#### Opponent layout — use GameLayout for multi-player arc games
+
+If the game has opponents arrayed around a shared table/board (3+ players, spatial layout), use `GameLayout`:
+
+```svelte
+import GameLayout from '$lib/components/games/GameLayout.svelte'
+
+const opponents = $derived(gs.players.filter((p) => p !== myPlayerId))
+
+{#snippet opponentTile(pid: string)}
+  <!-- opponent card, hand preview, status, etc. -->
+{/snippet}
+
+{#snippet center()}
+  <!-- draw pile, discard, dice tray, phase icon, etc. -->
+{/snippet}
+
+<GameLayout {opponents} {opponentTile} {center} />
+```
+
+`GameLayout` renders a vertical list on mobile and an ellipse arc on desktop automatically. See `docs/game-layout.md` for full details. Skip it for 2-player or non-spatial games (like `WarView`).
 
 Constraints to give the skill:
 - Svelte 5 runes syntax (`$props`, `$derived`, `$effect`)
@@ -94,7 +127,7 @@ Constraints to give the skill:
 - `shadcn-svelte` (bits-ui) for interactive elements when available
 - `lucide-svelte` for any icons
 - Design must reflect the game's theme and feel distinctive, not generic
-- Use `WarView.svelte` as reference for prop wiring, not for aesthetics
+- Use `WarView.svelte` as reference for 2-player prop wiring; use `FightView.svelte` as reference for multi-player arc layout
 
 ## Checklist before finishing
 - [ ] `applyAction` uses spread (`{ ...state }`) not mutation
@@ -103,3 +136,4 @@ Constraints to give the skill:
 - [ ] `activeGameId` set to `'<name>'` in setup
 - [ ] All 4 logic files created + registered in index
 - [ ] `frontend-design` skill invoked for the View component
+- [ ] Multi-player games use `GameLayout` (not a hand-rolled arc)
