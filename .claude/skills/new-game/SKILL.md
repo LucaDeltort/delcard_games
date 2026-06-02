@@ -75,10 +75,10 @@ import { <name> } from './<name>'
 ```
 Add to `games` object and `gameRules` record.
 
-### 5. `src/lib/components/games/<Name>View.svelte` (skeleton)
-Minimal Svelte 5 component. Use `WarView.svelte` as the simplest reference.
+### 5. `src/lib/components/games/<Name>View.svelte`
+**Use the `frontend-design` skill** to create this component. Invoke it before writing any UI code.
 
-Props:
+The component receives these props — pass them as design context to the skill:
 ```typescript
 const { state, validActions, onAction, currentPlayerId } = $props<{
   state: <Name>State
@@ -88,9 +88,18 @@ const { state, validActions, onAction, currentPlayerId } = $props<{
 }>()
 ```
 
+Constraints to give the skill:
+- Svelte 5 runes syntax (`$props`, `$derived`, `$effect`)
+- Tailwind CSS v4 utility classes only — no inline styles
+- `shadcn-svelte` (bits-ui) for interactive elements when available
+- `lucide-svelte` for any icons
+- Design must reflect the game's theme and feel distinctive, not generic
+- Use `WarView.svelte` as reference for prop wiring, not for aesthetics
+
 ## Checklist before finishing
 - [ ] `applyAction` uses spread (`{ ...state }`) not mutation
 - [ ] `getValidActions` returns `[]` (not null) for inactive players
 - [ ] `getWinner` returns null when `!isOver(state)`
 - [ ] `activeGameId` set to `'<name>'` in setup
 - [ ] All 4 logic files created + registered in index
+- [ ] `frontend-design` skill invoked for the View component
