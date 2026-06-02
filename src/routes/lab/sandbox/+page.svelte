@@ -5,7 +5,8 @@ const games = [
 	{ id: 'color', name: 'Color', ready: true },
 	{ id: 'presidents', name: 'Presidents', ready: true },
 	{ id: 'purple', name: 'Purple', ready: true },
-	{ id: 'werewolf', name: 'Werewolf', ready: true }
+	{ id: 'werewolf', name: 'Werewolf', ready: true },
+	{ id: 'yams', name: 'Yams', ready: true }
 ]
 </script>
 
