@@ -80,7 +80,11 @@ export default {
 			hearts: 'cœur',
 			diamonds: 'carreau',
 			clubs: 'trèfle',
-			spades: 'pique'
+			spades: 'pique',
+			red: 'rouge',
+			yellow: 'jaune',
+			green: 'vert',
+			blue: 'bleu'
 		}
 	},
 	color: {
@@ -394,7 +398,9 @@ export default {
 		frenchDeck: 'Jeu de cartes français',
 		colorDeck: 'Jeu de cartes Color',
 		werewolfDeck: 'Jeu Loup-Garou',
-		errorUnknownType: 'Type de jeu inconnu.'
+		errorUnknownType: 'Type de jeu inconnu.',
+		groupJokers: 'Jokers',
+		groupRoles: 'Rôles'
 	},
 	dice: {
 		title: 'Dés',
