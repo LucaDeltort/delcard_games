@@ -3,6 +3,7 @@ const games = [
 	{ id: 'war', name: 'War', ready: true },
 	{ id: 'fight', name: 'The Fight', ready: true },
 	{ id: 'color', name: 'Color', ready: true },
+	{ id: 'presidents', name: 'Presidents', ready: true },
 	{ id: 'purple', name: 'Purple', ready: true },
 	{ id: 'werewolf', name: 'Werewolf', ready: true }
 ]
