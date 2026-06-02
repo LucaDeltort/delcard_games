@@ -2,6 +2,7 @@
 import { Settings as SettingsIcon } from 'lucide-svelte'
 import { quintOut } from 'svelte/easing'
 import { crossfade } from 'svelte/transition'
+import GameLayout from '$lib/components/games/GameLayout.svelte'
 import PlayingCard from '$lib/components/PlayingCard.svelte'
 import RulesDrawer from '$lib/components/RulesDrawer.svelte'
 import type { GameStateGeneric } from '$lib/core/types'
@@ -71,43 +72,6 @@ function playerName(id: string): string {
 }
 
 const opponents = $derived(s.players.filter((id) => id !== myPlayerId))
-
-let arcW = $state(0)
-let arcH = $state(0)
-
-const arcPositions = $derived.by(() => {
-	const n = opponents.length
-	if (n === 0) return []
-	const RX = 40
-	const RY = 44
-	const maxAngle = Math.PI * (165 / 180)
-	const minAngle = Math.PI * (15 / 180)
-	const pos = (angle: number) => ({
-		left: `${50 + RX * Math.cos(angle)}%`,
-		top: `${62 - RY * Math.sin(angle)}%`
-	})
-	if (n === 1) return [{ pid: opponents[0], ...pos(Math.PI / 2) }]
-	const w = arcW || 100
-	const h = arcH || 100
-	const STEPS = 400
-	const samples: Array<{ angle: number; len: number }> = []
-	let len = 0
-	let prev: { x: number; y: number } | null = null
-	for (let i = 0; i <= STEPS; i++) {
-		const angle = maxAngle - (i / STEPS) * (maxAngle - minAngle)
-		const x = (RX / 100) * w * Math.cos(angle)
-		const y = (RY / 100) * h * Math.sin(angle)
-		if (prev) len += Math.hypot(x - prev.x, y - prev.y)
-		samples.push({ angle, len })
-		prev = { x, y }
-	}
-	const total = len
-	return opponents.map((pid, i) => {
-		const targetLen = (i / (n - 1)) * total
-		const samp = samples.find((sm) => sm.len >= targetLen) ?? samples[samples.length - 1]
-		return { pid, ...pos(samp.angle) }
-	})
-})
 </script>
 
 {#snippet oppTileInner(pid: string, active: boolean)}
@@ -153,69 +117,15 @@ const arcPositions = $derived.by(() => {
 		</div>
 	</header>
 
-	<!-- Mobile: opponent strip -->
-	<div class="opp-strip md:hidden">
-		{#each opponents as pid}
-			{@const active = s.turnPlayerId === pid}
-			<div class="opp-tile {active ? 'opp-tile--active' : ''}">
-				{@render oppTileInner(pid, active)}
-			</div>
-		{/each}
-	</div>
-
-	<!-- Mobile: table area -->
-	<div class="table-area md:hidden">
-		<div class="zones-row">
-			<div class="zone-col">
-				<PlayingCard card={{ id: 'back', face: 'back', isHidden: true }} back size="md" {deckSlug} />
-				<span class="zone-count">{s.zones['deck'].cards.length}</span>
-				<span class="zone-label">{$t('purple.deck')}</span>
-			</div>
-
-			<div class="zone-col">
-				<div class="card-stack {isFailing ? 'card-stack--failing' : (playingBankCards.length > 0 ? 'card-stack--active' : '')}">
-					{#each playingBankCards as card (card.id)}
-						<div
-							class="absolute"
-							style={getCardStyle(card.id)}
-							in:receive={{ key: card.id }}
-							out:send={{ key: card.id }}
-						>
-							<PlayingCard {card} size="md" {deckSlug} />
-						</div>
-					{/each}
-				</div>
-				<span class="zone-count">{playingBankCards.length}</span>
-				<span class="zone-label">{$t('purple.playingBank')}</span>
-			</div>
-
-			<div class="zone-col">
-				<div class="card-stack card-stack--penalty">
-					{#each s.zones[`penaltyBank_${s.turnPlayerId}`].cards as card (card.id)}
-						<div
-							class="absolute"
-							style={getCardStyle(card.id)}
-							in:receive={{ key: card.id }}
-						>
-							<PlayingCard {card} size="md" {deckSlug} />
-						</div>
-					{/each}
-				</div>
-				<span class="zone-count zone-count--penalty">{getCurrentPenaltyCount(s.turnPlayerId)}</span>
-				<span class="zone-label zone-label--penalty">{$t('purple.penalty')}</span>
-			</div>
+	{#snippet opponentTile(pid: string)}
+		{@const active = s.turnPlayerId === pid}
+		<div class="opp-tile {active ? 'opp-tile--active' : ''}">
+			{@render oppTileInner(pid, active)}
 		</div>
+	{/snippet}
 
-		<div class="bet-gems">
-			{#each [0, 1, 2] as i}
-				<div class="gem {turnBets > i ? 'gem--filled' : ''}"></div>
-			{/each}
-		</div>
-	</div>
-
-	<!-- Desktop arc -->
-	<div class="arc-container hidden md:flex" bind:clientWidth={arcW} bind:clientHeight={arcH}>
-		<div class="arc-center">
+	{#snippet center()}
+		<div class="flex flex-col items-center gap-5">
 			<div class="zones-row">
 				<div class="zone-col">
 					<PlayingCard card={{ id: 'back', face: 'back', isHidden: true }} back size="md" {deckSlug} />
@@ -223,9 +133,20 @@ const arcPositions = $derived.by(() => {
 					<span class="zone-label">{$t('purple.deck')}</span>
 				</div>
 				<div class="zone-col">
-					<div class="card-stack {isFailing ? 'card-stack--failing' : (playingBankCards.length > 0 ? 'card-stack--active' : '')}">
+					<div
+						class="card-stack {isFailing
+							? 'card-stack--failing'
+							: playingBankCards.length > 0
+								? 'card-stack--active'
+								: ''}"
+					>
 						{#each playingBankCards as card (card.id)}
-							<div class="absolute" style={getCardStyle(card.id)} in:receive={{ key: card.id }} out:send={{ key: card.id }}>
+							<div
+								class="absolute"
+								style={getCardStyle(card.id)}
+								in:receive={{ key: card.id }}
+								out:send={{ key: card.id }}
+							>
 								<PlayingCard {card} size="md" {deckSlug} />
 							</div>
 						{/each}
@@ -251,17 +172,9 @@ const arcPositions = $derived.by(() => {
 				{/each}
 			</div>
 		</div>
+	{/snippet}
 
-		{#each arcPositions as { pid, left, top }}
-			{@const active = s.turnPlayerId === pid}
-			<div
-				style="left: {left}; top: {top}; transform: translate(-50%, -50%)"
-				class="opp-tile arc-opp {active ? 'opp-tile--active' : ''}"
-			>
-				{@render oppTileInner(pid, active)}
-			</div>
-		{/each}
-	</div>
+	<GameLayout {opponents} {opponentTile} {center} />
 
 	<!-- Bottom dock -->
 	<div class="action-dock">
@@ -444,17 +357,7 @@ const arcPositions = $derived.by(() => {
 	}
 	.hdr-btn:hover { color: var(--pur); }
 
-	/* ── OPPONENT STRIP ───────────────────────── */
-	.opp-strip {
-		display: flex;
-		gap: 0.5rem;
-		overflow-x: auto;
-		padding: 0.75rem 1rem;
-		border-bottom: 1px solid oklch(1 0 0 / 7%);
-		scrollbar-width: none;
-	}
-	.opp-strip::-webkit-scrollbar { display: none; }
-
+	/* ── OPPONENTS ───────────────────────────── */
 	.opp-tile {
 		flex-shrink: 0;
 		display: flex;
@@ -535,19 +438,6 @@ const arcPositions = $derived.by(() => {
 		background: var(--fail-dim);
 		border: 1px solid oklch(0.50 0.18 25 / 0.30);
 		color: var(--fail);
-	}
-
-	/* ── TABLE AREA ───────────────────────────── */
-	.table-area {
-		flex: 1;
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		justify-content: center;
-		gap: 1.25rem;
-		padding: 1.5rem 1rem;
-		position: relative;
-		z-index: 1;
 	}
 
 	.zones-row {
@@ -633,36 +523,6 @@ const arcPositions = $derived.by(() => {
 	.gem--filled {
 		background: var(--pur);
 		box-shadow: 0 0 8px var(--pur-glow), 0 0 16px var(--pur-dim);
-	}
-
-	/* ── DESKTOP ARC ──────────────────────────── */
-	.arc-container {
-		position: relative;
-		flex: 1;
-		min-height: 280px;
-	}
-
-	.arc-opp {
-		position: absolute;
-	}
-
-	.arc-center {
-		position: absolute;
-		left: 50%;
-		top: 62%;
-		transform: translate(-50%, -50%);
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		gap: 1.25rem;
-		z-index: 1;
-	}
-
-	@media (min-width: 768px) {
-		.opp-strip,
-		.table-area {
-			display: none;
-		}
 	}
 
 	/* ── BOTTOM DOCK ──────────────────────────── */

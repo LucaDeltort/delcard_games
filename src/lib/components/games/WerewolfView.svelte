@@ -12,6 +12,7 @@ import {
 	X
 } from 'lucide-svelte'
 import { fade, fly } from 'svelte/transition'
+import GameLayout from '$lib/components/games/GameLayout.svelte'
 import PlayingCard from '$lib/components/PlayingCard.svelte'
 import RulesDrawer from '$lib/components/RulesDrawer.svelte'
 import { Button } from '$lib/components/ui/button'
@@ -81,9 +82,6 @@ let showDesc = $state(false)
 let hidden = $state(true)
 let showComposition = $state(false)
 let now = $state(Date.now())
-let arcW = $state(0)
-let arcH = $state(0)
-
 $effect(() => {
 	const id = setInterval(() => {
 		now = Date.now()
@@ -231,44 +229,6 @@ const others = $derived.by(() => {
 	const total = s.players.length
 	const myIdx = s.players.indexOf(myPlayerId)
 	return Array.from({ length: total - 1 }, (_, i) => s.players[(myIdx + 1 + i) % total])
-})
-
-// Ellipse arc: cx=50%, cy=62%, rx=43%, ry=50%. Arc 165°→15° through 90°.
-const arcPositions = $derived.by(() => {
-	const n = others.length
-	const RX = 43
-	const RY = 50
-	const maxAngle = Math.PI * (165 / 180)
-	const minAngle = Math.PI * (15 / 180)
-	const pos = (angle: number) => ({
-		left: `${50 + RX * Math.cos(angle)}%`,
-		top: `${62 - RY * Math.sin(angle)}%`
-	})
-	if (n === 1) return [{ pid: others[0], ...pos(Math.PI / 2) }]
-
-	// Sample the arc and place players at equal arc-length intervals. Lengths are
-	// measured in *pixels* (RX/RY% scaled by the container size) so the box's
-	// aspect ratio doesn't bunch players near the steep left/right ends.
-	const w = arcW || 100
-	const h = arcH || 100
-	const STEPS = 400
-	const samples: Array<{ angle: number; len: number }> = []
-	let len = 0
-	let prev: { x: number; y: number } | null = null
-	for (let i = 0; i <= STEPS; i++) {
-		const angle = maxAngle - (i / STEPS) * (maxAngle - minAngle)
-		const x = (RX / 100) * w * Math.cos(angle)
-		const y = (RY / 100) * h * Math.sin(angle)
-		if (prev) len += Math.hypot(x - prev.x, y - prev.y)
-		samples.push({ angle, len })
-		prev = { x, y }
-	}
-	const total = len
-	return others.map((pid, i) => {
-		const targetLen = (i / (n - 1)) * total
-		const s = samples.find((sm) => sm.len >= targetLen) ?? samples[samples.length - 1]
-		return { pid, ...pos(s.angle) }
-	})
 })
 
 const dayVoteCount = $derived(Object.keys(s.dayVotes).length)
@@ -489,83 +449,23 @@ const gameRoles = $derived.by(() => {
 		</div>
 	{/if}
 
-	<!-- ── Mobile: phase icon + timer ── -->
-	<div class="shrink-0 flex items-center justify-center gap-3 py-4 md:hidden">
-		{#key centerState}
-			<div in:fly={{ y: 8, duration: 250 }} out:fade={{ duration: 150 }} class="relative flex items-center justify-center" style="width: 80px; height: 80px;">
-				{#if s.phase !== 'gameover'}
-					<div class="absolute inset-0 opacity-25">
-						{#if timerProgress !== null}
-							<div
-								class="absolute inset-0 rounded-full"
-								style="background: conic-gradient(white 0deg {timerProgress * 360}deg, transparent {timerProgress * 360}deg 360deg)"
-							></div>
-						{/if}
-						<div class="absolute left-1/2 top-1/2 h-11 w-11 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white"></div>
-					</div>
-					{#if CenterIcon}
-						{@const Icon = CenterIcon}
-						<Icon class="relative z-10 h-8 w-8 text-foreground" />
-					{/if}
-				{/if}
-			</div>
-		{/key}
-		{#if subPhaseLabel && s.phase !== 'gameover'}
-			<div class="flex flex-col gap-0.5">
-				<span class="text-sm font-semibold text-foreground">{subPhaseLabel}</span>
-				{#if s.phase === 'day' && s.daySubPhase === 'voting'}
-					<span class="text-xs text-muted-foreground">{dayVoteCount}/{s.alive.length}</span>
-				{/if}
-			</div>
-		{/if}
-	</div>
-
-	<!-- ── Mobile: player list ── -->
-	<div class="flex flex-1 flex-col gap-2 overflow-y-auto px-4 pb-3 md:hidden">
-		{#each others as pid}
-			{@const alive = s.alive.includes(pid)}
-			{@const sel = isSelected(pid)}
-			{@const canTap = selectable(pid, alive)}
-			{@const role = s.roles[pid]}
-			{@const isSeerTarget = myRole === 'seer' && s.seerReveal?.target === pid}
-			{@const faceUp = !alive || s.phase === 'gameover' || (isSeerTarget && !hidden) || (s.roles[pid] === 'village-idiot' && s.idiotRevealed)}
-			<button
-				disabled={!canTap}
-				onclick={() => { if (canTap) tapPlayer(pid) }}
-				class="flex items-center justify-between rounded-lg border px-3 py-2 text-sm transition-colors
-					{sel ? 'border-primary bg-primary/10' : 'border-border bg-card'}
-					{!alive ? 'opacity-40' : ''}
-					{canTap ? 'cursor-pointer hover:border-primary/50' : 'cursor-default'}"
-			>
-				<div class="flex items-center gap-2">
-					{#if s.phase === 'day' && s.daySubPhase === 'voting' && s.dayVotes[pid] && alive}
-						<div class="h-2 w-2 shrink-0 rounded-full bg-amber-400"></div>
-					{/if}
-					<span class="text-sm text-foreground">{playerName(pid)}</span>
-					{#if !alive}<span class="text-xs text-destructive">— {$t('werewolf.eliminated')}</span>{/if}
-				</div>
-				<div class="rounded-lg transition-transform duration-150 {sel ? 'ring-4 ring-blue-500 scale-110' : s.mayor === pid ? 'ring-4 ring-yellow-400' : ''}" style="perspective: 600px; width: 64px; height: 64px; flex-shrink: 0;">
-					<div style="position: relative; width: 100%; height: 100%; transform-style: preserve-3d; transition: transform 0.5s ease; transform: rotateY({faceUp ? 180 : 0}deg)">
-						<div style="position: absolute; inset: 0; backface-visibility: hidden">
-							<PlayingCard card={{ id: `${pid}-back-m`, face: 'hidden', isHidden: true }} back {deckSlug} size="sm" />
-						</div>
-						<div style="position: absolute; inset: 0; backface-visibility: hidden; transform: rotateY(180deg)">
-							<PlayingCard card={{ id: `${pid}-role-m`, face: role, isHidden: false }} {deckSlug} size="sm" />
-						</div>
-					</div>
-				</div>
-			</button>
-		{/each}
-	</div>
-
-	<!-- ── Desktop: arc layout ── -->
-	<div class="relative hidden flex-1 md:block" bind:clientWidth={arcW} bind:clientHeight={arcH}>
-		<!-- Phase icon at ellipse center with timer disc -->
-		<div class="pointer-events-none absolute left-1/2 top-[62%] -translate-x-1/2 -translate-y-1/2">
+	{#snippet center()}
+		<div class="flex items-center gap-3">
 			{#key centerState}
-				<div in:fly={{ y: 16, duration: 300 }} out:fade={{ duration: 200 }} class="relative flex items-center justify-center" style="width: 112px; height: 112px;">
+				<div
+					in:fly={{ y: 8, duration: 250 }}
+					out:fade={{ duration: 150 }}
+					class="pointer-events-none relative flex items-center justify-center"
+					style="width: 80px; height: 80px;"
+				>
 					{#if s.phase === 'gameover'}
-						<p class="text-center text-sm font-bold {s.winTeam === 'werewolves' ? 'text-red-500' : s.winTeam === 'lovers' ? 'text-pink-400' : 'text-emerald-400'}">
+						<p
+							class="text-center text-sm font-bold {s.winTeam === 'werewolves'
+								? 'text-red-500'
+								: s.winTeam === 'lovers'
+									? 'text-pink-400'
+									: 'text-emerald-400'}"
+						>
 							{winLabel}
 						</p>
 					{:else}
@@ -576,56 +476,94 @@ const gameRoles = $derived.by(() => {
 									style="background: conic-gradient(white 0deg {timerProgress * 360}deg, transparent {timerProgress * 360}deg 360deg)"
 								></div>
 							{/if}
-							<div class="absolute left-1/2 top-1/2 h-16 w-16 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white"></div>
+							<div
+								class="absolute left-1/2 top-1/2 h-11 w-11 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white"
+							></div>
 						</div>
 						{#if CenterIcon}
 							{@const Icon = CenterIcon}
-							<Icon class="relative z-10 h-10 w-10 text-foreground" />
+							<Icon class="relative z-10 h-8 w-8 text-foreground" />
 						{/if}
 						{#if s.phase === 'day' && s.daySubPhase === 'voting'}
-							<span class="absolute -bottom-5 tabular-nums text-xs font-medium text-muted-foreground">{dayVoteCount}/{s.alive.length}</span>
+							<span
+								class="absolute -bottom-5 tabular-nums text-xs font-medium text-muted-foreground"
+								>{dayVoteCount}/{s.alive.length}</span
+							>
 						{/if}
 					{/if}
 				</div>
 			{/key}
+			{#if subPhaseLabel && s.phase !== 'gameover'}
+				<div class="flex flex-col gap-0.5 md:hidden">
+					<span class="text-sm font-semibold text-foreground">{subPhaseLabel}</span>
+					{#if s.phase === 'day' && s.daySubPhase === 'voting'}
+						<span class="text-xs text-muted-foreground">{dayVoteCount}/{s.alive.length}</span>
+					{/if}
+				</div>
+			{/if}
 		</div>
+	{/snippet}
 
-		<!-- Players on arc -->
-		{#each arcPositions as { pid, left, top }}
-			{@const alive = s.alive.includes(pid)}
-			{@const sel = isSelected(pid)}
-			{@const canTap = selectable(pid, alive)}
-			{@const role = s.roles[pid]}
-			{@const isSeerTarget = myRole === 'seer' && s.seerReveal?.target === pid}
-			{@const faceUp = !alive || s.phase === 'gameover' || (isSeerTarget && !hidden) || (s.roles[pid] === 'village-idiot' && s.idiotRevealed)}
-			<button
-				disabled={!canTap}
-				onclick={() => { if (canTap) tapPlayer(pid) }}
-				style="left: {left}; top: {top}; transform: translate(-50%, -50%)"
-				class="absolute flex flex-col items-center gap-1 transition-opacity
-					{!alive ? 'opacity-30' : ''}
-					{canTap ? 'cursor-pointer' : 'cursor-default'}"
+	{#snippet opponentTile(pid: string)}
+		{@const alive = s.alive.includes(pid)}
+		{@const sel = isSelected(pid)}
+		{@const canTap = selectable(pid, alive)}
+		{@const role = s.roles[pid]}
+		{@const isSeerTarget = myRole === 'seer' && s.seerReveal?.target === pid}
+		{@const faceUp =
+			!alive ||
+			s.phase === 'gameover' ||
+			(isSeerTarget && !hidden) ||
+			(s.roles[pid] === 'village-idiot' && s.idiotRevealed)}
+		<button
+			disabled={!canTap}
+			onclick={() => {
+				if (canTap) tapPlayer(pid)
+			}}
+			class="flex flex-col items-center gap-1 transition-opacity
+				{!alive ? 'opacity-30' : ''}
+				{canTap ? 'cursor-pointer' : 'cursor-default'}"
+		>
+			<div
+				class="rounded-lg transition-transform duration-150 {sel
+					? 'ring-4 ring-blue-500 scale-110'
+					: s.mayor === pid
+						? 'ring-4 ring-yellow-400'
+						: ''}"
+				style="perspective: 600px; width: 64px; height: 64px;"
 			>
-				<div class="rounded-lg transition-transform duration-150 {sel ? 'ring-4 ring-blue-500 scale-110' : s.mayor === pid ? 'ring-4 ring-yellow-400' : ''}"
-					style="perspective: 600px; width: 64px; height: 64px;">
-					<div style="position: relative; width: 100%; height: 100%; transform-style: preserve-3d; transition: transform 0.5s ease; transform: rotateY({faceUp ? 180 : 0}deg)">
-						<div style="position: absolute; inset: 0; backface-visibility: hidden">
-							<PlayingCard card={{ id: `${pid}-back-d`, face: 'hidden', isHidden: true }} back {deckSlug} size="sm" />
-						</div>
-						<div style="position: absolute; inset: 0; backface-visibility: hidden; transform: rotateY(180deg)">
-							<PlayingCard card={{ id: `${pid}-role-d`, face: role, isHidden: false }} {deckSlug} size="sm" />
-						</div>
+				<div
+					style="position: relative; width: 100%; height: 100%; transform-style: preserve-3d; transition: transform 0.5s ease; transform: rotateY({faceUp
+						? 180
+						: 0}deg)"
+				>
+					<div style="position: absolute; inset: 0; backface-visibility: hidden">
+						<PlayingCard
+							card={{ id: `${pid}-back`, face: 'hidden', isHidden: true }}
+							back
+							{deckSlug}
+							size="sm"
+						/>
+					</div>
+					<div style="position: absolute; inset: 0; backface-visibility: hidden; transform: rotateY(180deg)">
+						<PlayingCard
+							card={{ id: `${pid}-role`, face: role, isHidden: false }}
+							{deckSlug}
+							size="sm"
+						/>
 					</div>
 				</div>
-				<span class="max-w-[64px] truncate whitespace-nowrap text-[10px] leading-tight text-muted-foreground">
-					{playerName(pid)}
-				</span>
-				{#if s.phase === 'day' && s.daySubPhase === 'voting' && s.dayVotes[pid] && alive}
-					<div class="h-1.5 w-1.5 rounded-full bg-amber-400"></div>
-				{/if}
-			</button>
-		{/each}
-	</div>
+			</div>
+			<span class="max-w-[64px] truncate whitespace-nowrap text-[10px] leading-tight text-muted-foreground">
+				{playerName(pid)}
+			</span>
+			{#if s.phase === 'day' && s.daySubPhase === 'voting' && s.dayVotes[pid] && alive}
+				<div class="h-1.5 w-1.5 rounded-full bg-amber-400"></div>
+			{/if}
+		</button>
+	{/snippet}
+
+	<GameLayout opponents={others} {opponentTile} {center} />
 
 	<!-- ── Footer: my card — compact floating card ── -->
 	<div class="shrink-0 flex justify-center mb-4">
