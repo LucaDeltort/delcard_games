@@ -1,6 +1,6 @@
 <script lang="ts">
 import { Settings as SettingsIcon } from 'lucide-svelte'
-import { onDestroy } from 'svelte'
+import { onDestroy, untrack } from 'svelte'
 import Dice from '$lib/components/Dice.svelte'
 import RulesDrawer from '$lib/components/RulesDrawer.svelte'
 import type { GameStateGeneric } from '$lib/core/types'
@@ -42,7 +42,7 @@ const hasRolled = $derived(s.rollsRemaining < 3)
 const canRoll = $derived(validActions.some((a) => a.type === 'ROLL'))
 let rollingDice = $state([false, false, false, false, false])
 let rollTimer: ReturnType<typeof setTimeout> | null = null
-let prevRollsRemaining = s.rollsRemaining
+let prevRollsRemaining = untrack(() => s.rollsRemaining)
 
 $effect(() => {
 	const curr = s.rollsRemaining

@@ -10,6 +10,7 @@ import type {
 	SizeAnim
 } from '$lib/components/GameTitle.svelte'
 import GameTitle from '$lib/components/GameTitle.svelte'
+import GameLayout from '$lib/components/games/GameLayout.svelte'
 import RulesDrawer from '$lib/components/RulesDrawer.svelte'
 import { Button } from '$lib/components/ui/button'
 import type { Card, GameStateGeneric } from '$lib/core/types'
@@ -85,42 +86,6 @@ const soloButtonAction = $derived(callSoloAction ?? counterSoloAction)
 
 const opponents = $derived(gs.players.filter((p) => p !== myPlayerId))
 
-let arcW = $state(0)
-let arcH = $state(0)
-
-const arcPositions = $derived.by(() => {
-	const n = opponents.length
-	if (n === 0) return []
-	const RX = 43
-	const RY = 50
-	const maxAngle = Math.PI * (165 / 180)
-	const minAngle = Math.PI * (15 / 180)
-	const pos = (angle: number) => ({
-		left: `${50 + RX * Math.cos(angle)}%`,
-		top: `${62 - RY * Math.sin(angle)}%`
-	})
-	if (n === 1) return [{ pid: opponents[0], ...pos(Math.PI / 2) }]
-	const w = arcW || 100
-	const h = arcH || 100
-	const STEPS = 400
-	const samples: Array<{ angle: number; len: number }> = []
-	let len = 0
-	let prev: { x: number; y: number } | null = null
-	for (let i = 0; i <= STEPS; i++) {
-		const angle = maxAngle - (i / STEPS) * (maxAngle - minAngle)
-		const x = (RX / 100) * w * Math.cos(angle)
-		const y = (RY / 100) * h * Math.sin(angle)
-		if (prev) len += Math.hypot(x - prev.x, y - prev.y)
-		samples.push({ angle, len })
-		prev = { x, y }
-	}
-	const total = len
-	return opponents.map((pid, i) => {
-		const targetLen = (i / (n - 1)) * total
-		const s = samples.find((sm) => sm.len >= targetLen) ?? samples[samples.length - 1]
-		return { pid, ...pos(s.angle) }
-	})
-})
 const mustDraw = $derived(isMyTurn && canDraw && playableCardIds.size === 0 && gs.pendingDraw === 0)
 
 const COLOR_CLASSES: Record<CardColor, string> = {
@@ -450,95 +415,49 @@ const GAME_COLOR_DIM: Record<CardColor, string> = {
 		</div>
 	</header>
 
-	<!-- Opponents -->
-	<div class="opp-strip">
-		{#each opponents as pid}
-			{@const hand = gs.zones[`hand_${pid}`]?.cards ?? []}
-			{@const isActive = gs.turnPlayerId === pid}
-			<div class="opp-tile {isActive ? 'opp-tile--active' : ''} {bouncingOpponents.has(pid) ? 'opp-tile--bounce' : ''}">
-				<span class="opp-name">
-					{playerName(pid)}{#if isActive}&thinsp;▶{/if}
-				</span>
-				<div class="opp-cards">
-					{#each hand.slice(0, 7) as card (card.id)}
-						<img src={cardSrc(card, true)} alt="hidden" class="opp-card-img" draggable="false" />
-					{/each}
-					{#if hand.length > 7}
-						<span class="opp-overflow">+{hand.length - 7}</span>
-					{/if}
-					{#if hand.length === 0}
-						<span class="opp-empty">{$t('game.empty')}</span>
-					{/if}
-				</div>
+	{#snippet opponentTile(pid: string)}
+		{@const hand = gs.zones[`hand_${pid}`]?.cards ?? []}
+		{@const isActive = gs.turnPlayerId === pid}
+		<div
+			class="opp-tile {isActive
+				? 'opp-tile--active'
+				: ''} {bouncingOpponents.has(pid) ? 'opp-tile--bounce' : ''}"
+		>
+			<span class="opp-name">{playerName(pid)}{#if isActive}&thinsp;▶{/if}</span>
+			<div class="opp-cards">
+				{#each hand.slice(0, 7) as card (card.id)}
+					<img src={cardSrc(card, true)} alt="hidden" class="opp-card-img" draggable="false" />
+				{/each}
+				{#if hand.length > 7}
+					<span class="opp-overflow">+{hand.length - 7}</span>
+				{/if}
+				{#if hand.length === 0}
+					<span class="opp-empty">{$t('game.empty')}</span>
+				{/if}
 			</div>
-		{/each}
-	</div>
-
-	<!-- Arena: draw · orb · discard -->
-	<div class="arena">
-
-		<!-- Draw pile -->
-		<div class="arena-pile">
-			<button
-				onclick={() => canDraw && drawAction && onAction(drawAction)}
-				disabled={!canDraw}
-				class="pile-btn {canDraw ? 'pile-btn--active' : ''} {gs.pendingDraw > 0 ? 'pile-btn--pending' : mustDraw ? 'pile-btn--must' : ''}"
-				aria-label={$t('color.draw')}
-			>
-				{#if drawCount > 0}
-					<img
-						src={cardSrc({ id: '', face: 'back', isHidden: false }, true)}
-						alt="draw pile"
-						class="pile-img"
-						draggable="false"
-					/>
-				{:else}
-					<div class="pile-empty"></div>
-				{/if}
-			</button>
-			<span class="pile-label">{$t('color.draw')} ({drawCount})</span>
-			{#if gs.pendingDraw > 0}
-				<span class="pile-pending">+{gs.pendingDraw}</span>
-			{/if}
 		</div>
+	{/snippet}
 
-		<!-- Color orb -->
-		<div class="color-orb">
-			<div class="color-orb-inner"></div>
-		</div>
-
-		<!-- Discard pile -->
-		<div class="arena-pile">
-			{#key discardTop?.id}
-				{#if discardTop}
-					<img
-						in:fly={{ y: -28, duration: 200, easing: cubicOut }}
-						src={cardSrc(discardTop)}
-						alt="{discardTop.face}{discardTop.suit ? ' ' + discardTop.suit : ''}"
-						class="pile-img discard-img"
-						draggable="false"
-					/>
-				{:else}
-					<div class="pile-empty"></div>
-				{/if}
-			{/key}
-			<span class="pile-label">{discard.length}</span>
-		</div>
-	</div>
-
-	<!-- Desktop arc: opponents + arena -->
-	<div class="arc-container hidden md:block" bind:clientWidth={arcW} bind:clientHeight={arcH}>
-		<!-- Arena at ellipse center -->
-		<div class="arc-arena">
+	{#snippet center()}
+		<div class="flex items-center gap-9">
 			<div class="arena-pile">
 				<button
 					onclick={() => canDraw && drawAction && onAction(drawAction)}
 					disabled={!canDraw}
-					class="pile-btn {canDraw ? 'pile-btn--active' : ''} {gs.pendingDraw > 0 ? 'pile-btn--pending' : mustDraw ? 'pile-btn--must' : ''}"
+					class="pile-btn {canDraw ? 'pile-btn--active' : ''} {gs.pendingDraw > 0
+						? 'pile-btn--pending'
+						: mustDraw
+							? 'pile-btn--must'
+							: ''}"
 					aria-label={$t('color.draw')}
 				>
 					{#if drawCount > 0}
-						<img src={cardSrc({ id: '', face: 'back', isHidden: false }, true)} alt="draw pile" class="pile-img" draggable="false" />
+						<img
+							src={cardSrc({ id: '', face: 'back', isHidden: false }, true)}
+							alt="draw pile"
+							class="pile-img"
+							draggable="false"
+						/>
 					{:else}
 						<div class="pile-empty"></div>
 					{/if}
@@ -566,29 +485,9 @@ const GAME_COLOR_DIM: Record<CardColor, string> = {
 				<span class="pile-label">{discard.length}</span>
 			</div>
 		</div>
-		<!-- Opponents on arc -->
-		{#each arcPositions as { pid, left, top }}
-			{@const hand = gs.zones[`hand_${pid}`]?.cards ?? []}
-			{@const isActive = gs.turnPlayerId === pid}
-			<div
-				style="left: {left}; top: {top}; transform: translate(-50%, -50%)"
-				class="opp-tile arc-opp {isActive ? 'opp-tile--active' : ''} {bouncingOpponents.has(pid) ? 'opp-tile--bounce' : ''}"
-			>
-				<span class="opp-name">{playerName(pid)}{#if isActive}&thinsp;▶{/if}</span>
-				<div class="opp-cards">
-					{#each hand.slice(0, 7) as card (card.id)}
-						<img src={cardSrc(card, true)} alt="hidden" class="opp-card-img" draggable="false" />
-					{/each}
-					{#if hand.length > 7}
-						<span class="opp-overflow">+{hand.length - 7}</span>
-					{/if}
-					{#if hand.length === 0}
-						<span class="opp-empty">{$t('game.empty')}</span>
-					{/if}
-				</div>
-			</div>
-		{/each}
-	</div>
+	{/snippet}
+
+	<GameLayout {opponents} {opponentTile} {center} />
 
 	<!-- Turn direction -->
 	{#key gs.direction}
@@ -804,16 +703,6 @@ const GAME_COLOR_DIM: Record<CardColor, string> = {
 	.hdr-btn:hover { color: oklch(0.78 0 0); }
 
 	/* ── OPPONENTS ──────────────────────────────── */
-	.opp-strip {
-		display: flex;
-		gap: 0.5rem;
-		overflow-x: auto;
-		padding: 0.75rem 1rem;
-		border-bottom: 1px solid oklch(1 0 0 / 7%);
-		scrollbar-width: none;
-	}
-	.opp-strip::-webkit-scrollbar { display: none; }
-
 	.opp-tile {
 		flex-shrink: 0;
 		display: flex;
@@ -875,15 +764,6 @@ const GAME_COLOR_DIM: Record<CardColor, string> = {
 	}
 
 	/* ── ARENA ──────────────────────────────────── */
-	.arena {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		gap: 2.25rem;
-		padding: 2rem 1rem 0.75rem;
-		flex: 1;
-	}
-
 	.arena-pile {
 		display: flex;
 		flex-direction: column;
@@ -988,37 +868,6 @@ const GAME_COLOR_DIM: Record<CardColor, string> = {
 		background: var(--gc);
 		box-shadow: 0 0 20px var(--gc);
 	}
-
-	@media (min-width: 768px) {
-		.opp-strip,
-		.arena {
-			display: none;
-		}
-	}
-
-	/* ── DESKTOP ARC ────────────────────────────── */
-	.arc-container {
-		position: relative;
-		flex: 1;
-		min-height: 280px;
-	}
-
-	.arc-opp {
-		position: absolute;
-	}
-
-	.arc-arena {
-		position: absolute;
-		left: 50%;
-		top: 62%;
-		transform: translate(-50%, -50%);
-		display: flex;
-		align-items: center;
-		gap: 2.25rem;
-		pointer-events: none;
-	}
-
-	.arc-arena .pile-btn { pointer-events: all; }
 
 	/* ── DIRECTION ROW ──────────────────────────── */
 	.direction-row {

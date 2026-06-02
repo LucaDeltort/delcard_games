@@ -13,6 +13,7 @@ import type { FightState, HistoryEntry } from '$lib/games/fight/fight'
 import { t } from '$lib/i18n'
 import type { LobbyPlayer } from '$lib/network/messages'
 import { settings, settingsOpen } from '$lib/stores/settings'
+import GameLayout from './GameLayout.svelte'
 
 let {
 	state: gameState,
@@ -42,43 +43,6 @@ const isBonusTurn = $derived(gs.pendingBonusAction === myPlayerId)
 const iAmAlive = $derived(gs.activePlayers.includes(myPlayerId))
 
 const opponents = $derived(gs.players.filter((p) => p !== myPlayerId))
-
-let arcW = $state(0)
-let arcH = $state(0)
-
-const arcPositions = $derived.by(() => {
-	const n = opponents.length
-	if (n === 0) return []
-	const RX = 40
-	const RY = 44
-	const maxAngle = Math.PI * (165 / 180)
-	const minAngle = Math.PI * (15 / 180)
-	const pos = (angle: number) => ({
-		left: `${50 + RX * Math.cos(angle)}%`,
-		top: `${62 - RY * Math.sin(angle)}%`
-	})
-	if (n === 1) return [{ pid: opponents[0], ...pos(Math.PI / 2) }]
-	const w = arcW || 100
-	const h = arcH || 100
-	const STEPS = 400
-	const samples: Array<{ angle: number; len: number }> = []
-	let len = 0
-	let prev: { x: number; y: number } | null = null
-	for (let i = 0; i <= STEPS; i++) {
-		const angle = maxAngle - (i / STEPS) * (maxAngle - minAngle)
-		const x = (RX / 100) * w * Math.cos(angle)
-		const y = (RY / 100) * h * Math.sin(angle)
-		if (prev) len += Math.hypot(x - prev.x, y - prev.y)
-		samples.push({ angle, len })
-		prev = { x, y }
-	}
-	const total = len
-	return opponents.map((pid, i) => {
-		const targetLen = (i / (n - 1)) * total
-		const s = samples.find((sm) => sm.len >= targetLen) ?? samples[samples.length - 1]
-		return { pid, ...pos(s.angle) }
-	})
-})
 
 const chargeAction = $derived(validActions.find((a) => a.type === 'CHARGE') ?? null)
 const attackActions = $derived(validActions.filter((a) => a.type === 'ATTACK'))
@@ -319,68 +283,53 @@ onDestroy(() => {
 		</div>
 	</header>
 
-	<!-- OPPONENTS STRIP (mobile) -->
-	<div class="opponents-strip md:hidden">
-		{#each opponents as pid (pid)}
-			{@const eliminated = !gs.activePlayers.includes(pid)}
-			{@const isActing = pid === actingPlayerId}
-			{@const hasCharge = (gs.zones[`charge_${pid}`]?.cards.length ?? 0) > 0}
-			{@const hpPct = eliminated ? 0 : Math.min((gs.hp[pid] / 26) * 100, 100)}
-			{@const barColor = hpPct > 60 ? 'oklch(0.72 0.18 80)' : hpPct > 30 ? 'oklch(0.68 0.20 50)' : 'oklch(0.62 0.22 25)'}
-			<div
-				class="fighter-card {eliminated
-					? 'fighter-card--eliminated'
-					: isActing
-						? 'fighter-card--active'
-						: ''}"
-			>
-				<p class="fighter-name">{playerName(pid)}</p>
-				<div class="fighter-hp-row">
-					<div class="hp-bar-track">
-						<div
-							class="hp-bar-fill"
-							style="width: {hpPct}%; background-color: {barColor}"
-						></div>
-					</div>
-					<span class="hp-value">
-						{eliminated ? $t('fight.eliminated') : $t('fight.hp', { n: gs.hp[pid] })}
-					</span>
+	{#snippet opponentTile(pid: string)}
+		{@const eliminated = !gs.activePlayers.includes(pid)}
+		{@const isActing = pid === actingPlayerId}
+		{@const hasCharge = (gs.zones[`charge_${pid}`]?.cards.length ?? 0) > 0}
+		{@const hpPct = eliminated ? 0 : Math.min((gs.hp[pid] / 26) * 100, 100)}
+		{@const barColor =
+			hpPct > 60
+				? 'oklch(0.72 0.18 80)'
+				: hpPct > 30
+					? 'oklch(0.68 0.20 50)'
+					: 'oklch(0.62 0.22 25)'}
+		<div
+			class="fighter-card {eliminated
+				? 'fighter-card--eliminated'
+				: isActing
+					? 'fighter-card--active'
+					: ''}"
+		>
+			<p class="fighter-name">{playerName(pid)}</p>
+			<div class="fighter-hp-row">
+				<div class="hp-bar-track">
+					<div class="hp-bar-fill" style="width: {hpPct}%; background-color: {barColor}"></div>
 				</div>
-				<div class="fighter-zones">
-					<CardZone
-						card={gs.zones[`shield_${pid}`]?.cards[0] ?? null}
-						size="sm"
-						label={$t('fight.shield')}
-					/>
-					<CardZone
-						card={hasCharge ? gs.zones[`charge_${pid}`].cards[0] : null}
-						count={gs.zones[`charge_${pid}`]?.cards.length > 1
-							? gs.zones[`charge_${pid}`].cards.length
-							: undefined}
-						size="sm"
-						label={$t('fight.charge')}
-					/>
-				</div>
+				<span class="hp-value">
+					{eliminated ? $t('fight.eliminated') : $t('fight.hp', { n: gs.hp[pid] })}
+				</span>
 			</div>
-		{/each}
-	</div>
+			<div class="fighter-zones">
+				<CardZone
+					card={gs.zones[`shield_${pid}`]?.cards[0] ?? null}
+					size="sm"
+					label={$t('fight.shield')}
+				/>
+				<CardZone
+					card={hasCharge ? gs.zones[`charge_${pid}`].cards[0] : null}
+					count={gs.zones[`charge_${pid}`]?.cards.length > 1
+						? gs.zones[`charge_${pid}`].cards.length
+						: undefined}
+					size="sm"
+					label={$t('fight.charge')}
+				/>
+			</div>
+		</div>
+	{/snippet}
 
-	<!-- ARENA CENTER: draw + discard (mobile) -->
-	<div class="arena-center md:hidden">
-		<CardZone
-			card={gs.zones.draw?.cards[0] ?? null}
-			back
-			label={$t('fight.draw')}
-			count={gs.zones.draw?.cards.length ?? 0}
-		/>
-		<div class="arena-divider"></div>
-		<CardZone card={gs.zones.discard?.cards.at(-1) ?? null} label={$t('fight.discard')} />
-	</div>
-
-	<!-- DESKTOP ARC: opponents + arena -->
-	<div class="arc-container hidden md:block" bind:clientWidth={arcW} bind:clientHeight={arcH}>
-		<!-- Arena at ellipse center -->
-		<div class="arena-abs">
+	{#snippet center()}
+		<div class="flex items-center gap-8">
 			<CardZone
 				card={gs.zones.draw?.cards[0] ?? null}
 				back
@@ -390,48 +339,9 @@ onDestroy(() => {
 			<div class="arena-divider"></div>
 			<CardZone card={gs.zones.discard?.cards.at(-1) ?? null} label={$t('fight.discard')} />
 		</div>
-		<!-- Opponents on arc -->
-		{#each arcPositions as { pid, left, top }}
-			{@const eliminated = !gs.activePlayers.includes(pid)}
-			{@const isActing = pid === actingPlayerId}
-			{@const hasCharge = (gs.zones[`charge_${pid}`]?.cards.length ?? 0) > 0}
-			{@const hpPct = eliminated ? 0 : Math.min((gs.hp[pid] / 26) * 100, 100)}
-			{@const barColor = hpPct > 60 ? 'oklch(0.72 0.18 80)' : hpPct > 30 ? 'oklch(0.68 0.20 50)' : 'oklch(0.62 0.22 25)'}
-			<div
-				style="left: {left}; top: {top}; transform: translate(-50%, -50%)"
-				class="fighter-card arc-fighter {eliminated
-					? 'fighter-card--eliminated'
-					: isActing
-						? 'fighter-card--active'
-						: ''}"
-			>
-				<p class="fighter-name">{playerName(pid)}</p>
-				<div class="fighter-hp-row">
-					<div class="hp-bar-track">
-						<div class="hp-bar-fill" style="width: {hpPct}%; background-color: {barColor}"></div>
-					</div>
-					<span class="hp-value">
-						{eliminated ? $t('fight.eliminated') : $t('fight.hp', { n: gs.hp[pid] })}
-					</span>
-				</div>
-				<div class="fighter-zones">
-					<CardZone
-						card={gs.zones[`shield_${pid}`]?.cards[0] ?? null}
-						size="sm"
-						label={$t('fight.shield')}
-					/>
-					<CardZone
-						card={hasCharge ? gs.zones[`charge_${pid}`].cards[0] : null}
-						count={gs.zones[`charge_${pid}`]?.cards.length > 1
-							? gs.zones[`charge_${pid}`].cards.length
-							: undefined}
-						size="sm"
-						label={$t('fight.charge')}
-					/>
-				</div>
-			</div>
-		{/each}
-	</div>
+	{/snippet}
+
+	<GameLayout {opponents} {opponentTile} {center} />
 
 	<!-- MY SECTION -->
 	{#if !isSpectator}
@@ -950,38 +860,6 @@ onDestroy(() => {
 	.hdr-btn--active { color: oklch(0.80 0 0); }
 	.hdr-btn--label { gap: 0.3rem; }
 
-	/* ── DESKTOP ARC ─────────────────────────── */
-	.arc-container {
-		position: relative;
-		flex: 1;
-		min-height: 280px;
-	}
-
-	.arc-fighter {
-		position: absolute;
-	}
-
-	.arena-abs {
-		position: absolute;
-		left: 50%;
-		top: 62%;
-		transform: translate(-50%, -50%);
-		display: flex;
-		align-items: center;
-		gap: 2rem;
-		pointer-events: none;
-	}
-
-	/* ── OPPONENTS STRIP ──────────────────────── */
-	.opponents-strip {
-		display: flex;
-		gap: 0.625rem;
-		overflow-x: auto;
-		padding: 0.875rem 1rem;
-		scrollbar-width: none;
-	}
-	.opponents-strip::-webkit-scrollbar { display: none; }
-
 	.fighter-card {
 		flex-shrink: 0;
 		min-width: 108px;
@@ -1052,27 +930,11 @@ onDestroy(() => {
 		justify-content: center;
 	}
 
-	/* ── ARENA CENTER ──────────────────────────── */
-	.arena-center {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		gap: 2rem;
-		padding: 0.875rem 1rem;
-	}
-
 	.arena-divider {
 		width: 1px;
 		height: 72px;
 		background: linear-gradient(to bottom, transparent, oklch(0.48 0.10 55 / 0.4), transparent);
 		flex-shrink: 0;
-	}
-
-	@media (min-width: 768px) {
-		.opponents-strip,
-		.arena-center {
-			display: none;
-		}
 	}
 
 	/* ── MY SECTION ────────────────────────────── */

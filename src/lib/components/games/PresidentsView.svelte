@@ -10,6 +10,7 @@ import {
 import { untrack } from 'svelte'
 import { fade } from 'svelte/transition'
 import GameTitle from '$lib/components/GameTitle.svelte'
+import GameLayout from '$lib/components/games/GameLayout.svelte'
 import PlayingCard from '$lib/components/PlayingCard.svelte'
 import RulesDrawer from '$lib/components/RulesDrawer.svelte'
 import type { Card, GameStateGeneric } from '$lib/core/types'
@@ -37,43 +38,6 @@ const gs = $derived(gameState as PresidentsState)
 
 const me = $derived(myPlayerId)
 const opponents = $derived(gs.players.filter((p) => p !== me))
-
-let arcW = $state(0)
-let arcH = $state(0)
-
-const arcPositions = $derived.by(() => {
-	const n = opponents.length
-	if (n === 0) return []
-	const RX = 40
-	const RY = 44
-	const maxAngle = Math.PI * (165 / 180)
-	const minAngle = Math.PI * (15 / 180)
-	const pos = (angle: number) => ({
-		left: `${50 + RX * Math.cos(angle)}%`,
-		top: `${62 - RY * Math.sin(angle)}%`
-	})
-	if (n === 1) return [{ pid: opponents[0], ...pos(Math.PI / 2) }]
-	const w = arcW || 100
-	const h = arcH || 100
-	const STEPS = 400
-	const samples: Array<{ angle: number; len: number }> = []
-	let len = 0
-	let prev: { x: number; y: number } | null = null
-	for (let i = 0; i <= STEPS; i++) {
-		const angle = maxAngle - (i / STEPS) * (maxAngle - minAngle)
-		const x = (RX / 100) * w * Math.cos(angle)
-		const y = (RY / 100) * h * Math.sin(angle)
-		if (prev) len += Math.hypot(x - prev.x, y - prev.y)
-		samples.push({ angle, len })
-		prev = { x, y }
-	}
-	const total = len
-	return opponents.map((pid, i) => {
-		const targetLen = (i / (n - 1)) * total
-		const s = samples.find((sm) => sm.len >= targetLen) ?? samples[samples.length - 1]
-		return { pid, ...pos(s.angle) }
-	})
-})
 
 function playerName(id: string): string {
 	return players.find((p) => p.id === id)?.name ?? id
@@ -287,95 +251,30 @@ $effect(() => {
 		</div>
 	{:else}
 		<div class="pres-body">
-			<!-- Opponents strip -->
-			<div class="opp-strip">
-				{#each opponents as pid}
-					{@const active = gs.turnPlayerId === pid}
-					{@const done = isFinished(pid)}
-					<div class="opp-tile {active ? 'opp-tile--active' : ''} {done ? 'opp-tile--done' : ''}">
-						<span class="opp-name">{playerName(pid)}{#if active}&thinsp;▶{/if}</span>
-						<div class="opp-cards">
-							{#each { length: Math.min(handCount(pid), 6) } as _}
-								<PlayingCard card={null} back size="sm" />
-							{/each}
-							{#if handCount(pid) > 6}
-								<span class="opp-more">+{handCount(pid) - 6}</span>
-							{/if}
-							{#if handCount(pid) === 0}
-								<span class="opp-empty">{$t('game.empty')}</span>
-							{/if}
-						</div>
-						{#if done}
-							<span class="opp-done">{$t('presidents.finished')}</span>
+				{#snippet opponentTile(pid: string)}
+				{@const active = gs.turnPlayerId === pid}
+				{@const done = isFinished(pid)}
+				<div class="opp-tile {active ? 'opp-tile--active' : ''} {done ? 'opp-tile--done' : ''}">
+					<span class="opp-name">{playerName(pid)}{#if active}&thinsp;▶{/if}</span>
+					<div class="opp-cards">
+						{#each { length: Math.min(handCount(pid), 5) } as _}
+							<PlayingCard card={null} back size="sm" />
+						{/each}
+						{#if handCount(pid) > 5}
+							<span class="opp-more">+{handCount(pid) - 5}</span>
+						{/if}
+						{#if handCount(pid) === 0}
+							<span class="opp-empty">{$t('game.empty')}</span>
 						{/if}
 					</div>
-				{/each}
-			</div>
-
-			<!-- Exchange context banner -->
-			{#if isExchanging}
-				<div class="exchange-banner {isExchangeGiver ? 'exchange-banner--giver' : ''}">
-					<span class="exchange-banner-msg">
-						{#if isExchangeGiver}
-							{isVpExchange ? $t('presidents.chooseToGiveVp') : $t('presidents.chooseToGive')}
-						{:else}
-							{isVpExchange
-								? $t('presidents.waitingExchangeVp')
-								: $t('presidents.waitingExchange')}
-						{/if}
-					</span>
-				</div>
-			{/if}
-
-			<!-- Central table area -->
-			<div class="table-area">
-				<div class="pile-area">
-					<span class="pile-label">{$t('presidents.pile')}</span>
-					{#if pileCards.length > 0}
-						<div class="pile-cards">
-							{#each pileCards as card}
-								<PlayingCard {card} size="md" />
-							{/each}
-						</div>
-						<div class="pile-meta">
-							{#if comboLabel}
-								<span class="combo-label">{comboLabel}</span>
-							{/if}
-							{#if lockedFace}
-								<span class="lock-badge">= {lockedFace}</span>
-							{/if}
-						</div>
-					{:else}
-						<div class="pile-empty">
-							<span class="pile-empty-text">{$t('game.empty')}</span>
-						</div>
+					{#if done}
+						<span class="opp-done">{$t('presidents.finished')}</span>
 					{/if}
 				</div>
+			{/snippet}
 
-				<!-- Status (playing phase only) -->
-				{#if !isExchanging}
-					<div class="status-line">
-						{#if isMyTurn && lockedFace}
-							<span class="status--active">
-								{$t('presidents.lockedPlay', { face: lockedFace })}
-							</span>
-						{:else if isMyTurn}
-							<span class="status--active">
-								{gs.lastPlay === null ? $t('presidents.newTrick') : $t('presidents.yourTurn')}
-							</span>
-						{:else}
-							<span class="status--wait">
-								{$t('common.waitingFor', { name: playerName(gs.turnPlayerId) })}
-							</span>
-						{/if}
-					</div>
-				{/if}
-			</div>
-
-			<!-- Desktop arc: opponents + pile -->
-			<div class="arc-container hidden md:block" bind:clientWidth={arcW} bind:clientHeight={arcH}>
-				<!-- Pile + status at ellipse center -->
-				<div class="arc-center">
+			{#snippet center()}
+				<div class="table-area">
 					<div class="pile-area">
 						<span class="pile-label">{$t('presidents.pile')}</span>
 						{#if pileCards.length > 0}
@@ -406,32 +305,24 @@ $effect(() => {
 						</div>
 					{/if}
 				</div>
-				<!-- Opponents on arc -->
-				{#each arcPositions as { pid, left, top }}
-					{@const active = gs.turnPlayerId === pid}
-					{@const done = isFinished(pid)}
-					<div
-						style="left: {left}; top: {top}; transform: translate(-50%, -50%)"
-						class="opp-tile arc-opp {active ? 'opp-tile--active' : ''} {done ? 'opp-tile--done' : ''}"
-					>
-						<span class="opp-name">{playerName(pid)}{#if active}&thinsp;▶{/if}</span>
-						<div class="opp-cards">
-							{#each { length: Math.min(handCount(pid), 3) } as _}
-								<PlayingCard card={null} back size="sm" />
-							{/each}
-							{#if handCount(pid) > 3}
-								<span class="opp-more">+{handCount(pid) - 3}</span>
-							{/if}
-							{#if handCount(pid) === 0}
-								<span class="opp-empty">{$t('game.empty')}</span>
-							{/if}
-						</div>
-						{#if done}
-							<span class="opp-done">{$t('presidents.finished')}</span>
+			{/snippet}
+
+			<!-- Exchange context banner -->
+			{#if isExchanging}
+				<div class="exchange-banner {isExchangeGiver ? 'exchange-banner--giver' : ''}">
+					<span class="exchange-banner-msg">
+						{#if isExchangeGiver}
+							{isVpExchange ? $t('presidents.chooseToGiveVp') : $t('presidents.chooseToGive')}
+						{:else}
+							{isVpExchange
+								? $t('presidents.waitingExchangeVp')
+								: $t('presidents.waitingExchange')}
 						{/if}
-					</div>
-				{/each}
-			</div>
+					</span>
+				</div>
+			{/if}
+
+			<GameLayout {opponents} {opponentTile} {center} />
 
 			<!-- Hand dock -->
 			<div class="hand-dock">
@@ -684,19 +575,7 @@ $effect(() => {
 		flex: 1;
 	}
 
-	/* ── OPPONENTS STRIP ──────────────────────────── */
-	.opp-strip {
-		display: flex;
-		gap: 0.5rem;
-		overflow-x: auto;
-		padding: 0.75rem 1rem;
-		border-bottom: 1px solid oklch(1 0 0 / 7%);
-		scrollbar-width: none;
-	}
-	.opp-strip::-webkit-scrollbar {
-		display: none;
-	}
-
+	/* ── OPPONENTS ───────────────────────────────── */
 	.opp-tile {
 		flex-shrink: 0;
 		display: flex;
@@ -898,42 +777,6 @@ $effect(() => {
 		font-size: 1rem;
 		font-style: italic;
 		color: var(--muted);
-	}
-
-	@media (min-width: 768px) {
-		.opp-strip,
-		.table-area {
-			display: none;
-		}
-	}
-
-	/* ── DESKTOP ARC ──────────────────────────────── */
-	.arc-container {
-		position: relative;
-		flex: 1;
-		min-height: 280px;
-	}
-
-	.arc-opp {
-		position: absolute;
-	}
-
-	.arc-center {
-		position: absolute;
-		left: 50%;
-		top: 62%;
-		transform: translate(-50%, -50%);
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		gap: 0.875rem;
-		pointer-events: none;
-		z-index: 1;
-	}
-
-	.arc-center .pile-area,
-	.arc-center .status-line {
-		pointer-events: all;
 	}
 
 	/* ── HAND DOCK ────────────────────────────────── */
