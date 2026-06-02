@@ -3,6 +3,32 @@ type ReleaseNote = { version: string; date: string; items: ReleaseItem[] }
 
 const changelog: ReleaseNote[] = [
 	{
+		version: '0.8.0',
+		date: '2026-06-02',
+		items: [
+			{
+				fr: 'Yams : refonte visuelle thème casino ambré',
+				en: 'Yams: amber casino-den visual redesign'
+			},
+			{
+				fr: 'Purple, Présidents, Color : refonte visuelle neon et dorée',
+				en: 'Purple, Presidents, Color: neon and gilded visual redesigns'
+			},
+			{
+				fr: 'Disposition arc des joueurs sur desktop (Color, La Bagarre, Présidents)',
+				en: 'Arc player layout on desktop (Color, The Fight, Presidents)'
+			},
+			{
+				fr: 'Visionneuse de cartes avec tooltips de rôle et modal',
+				en: 'Deck viewer with role tooltips and modal'
+			},
+			{
+				fr: 'Correction des animations de dés en multijoueur',
+				en: 'Fixed dice roll animations in multiplayer'
+			}
+		]
+	},
+	{
 		version: '0.7.0',
 		date: '2026-06-01',
 		items: [
