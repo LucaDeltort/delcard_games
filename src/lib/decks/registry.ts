@@ -6,7 +6,7 @@ import { createFrenchDeck } from '$lib/decks/FrenchDeck/cards'
 import { frenchDeckMetadata } from '$lib/decks/FrenchDeck/metadata'
 import { defaultFrenchDeckPack, frenchDeckPacks } from '$lib/decks/FrenchDeck/packs'
 import type { CardPack, DeckMetadata } from '$lib/decks/types'
-import { createWerewolfDeck } from '$lib/decks/WerewolfDeck/cards'
+import { createWerewolfDeck, getWerewolfCardDetails } from '$lib/decks/WerewolfDeck/cards'
 import { werewolfDeckMetadata } from '$lib/decks/WerewolfDeck/metadata'
 import { defaultWerewolfDeckPack, werewolfDeckPacks } from '$lib/decks/WerewolfDeck/packs'
 
@@ -18,6 +18,9 @@ export type DeckTypeEntry = {
 	defaultPackId: string
 	metadata: DeckMetadata
 	createCards: () => Card[]
+	unsuitedLabelKey?: string
+	getCardDetails?: (card: Card) => { nameKey: string; descKey: string } | null
+	groupUnsuitedCards?: (cards: Card[]) => { labelKey: string; cards: Card[] }[]
 }
 
 const DECK_TYPE_SLUGS: Record<DeckType, string> = {
@@ -48,7 +51,14 @@ export const deckRegistry: DeckTypeEntry[] = [
 		packs: colorDeckPacks,
 		defaultPackId: defaultColorDeckPack.id,
 		metadata: colorDeckMetadata,
-		createCards: () => createColorDeck()
+		createCards: () => createColorDeck(),
+		groupUnsuitedCards: (cards) => [
+			{ labelKey: 'color.actionWild', cards: cards.filter((c) => c.face === 'Wild') },
+			{
+				labelKey: 'color.actionWildDrawFour',
+				cards: cards.filter((c) => c.face === 'WildDrawFour')
+			}
+		]
 	},
 	{
 		slug: 'werewolf-deck',
@@ -57,7 +67,9 @@ export const deckRegistry: DeckTypeEntry[] = [
 		packs: werewolfDeckPacks,
 		defaultPackId: defaultWerewolfDeckPack.id,
 		metadata: werewolfDeckMetadata,
-		createCards: () => createWerewolfDeck()
+		createCards: () => createWerewolfDeck(),
+		unsuitedLabelKey: 'decks.groupRoles',
+		getCardDetails: getWerewolfCardDetails
 	}
 ]
 

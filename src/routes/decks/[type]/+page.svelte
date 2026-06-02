@@ -1,7 +1,9 @@
 <script lang="ts">
-import { ArrowLeft, Check, Flag } from 'lucide-svelte'
+import { Dialog } from 'bits-ui'
+import { ArrowLeft, Check, Flag, X } from 'lucide-svelte'
 import { page } from '$app/stores'
 import Seo from '$lib/components/Seo.svelte'
+import type { Card } from '$lib/core/types'
 import { cardSrc, preloadPack } from '$lib/decks/preload'
 import { getDeckBySlug } from '$lib/decks/registry'
 import { t } from '$lib/i18n'
@@ -15,6 +17,7 @@ let previewPackId = $state<string | null>(null)
 let renderedPackId = $state<string | null>(null)
 let loading = $state(false)
 let activeHandle: { cancel: () => void } | null = null
+let selectedCard = $state<Card | null>(null)
 
 $effect(() => {
 	slug
@@ -34,6 +37,10 @@ const cardsBySuit = $derived.by(() => {
 })
 const jokers = $derived(
 	allCards.filter((c) => c.face === 'Joker' || !c.suit).sort((a, b) => a.face.localeCompare(b.face))
+)
+
+const selectedDetails = $derived(
+	selectedCard && entry?.getCardDetails ? entry.getCardDetails(selectedCard) : null
 )
 
 async function switchPack(packId: string) {
@@ -132,7 +139,7 @@ async function switchPack(packId: string) {
 				<div class="flex flex-col gap-6">
 					{#each cardsBySuit as { suit, cards }}
 						<div>
-							<p class="mb-2 text-xs capitalize tracking-widest text-muted-foreground">{suit}</p>
+							<p class="mb-2 text-xs uppercase tracking-widest text-muted-foreground">{$t('card.suit.' + suit)}</p>
 							<div class="flex flex-wrap gap-1.5">
 								{#each cards as card (card.id)}
 									<img
@@ -147,19 +154,41 @@ async function switchPack(packId: string) {
 					{/each}
 
 					{#if jokers.length > 0}
-						<div>
-							<p class="mb-2 text-xs tracking-widest text-muted-foreground uppercase">Jokers</p>
-							<div class="flex flex-wrap gap-1.5">
-								{#each jokers as card (card.id)}
-									<img
-										src={cardSrc(card, renderedPack)}
-										alt="{card.face}{card.suit ? ' ' + card.suit : ''}"
-										class="h-16 w-11 rounded-lg object-contain shadow-md sm:h-18.25 sm:w-13"
-										draggable="false"
-									/>
-								{/each}
-							</div>
-						</div>
+						{#each (entry.groupUnsuitedCards ? entry.groupUnsuitedCards(jokers) : [{ labelKey: entry.unsuitedLabelKey ?? 'decks.groupJokers', cards: jokers }]) as group}
+							{#if group.cards.length > 0}
+								<div>
+									<p class="mb-2 text-xs tracking-widest text-muted-foreground uppercase">{$t(group.labelKey)}</p>
+									<div class="flex flex-wrap gap-x-1.5 gap-y-7">
+										{#each group.cards as card (card.id)}
+											{@const details = entry.getCardDetails?.(card)}
+											{#if details}
+												<button
+													onclick={() => (selectedCard = card)}
+													class="group relative flex flex-col items-center rounded-lg transition-transform hover:scale-105 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+												>
+													<img
+														src={cardSrc(card, renderedPack)}
+														alt={$t(details.nameKey)}
+														class="h-16 w-11 rounded-lg object-contain shadow-md sm:h-18.25 sm:w-13"
+														draggable="false"
+													/>
+													<span class="absolute -bottom-5 left-1/2 -translate-x-1/2 whitespace-nowrap rounded bg-popover px-1.5 py-0.5 text-xs text-popover-foreground opacity-0 shadow transition-opacity group-hover:opacity-100">
+														{$t(details.nameKey)}
+													</span>
+												</button>
+											{:else}
+												<img
+													src={cardSrc(card, renderedPack)}
+													alt="{card.face}{card.suit ? ' ' + card.suit : ''}"
+													class="h-16 w-11 rounded-lg object-contain shadow-md sm:h-18.25 sm:w-13"
+													draggable="false"
+												/>
+											{/if}
+										{/each}
+									</div>
+								</div>
+							{/if}
+						{/each}
 					{/if}
 				</div>
 			</div>
@@ -170,3 +199,36 @@ async function switchPack(packId: string) {
 		</div>
 	{/if}
 </div>
+
+{#if entry?.getCardDetails}
+	<Dialog.Root open={selectedCard !== null} onOpenChange={(v) => { if (!v) selectedCard = null }}>
+		<Dialog.Portal>
+			<Dialog.Overlay class="fixed inset-0 z-50 bg-black/50" />
+			<Dialog.Content
+				class="fixed left-1/2 top-1/2 z-50 w-full max-w-sm -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-border bg-card p-6 shadow-xl focus:outline-none"
+			>
+				{#if selectedCard && selectedDetails}
+					<div class="flex flex-col items-center gap-4 pt-2">
+						<img
+							src={cardSrc(selectedCard, renderedPack)}
+							alt={$t(selectedDetails.nameKey)}
+							class="h-36 w-24 rounded-xl object-contain shadow-lg"
+							draggable="false"
+						/>
+						<div class="flex flex-col items-center gap-2 text-center">
+							<Dialog.Title class="text-lg font-medium">{$t(selectedDetails.nameKey)}</Dialog.Title>
+							<Dialog.Description class="text-sm text-muted-foreground leading-relaxed">
+								{$t(selectedDetails.descKey)}
+							</Dialog.Description>
+						</div>
+					</div>
+				{/if}
+				<Dialog.Close
+					class="absolute right-4 top-4 text-muted-foreground transition-colors hover:text-foreground"
+				>
+					<X size={16} />
+				</Dialog.Close>
+			</Dialog.Content>
+		</Dialog.Portal>
+	</Dialog.Root>
+{/if}

@@ -1,11 +1,17 @@
 <script lang="ts">
-import { Settings as SettingsIcon } from 'lucide-svelte'
+import {
+	ChevronDown,
+	ChevronUp,
+	Crown,
+	Minus,
+	Settings as SettingsIcon,
+	Skull
+} from 'lucide-svelte'
 import { untrack } from 'svelte'
 import { fade } from 'svelte/transition'
-import PlayerSlot from '$lib/components/PlayerSlot.svelte'
+import GameTitle from '$lib/components/GameTitle.svelte'
 import PlayingCard from '$lib/components/PlayingCard.svelte'
 import RulesDrawer from '$lib/components/RulesDrawer.svelte'
-import { Button } from '$lib/components/ui/button'
 import type { Card, GameStateGeneric } from '$lib/core/types'
 import type { Action } from '$lib/engine'
 import type { PresidentsState } from '$lib/games/presidents/presidents'
@@ -31,6 +37,43 @@ const gs = $derived(gameState as PresidentsState)
 
 const me = $derived(myPlayerId)
 const opponents = $derived(gs.players.filter((p) => p !== me))
+
+let arcW = $state(0)
+let arcH = $state(0)
+
+const arcPositions = $derived.by(() => {
+	const n = opponents.length
+	if (n === 0) return []
+	const RX = 40
+	const RY = 44
+	const maxAngle = Math.PI * (165 / 180)
+	const minAngle = Math.PI * (15 / 180)
+	const pos = (angle: number) => ({
+		left: `${50 + RX * Math.cos(angle)}%`,
+		top: `${62 - RY * Math.sin(angle)}%`
+	})
+	if (n === 1) return [{ pid: opponents[0], ...pos(Math.PI / 2) }]
+	const w = arcW || 100
+	const h = arcH || 100
+	const STEPS = 400
+	const samples: Array<{ angle: number; len: number }> = []
+	let len = 0
+	let prev: { x: number; y: number } | null = null
+	for (let i = 0; i <= STEPS; i++) {
+		const angle = maxAngle - (i / STEPS) * (maxAngle - minAngle)
+		const x = (RX / 100) * w * Math.cos(angle)
+		const y = (RY / 100) * h * Math.sin(angle)
+		if (prev) len += Math.hypot(x - prev.x, y - prev.y)
+		samples.push({ angle, len })
+		prev = { x, y }
+	}
+	const total = len
+	return opponents.map((pid, i) => {
+		const targetLen = (i / (n - 1)) * total
+		const s = samples.find((sm) => sm.len >= targetLen) ?? samples[samples.length - 1]
+		return { pid, ...pos(s.angle) }
+	})
+})
 
 function playerName(id: string): string {
 	return players.find((p) => p.id === id)?.name ?? id
@@ -172,174 +215,878 @@ $effect(() => {
 	}
 	_prevPhase = phase
 })
+
+let showTurnFlash = $state(false)
+let _prevTurnId = untrack(() => gs.turnPlayerId)
+
+$effect(() => {
+	const tid = gs.turnPlayerId
+	if (tid !== _prevTurnId) {
+		if (tid === me) {
+			showTurnFlash = true
+			setTimeout(() => (showTurnFlash = false), 1600)
+		}
+		_prevTurnId = tid
+	}
+})
 </script>
 
-<div class="flex min-h-screen flex-col">
-    <header
-        class="flex items-center justify-between border-b border-border bg-card px-4 py-2 text-xs text-muted-foreground"
-    >
-        <span class="font-mono">{$t("presidents.name")}</span>
-        <div class="flex items-center">
-            <button
-                onclick={() => ($settingsOpen = true)}
-                class="flex items-center rounded p-2 text-muted-foreground transition-colors hover:text-foreground"
-                aria-label="Settings"
-            >
-                <SettingsIcon size={16} />
-            </button>
-            <RulesDrawer gameId="presidents" size={16} />
-        </div>
-    </header>
+<div class="pres-root">
+	<!-- Header -->
+	<header class="pres-hdr">
+		<span class="pres-hdr-title">{$t('presidents.name')}</span>
+		<span class="pres-hdr-turn">
+			{#if gs.phase !== 'gameover'}
+				{#if isExchanging}
+					<em>{$t('presidents.exchangeTitle')}</em>
+				{:else if isMyTurn}
+					{$t('presidents.yourTurn')}
+				{:else}
+					{$t('common.waitingFor', { name: playerName(gs.turnPlayerId) })}
+				{/if}
+			{/if}
+		</span>
+		<div class="pres-hdr-icons">
+			<button onclick={() => ($settingsOpen = true)} class="hdr-btn" aria-label="Settings">
+				<SettingsIcon size={15} />
+			</button>
+			<RulesDrawer gameId="presidents" size={15} />
+		</div>
+	</header>
 
-    {#if gs.phase === "gameover"}
-        <!-- Results: full-screen centered -->
-        <div class="flex flex-1 flex-col items-center justify-center gap-4 px-4 py-6">
-            <p class="text-sm font-semibold text-accent">{$t("game.over")}</p>
-            <ol class="flex w-full max-w-xs flex-col gap-1.5">
-                {#each gs.finishOrder as pid, i}
-                    <li
-                        class="flex items-center gap-3 rounded-lg border px-3 py-2 {pid === me
-                            ? 'border-accent/50 bg-accent/5'
-                            : 'border-border bg-card'}"
-                    >
-                        <span class="w-5 text-center font-mono text-xs text-muted-foreground">#{i + 1}</span>
-                        <span class="flex-1 text-sm {pid === me ? 'font-semibold text-accent' : 'font-medium'}">
-                            {playerName(pid)}{pid === me ? ` (${$t("common.you")})` : ""}
-                        </span>
-                        <span class="text-xs text-muted-foreground">{getRoleLabel(i, gs.finishOrder.length)}</span>
-                    </li>
-                {/each}
-            </ol>
-        </div>
-    {:else}
-        <div class="flex flex-1 flex-col gap-4 px-4 py-6">
-            <!-- Opponents -->
-            <div class="flex flex-wrap justify-center gap-6">
-                {#each opponents as pid}
-                    <div class="flex flex-col items-center gap-2">
-                        <PlayerSlot name={playerName(pid)} dimmed={isFinished(pid)} />
-                        <div class="flex items-center gap-0.5">
-                            {#each { length: Math.min(handCount(pid), 5) } as _}
-                                <PlayingCard card={null} back size="sm" />
-                            {/each}
-                            {#if handCount(pid) > 5}
-                                <span class="ml-1 text-xs text-muted-foreground">+{handCount(pid) - 5}</span>
-                            {/if}
-                            {#if handCount(pid) === 0}
-                                <span class="text-xs text-muted-foreground">{$t("game.empty")}</span>
-                            {/if}
-                        </div>
-                        {#if isFinished(pid)}
-                            <span class="text-xs text-muted-foreground">{$t("presidents.finished")}</span>
-                        {/if}
-                    </div>
-                {/each}
-            </div>
+	{#if gs.phase === 'gameover'}
+		<!-- Results screen -->
+		<div class="gameover-screen">
+			<h2 class="gameover-heading">{$t('presidents.results')}</h2>
+			<ol class="rank-list">
+				{#each gs.finishOrder as pid, i}
+					{@const isMe = pid === me}
+					{@const total = gs.finishOrder.length}
+					<li class="rank-item {isMe ? 'rank-item--me' : ''}">
+						<span class="rank-num">#{i + 1}</span>
+						<span class="rank-icon">
+							{#if i === 0}
+								<Crown size={15} />
+							{:else if total >= 4 && i === 1}
+								<ChevronUp size={15} />
+							{:else if total >= 4 && i === total - 2}
+								<ChevronDown size={15} />
+							{:else if i === total - 1}
+								<Skull size={15} />
+							{:else}
+								<Minus size={15} />
+							{/if}
+						</span>
+						<span class="rank-name">
+							{playerName(pid)}{isMe ? ` (${$t('common.you')})` : ''}
+						</span>
+						<span class="rank-role">{getRoleLabel(i, total)}</span>
+					</li>
+				{/each}
+			</ol>
+		</div>
+	{:else}
+		<div class="pres-body">
+			<!-- Opponents strip -->
+			<div class="opp-strip">
+				{#each opponents as pid}
+					{@const active = gs.turnPlayerId === pid}
+					{@const done = isFinished(pid)}
+					<div class="opp-tile {active ? 'opp-tile--active' : ''} {done ? 'opp-tile--done' : ''}">
+						<span class="opp-name">{playerName(pid)}{#if active}&thinsp;▶{/if}</span>
+						<div class="opp-cards">
+							{#each { length: Math.min(handCount(pid), 6) } as _}
+								<PlayingCard card={null} back size="sm" />
+							{/each}
+							{#if handCount(pid) > 6}
+								<span class="opp-more">+{handCount(pid) - 6}</span>
+							{/if}
+							{#if handCount(pid) === 0}
+								<span class="opp-empty">{$t('game.empty')}</span>
+							{/if}
+						</div>
+						{#if done}
+							<span class="opp-done">{$t('presidents.finished')}</span>
+						{/if}
+					</div>
+				{/each}
+			</div>
 
-            <!-- Pile -->
-            <div class="flex flex-col items-center gap-2">
-                <span class="text-xs text-muted-foreground">{$t("presidents.pile")}</span>
-                <div class="flex items-center gap-1">
-                    {#if pileCards.length > 0}
-                        {#each pileCards as card}
-                            <PlayingCard {card} size="lg" />
-                        {/each}
-                        {#if comboLabel}
-                            <span class="ml-2 text-sm text-muted-foreground">({comboLabel})</span>
-                        {/if}
-                    {:else}
-                        <div
-                            class="flex h-33.5 w-24 items-center justify-center rounded-lg border border-dashed border-border text-xs text-muted-foreground"
-                        >
-                            {$t("game.empty")}
-                        </div>
-                    {/if}
-                </div>
-            </div>
+			<!-- Exchange context banner -->
+			{#if isExchanging}
+				<div class="exchange-banner {isExchangeGiver ? 'exchange-banner--giver' : ''}">
+					<span class="exchange-banner-msg">
+						{#if isExchangeGiver}
+							{isVpExchange ? $t('presidents.chooseToGiveVp') : $t('presidents.chooseToGive')}
+						{:else}
+							{isVpExchange
+								? $t('presidents.waitingExchangeVp')
+								: $t('presidents.waitingExchange')}
+						{/if}
+					</span>
+				</div>
+			{/if}
 
-            <!-- Status -->
-            <div class="text-center text-sm">
-                {#if isExchanging}
-                    <span class={isExchangeGiver ? "font-medium text-accent" : "text-muted-foreground"}>
-                        {#if isExchangeGiver}
-                            {isVpExchange ? $t("presidents.chooseToGiveVp") : $t("presidents.chooseToGive")}
-                        {:else}
-                            {isVpExchange ? $t("presidents.waitingExchangeVp") : $t("presidents.waitingExchange")}
-                        {/if}
-                    </span>
-                {:else if isMyTurn && lockedFace}
-                    <span class="font-medium text-accent">
-                        {$t("presidents.lockedPlay", { face: lockedFace })}
-                    </span>
-                {:else if isMyTurn}
-                    <span class="font-medium text-accent">
-                        {gs.lastPlay === null ? $t("presidents.newTrick") : $t("presidents.yourTurn")}
-                    </span>
-                {:else}
-                    <span class="text-muted-foreground">
-                        {$t("common.waitingFor", { name: playerName(gs.turnPlayerId) })}
-                    </span>
-                {/if}
-            </div>
+			<!-- Central table area -->
+			<div class="table-area">
+				<div class="pile-area">
+					<span class="pile-label">{$t('presidents.pile')}</span>
+					{#if pileCards.length > 0}
+						<div class="pile-cards">
+							{#each pileCards as card}
+								<PlayingCard {card} size="md" />
+							{/each}
+						</div>
+						<div class="pile-meta">
+							{#if comboLabel}
+								<span class="combo-label">{comboLabel}</span>
+							{/if}
+							{#if lockedFace}
+								<span class="lock-badge">= {lockedFace}</span>
+							{/if}
+						</div>
+					{:else}
+						<div class="pile-empty">
+							<span class="pile-empty-text">{$t('game.empty')}</span>
+						</div>
+					{/if}
+				</div>
 
-            <!-- My hand -->
-            <div class="mt-auto">
-                <div class="mb-2 flex items-center justify-between">
-                    <PlayerSlot name={playerName(me)} you />
-                    <span class="text-xs text-muted-foreground">
-                        {$t("presidents.cards", { n: myHand.length })}
-                    </span>
-                </div>
-                <div class="flex flex-wrap justify-center gap-2">
-                    {#each myHandSorted as card}
-                        {@const selected = selectedIds.has(card.id)}
-                        <button
-                            onclick={() => toggleCard(card.id)}
-                            class="rounded-lg transition-transform focus:outline-none {selected
-                                ? '-translate-y-3 ring-2 ring-accent'
-                                : ''} {canSelectCard ? 'cursor-pointer hover:-translate-y-1' : 'cursor-default'}"
-                        >
-                            <PlayingCard {card} size="md" />
-                        </button>
-                    {/each}
-                </div>
+				<!-- Status (playing phase only) -->
+				{#if !isExchanging}
+					<div class="status-line">
+						{#if isMyTurn && lockedFace}
+							<span class="status--active">
+								{$t('presidents.lockedPlay', { face: lockedFace })}
+							</span>
+						{:else if isMyTurn}
+							<span class="status--active">
+								{gs.lastPlay === null ? $t('presidents.newTrick') : $t('presidents.yourTurn')}
+							</span>
+						{:else}
+							<span class="status--wait">
+								{$t('common.waitingFor', { name: playerName(gs.turnPlayerId) })}
+							</span>
+						{/if}
+					</div>
+				{/if}
+			</div>
 
-                <!-- Actions -->
-                {#if isExchanging && isExchangeGiver}
-                    <div class="mt-4 flex justify-center gap-3">
-                        <Button onclick={handleGive} disabled={!giveAction} size="lg">
-                            {$t("presidents.giveCards")}
-                        </Button>
-                    </div>
-                {:else if isMyTurn}
-                    <div class="mt-4 flex justify-center gap-3">
-                        <Button onclick={handlePlay} disabled={!playAction} size="lg">
-                            {$t("presidents.play")}
-                        </Button>
-                        {#if passAction}
-                            <Button onclick={handlePass} variant="outline" size="lg">
-                                {gs.leaderCanPlay ? $t("presidents.endTrick") : $t("presidents.pass")}
-                            </Button>
-                        {/if}
-                    </div>
-                {/if}
-            </div>
-        </div>
-    {/if}
+			<!-- Desktop arc: opponents + pile -->
+			<div class="arc-container hidden md:block" bind:clientWidth={arcW} bind:clientHeight={arcH}>
+				<!-- Pile + status at ellipse center -->
+				<div class="arc-center">
+					<div class="pile-area">
+						<span class="pile-label">{$t('presidents.pile')}</span>
+						{#if pileCards.length > 0}
+							<div class="pile-cards">
+								{#each pileCards as card}
+									<PlayingCard {card} size="md" />
+								{/each}
+							</div>
+							<div class="pile-meta">
+								{#if comboLabel}<span class="combo-label">{comboLabel}</span>{/if}
+								{#if lockedFace}<span class="lock-badge">= {lockedFace}</span>{/if}
+							</div>
+						{:else}
+							<div class="pile-empty">
+								<span class="pile-empty-text">{$t('game.empty')}</span>
+							</div>
+						{/if}
+					</div>
+					{#if !isExchanging}
+						<div class="status-line">
+							{#if isMyTurn && lockedFace}
+								<span class="status--active">{$t('presidents.lockedPlay', { face: lockedFace })}</span>
+							{:else if isMyTurn}
+								<span class="status--active">{gs.lastPlay === null ? $t('presidents.newTrick') : $t('presidents.yourTurn')}</span>
+							{:else}
+								<span class="status--wait">{$t('common.waitingFor', { name: playerName(gs.turnPlayerId) })}</span>
+							{/if}
+						</div>
+					{/if}
+				</div>
+				<!-- Opponents on arc -->
+				{#each arcPositions as { pid, left, top }}
+					{@const active = gs.turnPlayerId === pid}
+					{@const done = isFinished(pid)}
+					<div
+						style="left: {left}; top: {top}; transform: translate(-50%, -50%)"
+						class="opp-tile arc-opp {active ? 'opp-tile--active' : ''} {done ? 'opp-tile--done' : ''}"
+					>
+						<span class="opp-name">{playerName(pid)}{#if active}&thinsp;▶{/if}</span>
+						<div class="opp-cards">
+							{#each { length: Math.min(handCount(pid), 3) } as _}
+								<PlayingCard card={null} back size="sm" />
+							{/each}
+							{#if handCount(pid) > 3}
+								<span class="opp-more">+{handCount(pid) - 3}</span>
+							{/if}
+							{#if handCount(pid) === 0}
+								<span class="opp-empty">{$t('game.empty')}</span>
+							{/if}
+						</div>
+						{#if done}
+							<span class="opp-done">{$t('presidents.finished')}</span>
+						{/if}
+					</div>
+				{/each}
+			</div>
+
+			<!-- Hand dock -->
+			<div class="hand-dock">
+				<div class="hand-header">
+					<span class="my-name">
+						{playerName(me)}<span class="you-tag">&thinsp;({$t('common.you')})</span>
+					</span>
+					<span class="hand-count">{$t('presidents.cards', { n: myHand.length })}</span>
+				</div>
+
+				<div class="hand-scroll">
+					{#each myHandSorted as card}
+						{@const selected = selectedIds.has(card.id)}
+						<button
+							onclick={() => toggleCard(card.id)}
+							class="card-btn {selected
+								? 'card-btn--selected'
+								: ''} {canSelectCard ? 'card-btn--selectable' : 'card-btn--inert'}"
+						>
+							<PlayingCard {card} size="md" />
+						</button>
+					{/each}
+				</div>
+
+				<!-- Actions -->
+				{#if isExchanging && isExchangeGiver}
+					<div class="actions-row">
+						<button onclick={handleGive} disabled={!giveAction} class="pres-btn pres-btn--play">
+							{$t('presidents.giveCards')}
+						</button>
+					</div>
+				{:else if isMyTurn}
+					<div class="actions-row">
+						<button onclick={handlePlay} disabled={!playAction} class="pres-btn pres-btn--play">
+							{$t('presidents.play')}
+						</button>
+						{#if passAction}
+							<button onclick={handlePass} class="pres-btn pres-btn--pass">
+								{gs.leaderCanPlay ? $t('presidents.endTrick') : $t('presidents.pass')}
+							</button>
+						{/if}
+					</div>
+				{/if}
+			</div>
+		</div>
+	{/if}
 </div>
 
+<!-- Your turn flash -->
+<div class="pointer-events-none">
+	<GameTitle
+		title={$t('presidents.yourTurn')}
+		show={showTurnFlash}
+		entry="bigEntrance"
+		exit="shrink"
+		rotation="wobble"
+		size="pulse"
+		color="gold"
+	/>
+</div>
+
+<!-- Exchange received flash -->
 {#if exchangeFlash !== null}
-    <div
-        class="pointer-events-none fixed inset-0 z-50 flex items-center justify-center"
-        transition:fade={{ duration: 150 }}
-    >
-        <div class="rounded-xl border border-border bg-card/95 px-8 py-6 text-center shadow-2xl backdrop-blur-sm">
-            <p class="mb-4 text-sm font-medium text-foreground">{exchangeFlashTitle}</p>
-            <div class="flex items-center justify-center gap-2">
-                {#each exchangeFlash as card}
-                    <PlayingCard {card} size="md" />
-                {/each}
-            </div>
-        </div>
-    </div>
+	<div
+		class="pointer-events-none fixed inset-0 z-50 flex items-center justify-center"
+		transition:fade={{ duration: 150 }}
+	>
+		<div class="flash-box">
+			<p class="flash-title">{exchangeFlashTitle}</p>
+			<div class="flash-cards">
+				{#each exchangeFlash as card}
+					<PlayingCard {card} size="md" />
+				{/each}
+			</div>
+		</div>
+	</div>
 {/if}
+
+<style>
+	/* ── ROOT ─────────────────────────────────────── */
+	.pres-root {
+		min-height: 100dvh;
+		display: flex;
+		flex-direction: column;
+		background:
+			radial-gradient(ellipse 90% 50% at 50% 15%, oklch(0.18 0.07 35 / 0.45) 0%, transparent 65%),
+			oklch(0.10 0.030 20);
+		--gold: oklch(0.72 0.14 76);
+		--gold-dim: oklch(0.28 0.08 76 / 0.35);
+		--gold-warm: oklch(0.56 0.10 76);
+		--cream: oklch(0.88 0.015 85);
+		--muted: oklch(0.44 0.025 40);
+		--felt: oklch(0.17 0.055 160);
+		--felt-border: oklch(0.24 0.07 160 / 0.55);
+	}
+
+	/* ── HEADER ───────────────────────────────────── */
+	.pres-hdr {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 0.5rem;
+		padding: calc(0.5rem + env(safe-area-inset-top)) 0.875rem 0.5rem;
+		border-bottom: 1px solid oklch(1 0 0 / 7%);
+		background: oklch(0.11 0.025 20 / 0.92);
+		backdrop-filter: blur(10px);
+		position: sticky;
+		top: 0;
+		z-index: 10;
+	}
+
+	.pres-hdr-title {
+		font-family: var(--font-display);
+		font-size: 1.2rem;
+		font-weight: 600;
+		letter-spacing: 0.06em;
+		color: var(--gold);
+		flex-shrink: 0;
+	}
+
+	.pres-hdr-turn {
+		font-family: var(--font-display);
+		font-size: 0.92rem;
+		font-style: italic;
+		color: var(--muted);
+		text-align: center;
+		flex: 1;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	.pres-hdr-icons {
+		display: flex;
+		align-items: center;
+		gap: 0.125rem;
+		flex-shrink: 0;
+	}
+
+	.hdr-btn {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		padding: 0.375rem;
+		background: none;
+		border: none;
+		border-radius: 2px;
+		color: oklch(0.38 0.02 40);
+		cursor: pointer;
+		transition: color 0.15s;
+	}
+	.hdr-btn:hover {
+		color: var(--gold);
+	}
+
+	/* ── GAMEOVER ─────────────────────────────────── */
+	.gameover-screen {
+		flex: 1;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		gap: 1.75rem;
+		padding: 2rem 1.5rem;
+	}
+
+	.gameover-heading {
+		font-family: var(--font-display);
+		font-size: 2.8rem;
+		font-weight: 700;
+		letter-spacing: 0.12em;
+		text-transform: uppercase;
+		color: var(--gold);
+		line-height: 1;
+	}
+
+	.rank-list {
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+		width: 100%;
+		max-width: 22rem;
+		list-style: none;
+		padding: 0;
+		margin: 0;
+	}
+
+	.rank-item {
+		display: flex;
+		align-items: center;
+		gap: 0.625rem;
+		padding: 0.7rem 0.875rem;
+		border-radius: 4px;
+		border: 1px solid oklch(1 0 0 / 8%);
+		background: oklch(0.13 0.025 20);
+		transition: border-color 0.2s;
+	}
+
+	.rank-item--me {
+		border-color: var(--gold-warm);
+		background: oklch(0.14 0.045 40);
+	}
+
+	.rank-num {
+		font-family: var(--font-heading);
+		font-size: 0.78rem;
+		letter-spacing: 0.04em;
+		color: oklch(0.34 0.02 40);
+		width: 1.5rem;
+		text-align: center;
+		flex-shrink: 0;
+	}
+
+	.rank-icon {
+		display: flex;
+		align-items: center;
+		color: var(--gold-warm);
+		flex-shrink: 0;
+	}
+
+	.rank-item:last-child .rank-icon {
+		color: oklch(0.40 0 0);
+	}
+
+	.rank-name {
+		font-family: var(--font-display);
+		font-size: 1.05rem;
+		font-weight: 600;
+		color: var(--cream);
+		flex: 1;
+	}
+
+	.rank-item--me .rank-name {
+		color: var(--gold);
+	}
+
+	.rank-role {
+		font-family: var(--font-heading);
+		font-size: 0.68rem;
+		letter-spacing: 0.12em;
+		text-transform: uppercase;
+		color: oklch(0.38 0.03 40);
+		flex-shrink: 0;
+	}
+
+	/* ── BODY ─────────────────────────────────────── */
+	.pres-body {
+		display: flex;
+		flex-direction: column;
+		flex: 1;
+	}
+
+	/* ── OPPONENTS STRIP ──────────────────────────── */
+	.opp-strip {
+		display: flex;
+		gap: 0.5rem;
+		overflow-x: auto;
+		padding: 0.75rem 1rem;
+		border-bottom: 1px solid oklch(1 0 0 / 7%);
+		scrollbar-width: none;
+	}
+	.opp-strip::-webkit-scrollbar {
+		display: none;
+	}
+
+	.opp-tile {
+		flex-shrink: 0;
+		display: flex;
+		flex-direction: column;
+		gap: 0.35rem;
+		padding: 0.5rem 0.625rem;
+		border-radius: 4px;
+		border: 1px solid oklch(1 0 0 / 7%);
+		border-top: 2px solid transparent;
+		background: oklch(0.13 0.020 20);
+		transition:
+			border-top-color 0.3s,
+			background 0.3s,
+			opacity 0.3s;
+	}
+
+	.opp-tile--active {
+		border-top-color: var(--gold);
+		background: oklch(0.15 0.04 35);
+	}
+
+	.opp-tile--done {
+		opacity: 0.35;
+		filter: grayscale(0.55);
+	}
+
+	.opp-name {
+		font-family: var(--font-display);
+		font-size: 0.97rem;
+		font-weight: 600;
+		color: var(--cream);
+		white-space: nowrap;
+	}
+
+	.opp-tile--active .opp-name {
+		color: var(--gold);
+	}
+
+	.opp-cards {
+		display: flex;
+		align-items: center;
+		gap: 2px;
+	}
+
+	.opp-more {
+		font-family: var(--font-heading);
+		font-size: 0.68rem;
+		color: oklch(0.40 0 0);
+		margin-left: 2px;
+	}
+
+	.opp-empty {
+		font-size: 0.68rem;
+		color: oklch(0.30 0 0);
+	}
+
+	.opp-done {
+		font-family: var(--font-heading);
+		font-size: 0.62rem;
+		letter-spacing: 0.14em;
+		text-transform: uppercase;
+		color: var(--gold-warm);
+	}
+
+	/* ── EXCHANGE BANNER ──────────────────────────── */
+	.exchange-banner {
+		padding: 0.625rem 1rem;
+		border-bottom: 1px solid oklch(1 0 0 / 7%);
+		background: oklch(0.12 0.020 20);
+		text-align: center;
+	}
+
+	.exchange-banner-msg {
+		font-family: var(--font-display);
+		font-size: 1rem;
+		font-style: italic;
+		color: var(--muted);
+	}
+
+	.exchange-banner--giver .exchange-banner-msg {
+		color: var(--gold);
+		font-style: normal;
+		font-weight: 600;
+	}
+
+	/* ── TABLE AREA ───────────────────────────────── */
+	.table-area {
+		flex: 1;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		gap: 0.875rem;
+		padding: 1.5rem 1rem;
+		position: relative;
+	}
+
+	.table-area::before {
+		content: '';
+		position: absolute;
+		inset: 0;
+		background: radial-gradient(
+			ellipse 70% 65% at 50% 45%,
+			oklch(0.18 0.06 160 / 0.22) 0%,
+			transparent 72%
+		);
+		pointer-events: none;
+	}
+
+	.pile-area {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 0.5rem;
+		position: relative;
+		z-index: 1;
+	}
+
+	.pile-label {
+		font-family: var(--font-heading);
+		font-size: 0.68rem;
+		letter-spacing: 0.22em;
+		text-transform: uppercase;
+		color: oklch(0.32 0.04 40);
+	}
+
+	.pile-cards {
+		display: flex;
+		gap: 0.375rem;
+		align-items: center;
+	}
+
+	/* subtle gold glow on cards in pile */
+	.pile-cards :global(img) {
+		box-shadow: 0 4px 18px oklch(0 0 0 / 0.55), 0 0 20px var(--gold-dim);
+	}
+
+	.pile-meta {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+	}
+
+	.combo-label {
+		font-family: var(--font-heading);
+		font-size: 0.70rem;
+		letter-spacing: 0.18em;
+		text-transform: uppercase;
+		color: oklch(0.55 0.04 85);
+	}
+
+	.lock-badge {
+		font-family: var(--font-heading);
+		font-size: 0.70rem;
+		letter-spacing: 0.10em;
+		color: var(--gold);
+		background: oklch(0.20 0.06 76 / 0.35);
+		border: 1px solid var(--gold-dim);
+		padding: 0.1rem 0.4rem;
+		border-radius: 2px;
+	}
+
+	.pile-empty {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 88px;
+		height: 122px;
+		border-radius: 8px;
+		border: 2px dashed var(--felt-border);
+		background: oklch(0.14 0.04 160 / 0.3);
+	}
+
+	.pile-empty-text {
+		font-family: var(--font-heading);
+		font-size: 0.66rem;
+		letter-spacing: 0.16em;
+		text-transform: uppercase;
+		color: oklch(0.30 0.04 160);
+	}
+
+	/* ── STATUS LINE ──────────────────────────────── */
+	.status-line {
+		text-align: center;
+		min-height: 1.6rem;
+		position: relative;
+		z-index: 1;
+	}
+
+	.status--active {
+		font-family: var(--font-display);
+		font-size: 1.1rem;
+		font-weight: 600;
+		color: var(--gold);
+	}
+
+	.status--wait {
+		font-family: var(--font-display);
+		font-size: 1rem;
+		font-style: italic;
+		color: var(--muted);
+	}
+
+	@media (min-width: 768px) {
+		.opp-strip,
+		.table-area {
+			display: none;
+		}
+	}
+
+	/* ── DESKTOP ARC ──────────────────────────────── */
+	.arc-container {
+		position: relative;
+		flex: 1;
+		min-height: 280px;
+	}
+
+	.arc-opp {
+		position: absolute;
+	}
+
+	.arc-center {
+		position: absolute;
+		left: 50%;
+		top: 62%;
+		transform: translate(-50%, -50%);
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 0.875rem;
+		pointer-events: none;
+		z-index: 1;
+	}
+
+	.arc-center .pile-area,
+	.arc-center .status-line {
+		pointer-events: all;
+	}
+
+	/* ── HAND DOCK ────────────────────────────────── */
+	.hand-dock {
+		border-top: 1px solid oklch(1 0 0 / 8%);
+		background: oklch(0.11 0.022 20 / 0.92);
+		padding: 0.875rem 0.75rem;
+		padding-bottom: calc(0.875rem + env(safe-area-inset-bottom));
+		display: flex;
+		flex-direction: column;
+		gap: 0.625rem;
+	}
+
+	.hand-header {
+		display: flex;
+		align-items: baseline;
+		justify-content: space-between;
+		gap: 0.5rem;
+	}
+
+	.my-name {
+		font-family: var(--font-display);
+		font-size: 1.08rem;
+		font-weight: 600;
+		color: var(--cream);
+	}
+
+	.you-tag {
+		font-family: var(--font-sans);
+		font-size: 0.72rem;
+		font-weight: 400;
+		font-style: normal;
+		color: oklch(0.38 0 0);
+	}
+
+	.hand-count {
+		font-family: var(--font-heading);
+		font-size: 0.70rem;
+		letter-spacing: 0.10em;
+		color: oklch(0.38 0.025 40);
+	}
+
+	.hand-scroll {
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: center;
+		gap: 0.375rem;
+	}
+
+	.card-btn {
+		background: none;
+		border: none;
+		padding: 0;
+		border-radius: 8px;
+		transition:
+			transform 0.15s ease,
+			box-shadow 0.15s ease;
+	}
+
+	.card-btn--selectable:hover {
+		transform: translateY(-4px);
+	}
+
+	.card-btn--selected {
+		transform: translateY(-10px);
+		box-shadow:
+			0 0 0 2px var(--gold),
+			0 6px 18px oklch(0 0 0 / 0.5);
+	}
+
+	.card-btn--inert {
+		cursor: default;
+		opacity: 0.35;
+	}
+
+	/* ── ACTIONS ──────────────────────────────────── */
+	.actions-row {
+		display: flex;
+		justify-content: center;
+		gap: 0.625rem;
+	}
+
+	.pres-btn {
+		font-family: var(--font-heading);
+		font-size: 1rem;
+		letter-spacing: 0.20em;
+		text-transform: uppercase;
+		padding: 0.7rem 2rem;
+		border-radius: 3px;
+		cursor: pointer;
+		transition:
+			filter 0.15s,
+			transform 0.1s;
+	}
+
+	.pres-btn:active {
+		transform: scale(0.97);
+	}
+
+	.pres-btn:disabled {
+		opacity: 0.28;
+		cursor: default;
+	}
+
+	.pres-btn--play {
+		background: linear-gradient(135deg, oklch(0.58 0.13 70), oklch(0.68 0.16 78));
+		color: oklch(0.10 0 0);
+		border: 1px solid oklch(0.75 0.16 80 / 0.45);
+		box-shadow: 0 2px 14px oklch(0.65 0.14 76 / 0.25);
+	}
+
+	.pres-btn--play:not(:disabled):hover {
+		filter: brightness(1.14);
+	}
+
+	.pres-btn--pass {
+		background: transparent;
+		color: oklch(0.50 0.025 40);
+		border: 1px solid oklch(1 0 0 / 11%);
+	}
+
+	.pres-btn--pass:hover {
+		color: oklch(0.72 0.02 40);
+		border-color: oklch(1 0 0 / 20%);
+	}
+
+	/* ── EXCHANGE FLASH ───────────────────────────── */
+	.flash-box {
+		border-radius: 6px;
+		border: 1px solid var(--gold-dim);
+		background: oklch(0.13 0.03 30);
+		padding: 1.5rem 2rem;
+		text-align: center;
+		box-shadow:
+			0 10px 52px oklch(0 0 0 / 0.88),
+			0 0 48px var(--gold-dim);
+		display: flex;
+		flex-direction: column;
+		gap: 1rem;
+		align-items: center;
+	}
+
+	.flash-title {
+		font-family: var(--font-display);
+		font-size: 1.1rem;
+		font-style: italic;
+		color: var(--gold);
+		letter-spacing: 0.04em;
+	}
+
+	.flash-cards {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+	}
+</style>

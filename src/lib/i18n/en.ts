@@ -80,7 +80,11 @@ export default {
 			hearts: 'hearts',
 			diamonds: 'diamonds',
 			clubs: 'clubs',
-			spades: 'spades'
+			spades: 'spades',
+			red: 'red',
+			yellow: 'yellow',
+			green: 'green',
+			blue: 'blue'
 		}
 	},
 	color: {
@@ -390,7 +394,9 @@ export default {
 		frenchDeck: 'French Deck',
 		colorDeck: 'Color Deck',
 		werewolfDeck: 'Werewolf Deck',
-		errorUnknownType: 'Unknown deck type.'
+		errorUnknownType: 'Unknown deck type.',
+		groupJokers: 'Jokers',
+		groupRoles: 'Roles'
 	},
 	dice: {
 		title: 'Dice',

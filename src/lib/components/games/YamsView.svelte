@@ -3,7 +3,6 @@ import { Settings as SettingsIcon } from 'lucide-svelte'
 import { onDestroy } from 'svelte'
 import Dice from '$lib/components/Dice.svelte'
 import RulesDrawer from '$lib/components/RulesDrawer.svelte'
-import { Button } from '$lib/components/ui/button'
 import type { GameStateGeneric } from '$lib/core/types'
 import type { Action } from '$lib/engine'
 import {
@@ -43,6 +42,20 @@ const hasRolled = $derived(s.rollsRemaining < 3)
 const canRoll = $derived(validActions.some((a) => a.type === 'ROLL'))
 let rollingDice = $state([false, false, false, false, false])
 let rollTimer: ReturnType<typeof setTimeout> | null = null
+let prevRollsRemaining = s.rollsRemaining
+
+$effect(() => {
+	const curr = s.rollsRemaining
+	if (curr < prevRollsRemaining) {
+		rollingDice = s.held.map((h) => !h)
+		clearTimeout(rollTimer ?? undefined)
+		rollTimer = setTimeout(() => {
+			rollingDice = [false, false, false, false, false]
+		}, 1200)
+	}
+	prevRollsRemaining = curr
+})
+
 onDestroy(() => clearTimeout(rollTimer ?? undefined))
 
 function canToggleHold(index: number): boolean {
@@ -58,11 +71,6 @@ function canScoreCategory(cat: CategoryId): boolean {
 }
 
 function roll() {
-	rollingDice = s.held.map((h) => !h)
-	if (rollTimer) clearTimeout(rollTimer)
-	rollTimer = setTimeout(() => {
-		rollingDice = [false, false, false, false, false]
-	}, 1200)
 	onAction({ type: 'ROLL', playerId: myPlayerId })
 }
 
@@ -103,15 +111,15 @@ function isFilled(playerId: string, cat: CategoryId): boolean {
 }
 </script>
 
-<div class="flex min-h-dvh flex-col bg-background text-foreground">
+<div class="yams-root">
 	<!-- Header -->
-	<header class="flex items-center justify-between border-b border-border bg-card px-4 py-3">
-		<span class="text-sm font-semibold">{$t('yams.name')}</span>
-		<div class="flex items-center gap-2">
+	<header class="yams-header">
+		<span class="yams-title">YAMS</span>
+		<div class="yams-actions">
 			<RulesDrawer gameId="yams" />
 			<button
 				type="button"
-				class="rounded p-1 text-muted-foreground hover:text-foreground"
+				class="settings-btn"
 				onclick={() => ($settingsOpen = true)}
 				aria-label="Settings"
 			>
@@ -120,25 +128,27 @@ function isFilled(playerId: string, cat: CategoryId): boolean {
 		</div>
 	</header>
 
-	<!-- Turn indicator -->
-	<div class="px-4 py-2 text-center text-sm">
+	<!-- Turn banner -->
+	<div class="turn-banner" class:mine={isMyTurn} class:over={s.phase === 'gameover'}>
 		{#if s.phase === 'gameover'}
-			<span class="font-medium">{$t('game.over')}</span>
+			GAME OVER
 		{:else if isMyTurn}
-			<span class="font-semibold text-primary">{$t('yams.yourTurn')}</span>
+			YOUR TURN
 		{:else}
-			<span class="text-muted-foreground">{$t('game.waitingTurn', { name: playerName(s.turnPlayerId) })}</span>
+			{playerName(s.turnPlayerId)}'s TURN
 		{/if}
 	</div>
 
 	<!-- Dice tray -->
-	<section class="flex flex-col items-center gap-3 px-4 py-4">
-		<div class="flex gap-5">
+	<section class="dice-tray">
+		<div class="dice-shelf">
 			{#each s.dice as die, i}
 				{@const holdable = canToggleHold(i)}
 				<button
 					type="button"
-					class="rounded-lg transition-opacity {!hasRolled ? 'opacity-30' : ''} {holdable ? 'cursor-pointer' : 'cursor-default'}"
+					class="die-btn"
+					class:unrolled={!hasRolled}
+					class:holdable
 					onclick={() => holdable && toggleHold(i)}
 					disabled={!holdable}
 					aria-label="{$t('yams.held')}: {s.held[i]}"
@@ -148,98 +158,120 @@ function isFilled(playerId: string, cat: CategoryId): boolean {
 			{/each}
 		</div>
 
-		<div class="flex flex-col items-center gap-1">
-			<Button onclick={roll} disabled={!canRoll}>
-				{$t('yams.roll')}
-			</Button>
+		<div class="roll-zone">
 			{#if hasRolled && s.rollsRemaining > 0}
-				<span class="text-xs text-muted-foreground">{$t('yams.rollsLeft', { n: s.rollsRemaining })}</span>
-			{:else if s.rollsRemaining === 0}
-				<span class="text-xs text-muted-foreground">{$t('yams.rollsLeft', { n: 0 })}</span>
+				<div class="rolls-left">
+					<span class="rolls-n">{s.rollsRemaining}</span>
+					<span class="rolls-txt">{s.rollsRemaining === 1 ? 'ROLL LEFT' : 'ROLLS LEFT'}</span>
+				</div>
+			{:else if hasRolled && s.rollsRemaining === 0}
+				<span class="score-prompt">SCORE NOW</span>
 			{/if}
+			<button class="roll-btn" onclick={roll} disabled={!canRoll}>ROLL</button>
 		</div>
 	</section>
 
 	<!-- Scorecard -->
-	<section class="flex-1 overflow-x-auto px-2 pb-6">
-		<table class="w-full min-w-max border-collapse text-sm">
+	<section class="scorecard">
+		<table class="score-table">
 			<thead>
-				<tr class="border-b border-border">
-					<th class="py-2 pr-3 text-left font-medium text-muted-foreground"></th>
+				<tr>
+					<th class="th-cat"></th>
 					{#each s.players as pid}
-						<th class="px-3 py-2 text-center font-medium {pid === s.turnPlayerId ? 'text-primary' : ''}">
+						<th class="th-player" class:active={pid === s.turnPlayerId}>
 							{playerName(pid)}
+							{#if pid === s.turnPlayerId && s.phase !== 'gameover'}
+								<span class="active-dot"></span>
+							{/if}
 						</th>
 					{/each}
 				</tr>
 			</thead>
 			<tbody>
 				<!-- Upper section -->
-				<tr>
-					<td colspan={s.players.length + 1} class="pb-1 pt-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-						{$t('yams.upperSection')}
+				<tr class="section-row">
+					<td colspan={s.players.length + 1}>
+						<div class="section-divider">
+							<span class="section-rule"></span>
+							<span class="section-label">{$t('yams.upperSection')}</span>
+							<span class="section-rule"></span>
+						</div>
 					</td>
 				</tr>
 				{#each UPPER_CATS as cat}
-					<tr
-						class="border-b border-border/50 {canScoreCategory(cat) ? 'cursor-pointer hover:bg-accent' : ''}"
-						onclick={() => canScoreCategory(cat) && scoreFor(cat)}
-					>
-						<td class="py-1.5 pr-3 text-muted-foreground">{$t(`yams.${cat}`)}</td>
+					{@const clickable = canScoreCategory(cat)}
+					<tr class="score-row" class:clickable onclick={() => clickable && scoreFor(cat)}>
+						<td class="td-cat">{$t(`yams.${cat}`)}</td>
 						{#each s.players as pid}
 							{@const filled = isFilled(pid, cat)}
 							{@const display = displayScore(pid, cat)}
-							<td class="px-3 py-1.5 text-center {filled ? 'font-medium' : 'text-muted-foreground/60'} {pid === myPlayerId && canScoreCategory(cat) ? 'text-primary font-semibold' : ''}">
-								{display}
-							</td>
+							{@const isPreview = !filled && pid === myPlayerId && isMyTurn && hasRolled}
+							<td
+								class="td-score"
+								class:filled
+								class:preview={isPreview}
+								class:myclick={pid === myPlayerId && clickable}
+								class:activecol={pid === s.turnPlayerId}
+							>{display}</td>
 						{/each}
 					</tr>
 				{/each}
-				<!-- Upper totals -->
-				<tr class="border-b border-border bg-muted/30">
-					<td class="py-1.5 pr-3 text-xs text-muted-foreground">{$t('yams.upperTotal')}</td>
+
+				<!-- Upper subtotals -->
+				<tr class="sub-row">
+					<td class="td-cat sub">{$t('yams.upperTotal')}</td>
 					{#each s.players as pid}
-						{@const ut = upperTotal(s.scores[pid] ?? {})}
-						<td class="px-3 py-1.5 text-center text-xs font-medium">{ut}</td>
+						<td class="td-score sub" class:activecol={pid === s.turnPlayerId}>
+							{upperTotal(s.scores[pid] ?? {})}/63
+						</td>
 					{/each}
 				</tr>
-				<tr class="border-b border-border bg-muted/30">
-					<td class="py-1.5 pr-3 text-xs text-muted-foreground">{$t('yams.upperBonus')}</td>
+				<tr class="sub-row">
+					<td class="td-cat sub">{$t('yams.upperBonus')}</td>
 					{#each s.players as pid}
 						{@const bonus = upperBonus(s.scores[pid] ?? {})}
-						<td class="px-3 py-1.5 text-center text-xs font-medium {bonus > 0 ? 'text-green-600 dark:text-green-400' : ''}">
-							{bonus > 0 ? `+${bonus}` : ''}
-						</td>
+						<td
+							class="td-score sub"
+							class:activecol={pid === s.turnPlayerId}
+							class:earned={bonus > 0}
+						>{bonus > 0 ? `+${bonus}` : '—'}</td>
 					{/each}
 				</tr>
 
 				<!-- Lower section -->
-				<tr>
-					<td colspan={s.players.length + 1} class="pb-1 pt-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-						{$t('yams.lowerSection')}
+				<tr class="section-row">
+					<td colspan={s.players.length + 1}>
+						<div class="section-divider">
+							<span class="section-rule"></span>
+							<span class="section-label">{$t('yams.lowerSection')}</span>
+							<span class="section-rule"></span>
+						</div>
 					</td>
 				</tr>
 				{#each LOWER_CATS as cat}
-					<tr
-						class="border-b border-border/50 {canScoreCategory(cat) ? 'cursor-pointer hover:bg-accent' : ''}"
-						onclick={() => canScoreCategory(cat) && scoreFor(cat)}
-					>
-						<td class="py-1.5 pr-3 text-muted-foreground">{$t(`yams.${cat}`)}</td>
+					{@const clickable = canScoreCategory(cat)}
+					<tr class="score-row" class:clickable onclick={() => clickable && scoreFor(cat)}>
+						<td class="td-cat">{$t(`yams.${cat}`)}</td>
 						{#each s.players as pid}
 							{@const filled = isFilled(pid, cat)}
 							{@const display = displayScore(pid, cat)}
-							<td class="px-3 py-1.5 text-center {filled ? 'font-medium' : 'text-muted-foreground/60'} {pid === myPlayerId && canScoreCategory(cat) ? 'text-primary font-semibold' : ''}">
-								{display}
-							</td>
+							{@const isPreview = !filled && pid === myPlayerId && isMyTurn && hasRolled}
+							<td
+								class="td-score"
+								class:filled
+								class:preview={isPreview}
+								class:myclick={pid === myPlayerId && clickable}
+								class:activecol={pid === s.turnPlayerId}
+							>{display}</td>
 						{/each}
 					</tr>
 				{/each}
 
 				<!-- Grand total -->
-				<tr class="border-t-2 border-border">
-					<td class="py-2 pr-3 font-semibold">{$t('yams.total')}</td>
+				<tr class="total-row">
+					<td class="td-total-label">{$t('yams.total')}</td>
 					{#each s.players as pid}
-						<td class="px-3 py-2 text-center font-bold text-lg">
+						<td class="td-total" class:activecol={pid === s.turnPlayerId}>
 							{grandTotal(s.scores[pid] ?? {})}
 						</td>
 					{/each}
@@ -248,3 +280,410 @@ function isFilled(playerId: string, cat: CategoryId): boolean {
 		</table>
 	</section>
 </div>
+
+<style>
+	.yams-root {
+		--ya: #e8a038;
+		--ya-dim: rgba(232, 160, 56, 0.11);
+		--ya-glow: rgba(232, 160, 56, 0.28);
+		--ya-felt: #0a1510;
+		/* override accent for held-dice glow in this subtree */
+		--accent: var(--ya);
+
+		display: flex;
+		flex-direction: column;
+		min-height: 100dvh;
+		background: var(--background);
+		color: var(--foreground);
+	}
+
+	/* ── Header ──────────────────────────────────── */
+
+	.yams-header {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		padding: 0.6rem 1rem;
+		border-bottom: 1px solid rgba(232, 160, 56, 0.16);
+	}
+
+	.yams-title {
+		font-family: var(--font-heading);
+		font-size: 1.85rem;
+		letter-spacing: 0.12em;
+		color: var(--ya);
+		line-height: 1;
+	}
+
+	.yams-actions {
+		display: flex;
+		align-items: center;
+		gap: 0.375rem;
+	}
+
+	.settings-btn {
+		background: none;
+		border: none;
+		cursor: pointer;
+		padding: 0.25rem;
+		border-radius: 0.375rem;
+		color: var(--muted-foreground);
+		transition: color 150ms;
+	}
+	.settings-btn:hover {
+		color: var(--foreground);
+	}
+
+	/* ── Turn banner ─────────────────────────────── */
+
+	.turn-banner {
+		padding: 0.4rem 1rem;
+		text-align: center;
+		font-family: var(--font-heading);
+		font-size: 0.95rem;
+		letter-spacing: 0.18em;
+		color: var(--muted-foreground);
+		transition: background 200ms, color 200ms;
+	}
+	.turn-banner.mine {
+		color: var(--ya);
+		background: var(--ya-dim);
+	}
+	.turn-banner.over {
+		color: var(--foreground);
+	}
+
+	/* ── Dice tray ───────────────────────────────── */
+
+	.dice-tray {
+		position: relative;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 1.125rem;
+		padding: 1.375rem 1rem 1.5rem;
+		background:
+			radial-gradient(circle, rgba(255, 255, 255, 0.032) 1px, transparent 1px),
+			var(--ya-felt);
+		background-size:
+			18px 18px,
+			100% 100%;
+		border-bottom: 1px solid rgba(232, 160, 56, 0.1);
+		overflow: hidden;
+	}
+
+	.dice-tray::before {
+		content: '';
+		position: absolute;
+		inset: 0;
+		background: radial-gradient(
+			ellipse 90% 80% at 50% 50%,
+			transparent 25%,
+			rgba(0, 0, 0, 0.52) 100%
+		);
+		pointer-events: none;
+		z-index: 0;
+	}
+
+	.dice-shelf {
+		display: flex;
+		gap: 0.75rem;
+		position: relative;
+		z-index: 1;
+	}
+
+	.die-btn {
+		background: none;
+		border: none;
+		padding: 0;
+		cursor: default;
+		border-radius: 0.5rem;
+		transition:
+			transform 150ms,
+			opacity 150ms;
+	}
+	.die-btn.holdable {
+		cursor: pointer;
+	}
+	.die-btn.unrolled {
+		opacity: 0.28;
+	}
+	.die-btn.holdable:active {
+		transform: scale(0.9);
+	}
+
+	/* ── Roll zone ───────────────────────────────── */
+
+	.roll-zone {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 0.45rem;
+		position: relative;
+		z-index: 1;
+		width: 100%;
+		max-width: 210px;
+	}
+
+	.rolls-left {
+		display: flex;
+		align-items: baseline;
+		gap: 0.35rem;
+	}
+
+	.rolls-n {
+		font-family: var(--font-heading);
+		font-size: 2.25rem;
+		line-height: 1;
+		color: var(--ya);
+	}
+
+	.rolls-txt {
+		font-family: var(--font-heading);
+		font-size: 0.78rem;
+		letter-spacing: 0.12em;
+		color: rgba(232, 160, 56, 0.65);
+	}
+
+	.score-prompt {
+		font-family: var(--font-heading);
+		font-size: 0.75rem;
+		letter-spacing: 0.16em;
+		color: rgba(232, 160, 56, 0.5);
+	}
+
+	.roll-btn {
+		width: 100%;
+		padding: 0.8rem 0;
+		font-family: var(--font-heading);
+		font-size: 1.5rem;
+		letter-spacing: 0.32em;
+		color: #160c00;
+		background: var(--ya);
+		border: none;
+		border-radius: 999px;
+		cursor: pointer;
+		transition:
+			transform 100ms,
+			background 120ms,
+			box-shadow 120ms;
+		box-shadow:
+			0 4px 0 rgba(0, 0, 0, 0.5),
+			0 0 22px var(--ya-glow);
+	}
+	.roll-btn:hover:not(:disabled) {
+		background: #f0b448;
+		box-shadow:
+			0 4px 0 rgba(0, 0, 0, 0.5),
+			0 0 34px var(--ya-glow);
+	}
+	.roll-btn:active:not(:disabled) {
+		transform: translateY(4px);
+		box-shadow:
+			0 0 0 rgba(0, 0, 0, 0),
+			0 0 14px var(--ya-glow);
+	}
+	.roll-btn:disabled {
+		background: rgba(232, 160, 56, 0.16);
+		color: rgba(255, 255, 255, 0.1);
+		cursor: not-allowed;
+		box-shadow: none;
+	}
+
+	/* ── Scorecard ───────────────────────────────── */
+
+	.scorecard {
+		flex: 1;
+		overflow-x: auto;
+		padding-bottom: 2rem;
+	}
+
+	.score-table {
+		width: 100%;
+		min-width: max-content;
+		border-collapse: collapse;
+		font-size: 0.8rem;
+	}
+
+	.score-table thead tr {
+		border-bottom: 1px solid rgba(232, 160, 56, 0.2);
+	}
+
+	.th-cat {
+		min-width: 126px;
+		padding: 0.6rem 0.75rem 0.5rem;
+		text-align: left;
+	}
+
+	.th-player {
+		min-width: 62px;
+		padding: 0.6rem 0.75rem 0.5rem;
+		text-align: center;
+		font-family: var(--font-heading);
+		font-size: 0.85rem;
+		letter-spacing: 0.06em;
+		color: var(--muted-foreground);
+		white-space: nowrap;
+	}
+
+	.th-player.active {
+		color: var(--ya);
+	}
+
+	.active-dot {
+		display: inline-block;
+		width: 5px;
+		height: 5px;
+		border-radius: 50%;
+		background: var(--ya);
+		margin-left: 4px;
+		vertical-align: middle;
+		animation: blink 1.4s ease-in-out infinite;
+	}
+
+	@keyframes blink {
+		0%,
+		100% {
+			opacity: 1;
+		}
+		50% {
+			opacity: 0.2;
+		}
+	}
+
+	/* Section divider row */
+
+	.section-row td {
+		padding: 0.5rem 0;
+	}
+
+	.section-divider {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		padding: 0 0.75rem;
+	}
+
+	.section-rule {
+		flex: 1;
+		height: 1px;
+		background: linear-gradient(
+			to right,
+			transparent,
+			rgba(232, 160, 56, 0.3),
+			transparent
+		);
+	}
+
+	.section-label {
+		font-family: var(--font-heading);
+		font-size: 0.62rem;
+		letter-spacing: 0.2em;
+		color: rgba(232, 160, 56, 0.5);
+		white-space: nowrap;
+	}
+
+	/* Score rows */
+
+	.score-row {
+		border-bottom: 1px solid var(--border);
+		transition: background 100ms;
+	}
+
+	.score-row.clickable {
+		cursor: pointer;
+	}
+
+	.score-row.clickable:hover {
+		background: rgba(232, 160, 56, 0.07);
+	}
+
+	.td-cat {
+		padding: 0.4rem 0.75rem;
+		color: var(--muted-foreground);
+		font-size: 0.78rem;
+		text-align: left;
+		white-space: nowrap;
+	}
+
+	.td-cat.sub {
+		font-size: 0.7rem;
+		opacity: 0.6;
+	}
+
+	.td-score {
+		padding: 0.4rem 0.75rem;
+		text-align: center;
+		font-family: var(--font-display);
+		font-size: 0.95rem;
+		color: var(--muted-foreground);
+	}
+
+	.td-score.activecol {
+		background: rgba(232, 160, 56, 0.04);
+	}
+
+	.td-score.filled {
+		color: var(--foreground);
+		font-weight: 600;
+	}
+
+	.td-score.preview {
+		color: rgba(232, 160, 56, 0.58);
+		font-style: italic;
+	}
+
+	.td-score.myclick {
+		color: var(--ya);
+	}
+
+	.td-score.sub {
+		font-family: var(--font-sans);
+		font-size: 0.7rem;
+		opacity: 0.6;
+	}
+
+	.td-score.earned {
+		font-family: var(--font-sans);
+		font-size: 0.75rem;
+		font-style: normal;
+		color: #4ade80;
+		opacity: 1;
+	}
+
+	/* Sub rows */
+
+	.sub-row {
+		border-bottom: 1px solid var(--border);
+		background: rgba(255, 255, 255, 0.015);
+	}
+
+	/* Total row */
+
+	.total-row {
+		border-top: 1px solid rgba(232, 160, 56, 0.28);
+	}
+
+	.td-total-label {
+		padding: 0.7rem 0.75rem;
+		font-family: var(--font-heading);
+		font-size: 0.88rem;
+		letter-spacing: 0.12em;
+		color: var(--ya);
+		text-align: left;
+	}
+
+	.td-total {
+		padding: 0.7rem 0.75rem;
+		text-align: center;
+		font-family: var(--font-display);
+		font-size: 1.6rem;
+		font-weight: 600;
+		color: var(--foreground);
+	}
+
+	.td-total.activecol {
+		color: var(--ya);
+		background: rgba(232, 160, 56, 0.04);
+	}
+</style>

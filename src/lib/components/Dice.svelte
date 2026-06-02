@@ -89,7 +89,7 @@ $effect(() => {
 	]
 
 	currentAnimation = diceEl.animate(keyframes, {
-		duration: 1200,
+		duration: 1800,
 		easing: 'cubic-bezier(0.34, 1.56, 0.64, 1)',
 		fill: 'forwards'
 	})
@@ -132,7 +132,7 @@ onDestroy(() => {
 		position: relative;
 		width: 60px;
 		height: 60px;
-		perspective: 200px;
+		perspective: 1000px;
 		transition: box-shadow 200ms ease;
 	}
 
@@ -156,7 +156,8 @@ onDestroy(() => {
 		border-radius: 8px;
 		overflow: hidden;
 		backface-visibility: hidden;
-		background: #002fa7;
+		-webkit-backface-visibility: hidden;
+		background: transparent;
 	}
 
 	.face img {
@@ -165,6 +166,8 @@ onDestroy(() => {
 		height: 60px;
 		pointer-events: none;
 		user-select: none;
+		backface-visibility: hidden;
+		-webkit-backface-visibility: hidden;
 	}
 
 	.face-1 {
