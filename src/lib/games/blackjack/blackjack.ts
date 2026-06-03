@@ -1,16 +1,12 @@
 import type { Card, GameStateGeneric } from '$lib/core/types'
 import type { GameDefinition } from '$lib/engine'
 import { createDeck, createZone, deal, drawCard, shuffle } from '$lib/engine'
-import type { OptionSchema } from '$lib/engine/options'
 
 type PlayerStatus = 'playing' | 'standing' | 'bust'
-
-type BlackjackOptions = { autoRestart: 'manual' | 'auto' }
 
 export type BlackjackState = GameStateGeneric & {
 	phase: 'playing' | 'scoring' | 'gameover'
 	playerStatus: Record<string, PlayerStatus>
-	options: BlackjackOptions
 }
 
 export function handValue(cards: Card[]): number {
@@ -40,36 +36,6 @@ function buildShoe(): Card[] {
 		...createDeck('FrenchDeckWithoutJoker'),
 		...createDeck('FrenchDeckWithoutJoker')
 	])
-}
-
-function dealRound(
-	players: string[],
-	options: BlackjackOptions,
-	base: Partial<BlackjackState> = {}
-): BlackjackState {
-	const { hands, remaining } = deal(buildShoe(), 2, players.length + 1)
-
-	const zones: BlackjackState['zones'] = {
-		deck: createZone('deck', 'hidden', remaining),
-		hand_dealer: createZone('hand_dealer', 'fan', hands[players.length])
-	}
-	const playerStatus: Record<string, PlayerStatus> = {}
-
-	players.forEach((pid, i) => {
-		zones[`hand_${pid}`] = createZone(`hand_${pid}`, 'fan', hands[i], pid)
-		playerStatus[pid] = 'playing'
-	})
-
-	return {
-		...(base as BlackjackState),
-		players,
-		zones,
-		turnPlayerId: players[0],
-		phase: 'playing',
-		activeGameId: 'blackjack',
-		playerStatus,
-		options
-	}
 }
 
 function resolveDealerTurn(state: BlackjackState): BlackjackState {
@@ -105,18 +71,64 @@ function advanceFromPlayer(state: BlackjackState): BlackjackState {
 	return resolveDealerTurn(state)
 }
 
-const optionsSchema: OptionSchema[] = [
-	{
-		key: 'autoRestart',
-		label: 'After a round',
-		type: 'select',
-		default: 'manual',
-		choices: [
-			{ value: 'manual', label: 'Wait for host' },
-			{ value: 'auto', label: 'Auto-restart (5s)' }
-		]
+function dealRound(players: string[], base: Partial<BlackjackState> = {}): BlackjackState {
+	const { hands, remaining } = deal(buildShoe(), 2, players.length + 1)
+
+	const zones: BlackjackState['zones'] = {
+		deck: createZone('deck', 'hidden', remaining),
+		hand_dealer: createZone('hand_dealer', 'fan', hands[players.length])
 	}
-]
+
+	// Auto-stand players with natural blackjack
+	const playerStatus: Record<string, PlayerStatus> = {}
+	players.forEach((pid, i) => {
+		zones[`hand_${pid}`] = createZone(`hand_${pid}`, 'fan', hands[i], pid)
+		playerStatus[pid] = handValue(hands[i]) === 21 ? 'standing' : 'playing'
+	})
+
+	// Dealer blackjack: skip player turns, go straight to scoring
+	const dealerBJ = handValue(hands[players.length]) === 21
+	if (dealerBJ) {
+		// Non-BJ players lose; BJ players push — both are 'standing' for scoring comparison
+		players.forEach((pid) => {
+			if (playerStatus[pid] !== 'standing') playerStatus[pid] = 'standing'
+		})
+		return {
+			...(base as BlackjackState),
+			players,
+			zones,
+			turnPlayerId: players[0],
+			phase: 'scoring',
+			activeGameId: 'blackjack',
+			playerStatus
+		}
+	}
+
+	const firstPlaying = players.find((p) => playerStatus[p] === 'playing')
+
+	// All players have natural BJ — go straight to dealer turn
+	if (!firstPlaying) {
+		return resolveDealerTurn({
+			...(base as BlackjackState),
+			players,
+			zones,
+			turnPlayerId: players[0],
+			phase: 'playing',
+			activeGameId: 'blackjack',
+			playerStatus
+		})
+	}
+
+	return {
+		...(base as BlackjackState),
+		players,
+		zones,
+		turnPlayerId: firstPlaying,
+		phase: 'playing',
+		activeGameId: 'blackjack',
+		playerStatus
+	}
+}
 
 export const blackjack: GameDefinition<BlackjackState> = {
 	id: 'blackjack',
@@ -125,13 +137,9 @@ export const blackjack: GameDefinition<BlackjackState> = {
 	minPlayers: 1,
 	maxPlayers: 6,
 	isNew: true,
-	optionsSchema,
 
-	setup(players, opts) {
-		const options: BlackjackOptions = {
-			autoRestart: (opts?.autoRestart as BlackjackOptions['autoRestart']) ?? 'manual'
-		}
-		return dealRound(players, options)
+	setup(players) {
+		return dealRound(players)
 	},
 
 	getValidActions(state, playerId) {
@@ -161,7 +169,7 @@ export const blackjack: GameDefinition<BlackjackState> = {
 		const pid = action.playerId
 
 		if (action.type === 'NEW_ROUND') {
-			return dealRound(state.players, state.options)
+			return dealRound(state.players)
 		}
 
 		if (action.type === 'END_GAME') {
@@ -217,15 +225,6 @@ export const blackjack: GameDefinition<BlackjackState> = {
 		}
 
 		return state
-	},
-
-	scheduleAction(state) {
-		if (state.phase !== 'scoring') return null
-		if (state.options?.autoRestart !== 'auto') return null
-		return {
-			action: { type: 'NEW_ROUND', playerId: state.players[0] },
-			delayMs: 5000
-		}
 	},
 
 	isOver(state) {

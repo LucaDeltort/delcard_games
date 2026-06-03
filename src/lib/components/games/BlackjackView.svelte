@@ -42,11 +42,51 @@ function playerName(id: string): string {
 const dealerCards = $derived(zone('hand_dealer')?.cards ?? [])
 const dealerValue = $derived(handValue(dealerCards))
 const dealerBust = $derived(dealerValue > 21)
-
 const allPlayers = $derived(gs.players ?? [])
 const iAmInGame = $derived(allPlayers.includes(myPlayerId))
 const isScoring = $derived(gs.phase === 'scoring' || gs.phase === 'gameover')
 
+// During playing phase show only visible dealer card value (hole card is hidden)
+const dealerVisibleValue = $derived(
+	gs.phase === 'playing' && dealerCards.length > 0 ? handValue([dealerCards[0]]) : dealerValue
+)
+
+// --- Dealing animation ---
+// Cards appear in casino deal order: P1, P2, …, Dealer(up), P1, P2, …, Dealer(down)
+let revealedCount = $state(0)
+const firstCardId = $derived(gs.zones[`hand_${gs.players?.[0]}`]?.cards[0]?.id ?? '')
+const totalInitialCards = $derived((gs.players.length + 1) * 2)
+
+$effect(() => {
+	void firstCardId // reactive dependency — reset animation on new deal
+	revealedCount = 0
+})
+
+$effect(() => {
+	if (revealedCount < totalInitialCards) {
+		const timer = setTimeout(() => {
+			revealedCount++
+		}, 300)
+		return () => clearTimeout(timer)
+	}
+})
+
+function playerCardVisible(pid: string, cardIdx: number): boolean {
+	if (cardIdx >= 2) return true // HIT cards always visible immediately
+	const pIdx = gs.players.indexOf(pid)
+	const n = gs.players.length
+	const dealIdx = cardIdx === 0 ? pIdx : n + 1 + pIdx
+	return revealedCount > dealIdx
+}
+
+function dealerCardVisible(cardIdx: number): boolean {
+	if (cardIdx >= 2) return true // dealer draws always show immediately
+	const n = gs.players.length
+	const dealIdx = cardIdx === 0 ? n : 2 * n + 1
+	return revealedCount > dealIdx
+}
+
+// --- Actions ---
 const hitAction = $derived(validActions.find((a) => a.type === 'HIT') ?? null)
 const standAction = $derived(validActions.find((a) => a.type === 'STAND') ?? null)
 const doubleAction = $derived(validActions.find((a) => a.type === 'DOUBLE') ?? null)
@@ -69,13 +109,14 @@ const currentTurnName = $derived(
 	gs.turnPlayerId && allPlayers.includes(gs.turnPlayerId) ? playerName(gs.turnPlayerId) : ''
 )
 
+// dealerWins = true only when ALL players strictly lose (no pushes, no wins)
 const dealerWins = $derived(
 	isScoring &&
 		!dealerBust &&
 		(allPlayers.every((p) => {
 			const s = gs.playerStatus?.[p]
 			if (s === 'bust') return true
-			return handValue(zone(`hand_${p}`)?.cards ?? []) <= dealerValue
+			return handValue(zone(`hand_${p}`)?.cards ?? []) < dealerValue
 		}) ??
 			false)
 )
@@ -98,37 +139,70 @@ const dealerWins = $derived(
 	</span>
 {/snippet}
 
+{#snippet dealerSection()}
+	<div class="dealer-zone">
+		<div class="dealer-header">
+			<span class="dealer-label">{$t('blackjack.dealer')}</span>
+			{#if isScoring}
+				{#if dealerWins}
+					<span class="rbadge rbadge--win"><Trophy size={11} />{$t('blackjack.dealerWins')}</span>
+				{:else}
+					<span class="dealer-score" class:dealer-score--bust={dealerBust}>
+						{dealerBust ? $t('blackjack.bust') : dealerValue}
+					</span>
+				{/if}
+			{/if}
+		</div>
+		<div class="card-fan">
+			{#each dealerCards as card, i (card.id)}
+				{#if dealerCardVisible(i)}
+					<div in:fly={{ y: -28, duration: 220, opacity: 0 }}>
+						<PlayingCard {card} size="sm" back={i === 1 && gs.phase === 'playing'} {deckSlug} />
+					</div>
+				{/if}
+			{/each}
+			{#if !dealerCards.some((_, i) => dealerCardVisible(i))}
+				<div class="card-ghost" aria-hidden="true"></div>
+			{/if}
+		</div>
+		{@render valuePill(dealerVisibleValue, isScoring && dealerBust ? 'bust' : '')}
+	</div>
+{/snippet}
+
 {#snippet playerTile(pid: string)}
 	{@const isMe = pid === myPlayerId}
 	{@const cards = zone(`hand_${pid}`)?.cards ?? []}
 	{@const val = handValue(cards)}
 	{@const status = gs.playerStatus?.[pid] ?? 'playing'}
 	{@const isActive = gs.turnPlayerId === pid && gs.phase === 'playing'}
+	{@const hasVisibleCard = cards.some((_, i) => playerCardVisible(pid, i))}
 	<div class="player-tile" class:player-tile--me={isMe} class:player-tile--active={isActive}>
 		<span class="seat-label" class:seat-label--me={isMe}>
 			{isMe ? $t('common.you') : playerName(pid)}
 		</span>
 		<div class="card-fan">
-			{#each cards as card (card.id)}
-				<div in:fly={{ y: -28, duration: 220, opacity: 0 }}>
-					<PlayingCard {card} size="sm" />
-				</div>
+			{#each cards as card, i (card.id)}
+				{#if playerCardVisible(pid, i)}
+					<div in:fly={{ y: -28, duration: 220, opacity: 0 }}>
+						<PlayingCard {card} size="sm" {deckSlug} />
+					</div>
+				{/if}
 			{/each}
-			{#if cards.length === 0}
+			{#if !hasVisibleCard}
 				<div class="card-ghost" aria-hidden="true"></div>
 			{/if}
 		</div>
 		<div class="tile-bottom">
-			{@render valuePill(val, status)}
+			{#if hasVisibleCard}
+				{@render valuePill(val, status)}
+			{/if}
 			{#if isScoring && iAmInGame}{@render resultBadge(playerResult(pid))}{/if}
 		</div>
 	</div>
 {/snippet}
 
 {#snippet center()}
-	<div class="arc-center" aria-hidden="true">
-		<span>♦</span>
-	</div>
+	{@render dealerSection()}
 {/snippet}
 
 <div class="felt flex min-h-screen flex-col pb-24">
@@ -151,39 +225,13 @@ const dealerWins = $derived(
 
 	<!-- Table body -->
 	<div class="flex flex-1 flex-col items-center gap-4 px-4 pt-2">
-
-		<!-- Dealer zone -->
-		<div class="dealer-zone">
-			<div class="dealer-header">
-				<span class="dealer-label">{$t('blackjack.dealer')}</span>
-				{#if isScoring}
-					{#if dealerWins}
-						<span class="rbadge rbadge--win"><Trophy size={11} />{$t('blackjack.dealerWins')}</span>
-					{:else}
-						<span class="dealer-score" class:dealer-score--bust={dealerBust}>
-							{dealerBust ? $t('blackjack.bust') : dealerValue}
-						</span>
-					{/if}
-				{/if}
-			</div>
-			<div class="card-fan">
-				{#each dealerCards as card (card.id)}
-					<div in:fly={{ y: -28, duration: 220, opacity: 0 }}>
-						<PlayingCard {card} size="sm" />
-					</div>
-				{/each}
-				{#if dealerCards.length === 0}
-					<div class="card-ghost" aria-hidden="true"></div>
-				{/if}
-			</div>
-			{@render valuePill(dealerValue, dealerBust ? 'bust' : '')}
-		</div>
-
-		<!-- Players arc -->
 		{#if allPlayers.length === 1}
-			<!-- Solo: single tile inline -->
-			{@render playerTile(allPlayers[0])}
-		{:else if allPlayers.length >= 2}
+			<!-- Solo: dealer on top, player below -->
+			<div class="flex flex-col items-center gap-4 w-full">
+				{@render dealerSection()}
+				{@render playerTile(allPlayers[0])}
+			</div>
+		{:else}
 			<div class="w-full">
 				<GameLayout opponents={allPlayers} opponentTile={playerTile} {center} />
 			</div>
@@ -410,19 +458,6 @@ const dealerWins = $derived(
 		gap: 6px;
 		flex-wrap: wrap;
 		justify-content: center;
-	}
-
-	/* Arc center */
-	.arc-center {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		width: 32px;
-		height: 32px;
-		border-radius: 50%;
-		border: 1px solid oklch(0.28 0.05 145 / 0.4);
-		font-size: 0.7rem;
-		color: oklch(0.32 0.06 145);
 	}
 
 	/* Sticky action footer */
