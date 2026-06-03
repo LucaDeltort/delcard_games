@@ -20,6 +20,7 @@ import ConfirmDialog from '$lib/components/ConfirmDialog.svelte'
 import DeckPackPicker from '$lib/components/DeckPackPicker.svelte'
 import DicePackPicker from '$lib/components/DicePackPicker.svelte'
 import GameOptionsPanel from '$lib/components/GameOptionsPanel.svelte'
+import BlackjackView from '$lib/components/games/BlackjackView.svelte'
 import ColorView from '$lib/components/games/ColorView.svelte'
 import FightView from '$lib/components/games/FightView.svelte'
 import PresidentsView from '$lib/components/games/PresidentsView.svelte'
@@ -529,6 +530,16 @@ $effect(() => {
 		players={enrichedPlayers}
 		{validActions}
 		onAction={submitAction}
+	/>
+{:else if gameState.activeGameId === 'blackjack'}
+	<BlackjackView
+		state={gameState}
+		{myPlayerId}
+		players={enrichedPlayers}
+		{validActions}
+		onAction={submitAction}
+		{isSpectator}
+		{deckSlug}
 	/>
 	<!-- ── Game (generic fallback) ───────────────────────────────── -->
 {:else}

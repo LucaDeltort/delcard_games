@@ -375,6 +375,21 @@ export default {
 		bannerCharge: 'Charge !',
 		bannerShield: 'Bouclier !'
 	},
+	blackjack: {
+		name: 'Blackjack',
+		hit: 'Tirer',
+		stand: 'Rester',
+		double: 'Doubler',
+		endGame: 'Terminer',
+		newRound: 'Nouvelle partie',
+		bust: 'Bust',
+		dealer: 'Croupier',
+		win: 'Gagné',
+		lose: 'Perdu',
+		push: 'Égalité',
+		dealerWins: 'Le croupier gagne',
+		yourTurn: 'À toi !'
+	},
 	settings: {
 		title: 'Paramètres',
 		timeFormat: "Format de l'heure",

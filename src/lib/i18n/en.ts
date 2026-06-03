@@ -371,6 +371,21 @@ export default {
 		bannerCharge: 'Charge!',
 		bannerShield: 'Shield!'
 	},
+	blackjack: {
+		name: 'Blackjack',
+		hit: 'Hit',
+		stand: 'Stand',
+		double: 'Double',
+		endGame: 'End Game',
+		newRound: 'New Round',
+		bust: 'Bust',
+		dealer: 'Dealer',
+		win: 'Win',
+		lose: 'Lose',
+		push: 'Push',
+		dealerWins: 'Dealer wins',
+		yourTurn: 'Your Turn!'
+	},
 	settings: {
 		title: 'Settings',
 		timeFormat: 'Time format',
