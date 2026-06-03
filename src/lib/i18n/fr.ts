@@ -287,7 +287,8 @@ export default {
 			wolfTimerSeconds: 'Minuteur loups (s)',
 			roleTimerSeconds: 'Minuteur rôle (s)',
 			talkTimerSeconds: 'Minuteur discussion (s)',
-			voteTimerSeconds: 'Minuteur vote (s)'
+			voteTimerSeconds: 'Minuteur vote (s)',
+			narrationGapSeconds: 'Pause narration (s)'
 		},
 		desc: {
 			werewolf: 'Chaque nuit, votez secrètement avec les autres loups pour éliminer un villageois.',
@@ -414,6 +415,9 @@ export default {
 		timeFormat12: '12h',
 		timeFormat24: '24h',
 		timeFormatHint: "Utilisé dans l'historique des parties.",
+		sound: 'Son',
+		soundOn: 'Activé',
+		soundOff: 'Désactivé',
 		language: 'Langue',
 		decks: 'Jeux de cartes',
 		changelog: 'Notes de version',

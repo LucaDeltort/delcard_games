@@ -1,3 +1,4 @@
+import { type SoundDef, Sounds } from '$lib/audio/sounds'
 import type { Action } from '$lib/engine'
 import type { NightStepKey, Role, WerewolfState } from './types'
 import { majority } from './votes'
@@ -14,6 +15,9 @@ export interface Turn {
 	readonly role: Role
 	/** The action type this turn accepts (host NEXT_PHASE excluded). */
 	readonly actionType: string
+	/** Narration cues played by the view when this step opens / closes. */
+	readonly wakeVoice: SoundDef
+	readonly sleepVoice: SoundDef
 	/** Whether this turn runs this night given current state. */
 	isActive(state: WerewolfState): boolean
 	/** Whether this turn's required input is in — host advances immediately. */
@@ -35,6 +39,8 @@ abstract class NightTurn implements Turn {
 	abstract readonly key: NightStepKey
 	abstract readonly role: Role
 	abstract readonly actionType: string
+	abstract readonly wakeVoice: SoundDef
+	abstract readonly sleepVoice: SoundDef
 	protected readonly firstNightOnly: boolean = false
 
 	isActive(state: WerewolfState): boolean {
@@ -62,6 +68,8 @@ class CupidTurn extends NightTurn {
 	readonly key = 'cupid' as const
 	readonly role = 'cupid' as const
 	readonly actionType = 'CUPID_LINK'
+	readonly wakeVoice = Sounds.voice.CupidWake
+	readonly sleepVoice = Sounds.voice.CupidSleep
 	protected readonly firstNightOnly = true
 
 	protected extraActive(state: WerewolfState): boolean {
@@ -97,6 +105,8 @@ class DefenderTurn extends NightTurn {
 	readonly key = 'defender' as const
 	readonly role = 'defender' as const
 	readonly actionType = 'PROTECT'
+	readonly wakeVoice = Sounds.voice.DefenderWake
+	readonly sleepVoice = Sounds.voice.DefenderSleep
 
 	isComplete(state: WerewolfState): boolean {
 		return state.protectedId !== null
@@ -125,6 +135,8 @@ class WolvesTurn extends NightTurn {
 	readonly key = 'wolves' as const
 	readonly role = 'werewolf' as const
 	readonly actionType = 'NIGHT_VOTE'
+	readonly wakeVoice = Sounds.voice.WolvesWake
+	readonly sleepVoice = Sounds.voice.WolvesSleep
 
 	timerMs(state: WerewolfState): number {
 		const wolfCount = livingHolders(state, 'werewolf')
@@ -154,6 +166,8 @@ class WitchTurn extends NightTurn {
 	readonly key = 'witch' as const
 	readonly role = 'witch' as const
 	readonly actionType = 'WITCH_ACT'
+	readonly wakeVoice = Sounds.voice.WitchWake
+	readonly sleepVoice = Sounds.voice.WitchSleep
 
 	protected extraActive(state: WerewolfState): boolean {
 		return !(state.witchSaveUsed && state.witchKillUsed)
@@ -200,6 +214,8 @@ class SeerTurn extends NightTurn {
 	readonly key = 'seer' as const
 	readonly role = 'seer' as const
 	readonly actionType = 'SEER_PEEK'
+	readonly wakeVoice = Sounds.voice.SeerWake
+	readonly sleepVoice = Sounds.voice.SeerSleep
 
 	protected extraActive(state: WerewolfState): boolean {
 		return !state.seerReveal

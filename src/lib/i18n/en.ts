@@ -285,7 +285,8 @@ export default {
 			wolfTimerSeconds: 'Wolf phase timer (s)',
 			roleTimerSeconds: 'Role phase timer (s)',
 			talkTimerSeconds: 'Discussion timer (s)',
-			voteTimerSeconds: 'Vote timer (s)'
+			voteTimerSeconds: 'Vote timer (s)',
+			narrationGapSeconds: 'Narration gap (s)'
 		},
 		desc: {
 			werewolf: 'Each night, secretly vote with the other werewolves to eliminate a villager.',
@@ -410,6 +411,9 @@ export default {
 		timeFormat12: '12h',
 		timeFormat24: '24h',
 		timeFormatHint: 'Used in match history.',
+		sound: 'Sound',
+		soundOn: 'On',
+		soundOff: 'Off',
 		language: 'Language',
 		decks: 'Card decks',
 		changelog: 'Changelog',

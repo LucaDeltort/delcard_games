@@ -21,6 +21,7 @@ Not linked from the main app, but always accessible at `/lab`.
 | Route | Component | What it shows |
 |-------|-----------|---------------|
 | `/lab/game-title` | `GameTitle.svelte` | Entry, exit, rotation, size, color animations |
+| `/lab/sound` | audio engine | Play/loop every registered sound, per-sound gain, locale switch, missing-file flags |
 | `/lab/sandbox` | menu | Game sandbox picker (`/lab/sandbox/<game>`) |
 
 ## Sandbox (`/lab/sandbox/<game>`)

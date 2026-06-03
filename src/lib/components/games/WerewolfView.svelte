@@ -11,13 +11,18 @@ import {
 	Sun,
 	X
 } from 'lucide-svelte'
+import { onDestroy } from 'svelte'
 import { fade, fly } from 'svelte/transition'
+import { playSoundUntilEnd, unlockAudio } from '$lib/audio/player'
+import { type SoundDef, Sounds } from '$lib/audio/sounds'
 import GameLayout from '$lib/components/games/GameLayout.svelte'
 import PlayingCard from '$lib/components/PlayingCard.svelte'
 import RulesDrawer from '$lib/components/RulesDrawer.svelte'
 import { Button } from '$lib/components/ui/button'
 import type { GameStateGeneric } from '$lib/core/types'
 import type { Action } from '$lib/engine'
+import { turnByKey } from '$lib/games/werewolf/turns'
+import type { NightStepKey } from '$lib/games/werewolf/types'
 import type { WerewolfState } from '$lib/games/werewolf/werewolf'
 import { t } from '$lib/i18n'
 import type { LobbyPlayer } from '$lib/network/messages'
@@ -104,6 +109,88 @@ $effect(() => {
 // Auto-reveal my card only on night actions (privacy). Day votes don't flip it.
 $effect(() => {
 	hidden = !isNightAction
+})
+
+// ── Narration ── play voice cues on phase/step transitions. A transition can
+// emit several cues (e.g. night start = "night falls" + first role); they're
+// queued and played one after another, each waiting for the previous clip to
+// finish (+ a short breath) so they never overlap. The longer pause *between*
+// night turns is enforced by the engine (nightGap), not here. Each client
+// narrates locally; starts once everyone is ready.
+const CUE_BREATH_MS = 400
+let narrPhase: string | undefined
+let narrStep: NightStepKey | null | undefined
+let narrQueue: SoundDef[] = []
+let narrRunning = false
+let narrAlive = true
+
+async function pump() {
+	if (narrRunning) return
+	narrRunning = true
+	while (narrAlive && narrQueue.length > 0) {
+		await playSoundUntilEnd(narrQueue.shift()!)
+		if (narrAlive && narrQueue.length > 0) {
+			await new Promise((r) => setTimeout(r, CUE_BREATH_MS))
+		}
+	}
+	narrRunning = false
+}
+
+function playCues(cues: SoundDef[]) {
+	unlockAudio()
+	narrQueue.push(...cues)
+	pump()
+}
+
+onDestroy(() => {
+	narrAlive = false
+})
+$effect(() => {
+	const phase = s.phase
+	const step = s.nightStep
+	if (!allReady) return
+
+	const cues: SoundDef[] = []
+	const sleepOf = (k: NightStepKey | null | undefined) => (k ? turnByKey(k)?.sleepVoice : undefined)
+	const wakeOf = (k: NightStepKey | null | undefined) => (k ? turnByKey(k)?.wakeVoice : undefined)
+	const push = (v: SoundDef | undefined) => {
+		if (v) cues.push(v)
+	}
+
+	if (phase === 'gameover') {
+		if (narrPhase !== 'gameover') {
+			push(
+				s.winTeam === 'werewolves'
+					? Sounds.voice.WolvesWin
+					: s.winTeam === 'lovers'
+						? Sounds.voice.LoversWin
+						: Sounds.voice.VillageWins
+			)
+		}
+	} else if (phase === 'night') {
+		if (narrPhase !== 'night') {
+			push(Sounds.voice.NightFalls)
+			push(wakeOf(step))
+		} else if (step !== narrStep) {
+			push(sleepOf(narrStep))
+			// Lovers recognise each other after Cupid acts, first night only.
+			if (narrStep === 'cupid' && s.lovers && s.round === 1) {
+				push(Sounds.voice.LoversWake)
+				push(Sounds.voice.LoversSleep)
+			}
+			push(wakeOf(step))
+		}
+	} else if (phase === 'day') {
+		if (narrPhase === 'night') {
+			push(sleepOf(narrStep))
+			push(Sounds.voice.DayBreaks)
+		}
+	}
+
+	narrPhase = phase
+	narrStep = step
+
+	if (cues.length > 0) playCues(cues)
 })
 
 function playerName(id: string) {
@@ -305,6 +392,8 @@ const winLabel = $derived(
 // Timer disc progress (1 = full, 0 = empty)
 const timerProgress = $derived.by(() => {
 	if (!s.phaseEndTime || !s.phaseDurationMs || s.phase === 'gameover') return null
+	// Between-turn pause: keep the disc full, like it's on standby.
+	if (s.nightGap !== null) return 1
 	return Math.max(0, s.phaseEndTime - now) / s.phaseDurationMs
 })
 
