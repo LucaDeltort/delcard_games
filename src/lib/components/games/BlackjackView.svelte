@@ -1,6 +1,7 @@
 <script lang="ts">
 import { CircleX, Equal, RefreshCw, Settings, Trophy } from 'lucide-svelte'
 import { fly } from 'svelte/transition'
+import GameTitle from '$lib/components/GameTitle.svelte'
 import GameLayout from '$lib/components/games/GameLayout.svelte'
 import PlayingCard from '$lib/components/PlayingCard.svelte'
 import RulesDrawer from '$lib/components/RulesDrawer.svelte'
@@ -46,11 +47,6 @@ const allPlayers = $derived(gs.players ?? [])
 const iAmInGame = $derived(allPlayers.includes(myPlayerId))
 const isScoring = $derived(gs.phase === 'scoring' || gs.phase === 'gameover')
 
-// During playing phase show only visible dealer card value (hole card is hidden)
-const dealerVisibleValue = $derived(
-	gs.phase === 'playing' && dealerCards.length > 0 ? handValue([dealerCards[0]]) : dealerValue
-)
-
 // --- Dealing animation ---
 // Cards appear in casino deal order: P1, P2, …, Dealer(up), P1, P2, …, Dealer(down)
 let revealedCount = $state(0)
@@ -71,6 +67,122 @@ $effect(() => {
 	}
 })
 
+// --- BJ + dealer turn announcements + draw animation ---
+const dealerNaturalBJ = $derived(
+	isScoring && dealerCards.length === 2 && handValue(dealerCards) === 21
+)
+const dealerExtraCardId = $derived(dealerCards[2]?.id ?? '')
+let dealerExtraRevealCount = $state(0)
+let showDealerTitle = $state(false)
+let dealerTurnReady = $state(false)
+
+// Natural BJ announcement state
+let bjQueue = $state<string[]>([])
+let currentBJName = $state('')
+let showBJTitle = $state(false)
+let bjDone = $state(false)
+let bjAnnouncedForKey = $state('')
+let announcementTitle = $state('')
+
+// Reset BJ state on new deal
+$effect(() => {
+	void firstCardId
+	bjDone = false
+	bjQueue = []
+	showBJTitle = false
+})
+
+// Queue natural BJs after deal animation completes
+$effect(() => {
+	if (revealedCount < totalInitialCards || firstCardId === bjAnnouncedForKey) return
+	bjAnnouncedForKey = firstCardId
+	const bjs: string[] = []
+	for (const pid of gs.players) {
+		const hand = gs.zones[`hand_${pid}`]?.cards ?? []
+		if (hand.length === 2 && handValue(hand) === 21) bjs.push(playerName(pid))
+	}
+	if (dealerCards.length === 2 && handValue(dealerCards) === 21) bjs.push($t('blackjack.dealer'))
+	if (bjs.length > 0) {
+		bjQueue = bjs
+	} else {
+		bjDone = true
+	}
+})
+
+// Show each BJ in queue for 1.6s
+$effect(() => {
+	if (bjQueue.length === 0 || showBJTitle) return
+	const [name, ...rest] = bjQueue
+	currentBJName = name
+	bjQueue = rest
+	showBJTitle = true
+	const timer = setTimeout(() => {
+		showBJTitle = false
+	}, 1600)
+	return () => clearTimeout(timer)
+})
+
+// After last BJ exit animation (~450ms blur), mark done
+$effect(() => {
+	if (!showBJTitle && !bjDone && bjQueue.length === 0 && bjAnnouncedForKey === firstCardId) {
+		const timer = setTimeout(() => {
+			bjDone = true
+		}, 450)
+		return () => clearTimeout(timer)
+	}
+})
+
+// Keep announcement title stable during exit animation
+$effect(() => {
+	if (showBJTitle) announcementTitle = currentBJName
+	else if (showDealerTitle) announcementTitle = $t('blackjack.dealer')
+})
+
+$effect(() => {
+	void dealerExtraCardId
+	dealerExtraRevealCount = 0
+})
+
+$effect(() => {
+	if (isScoring && bjDone && revealedCount >= totalInitialCards) {
+		if (dealerNaturalBJ) {
+			dealerTurnReady = true
+		} else {
+			showDealerTitle = true
+			dealerTurnReady = false
+			const timer = setTimeout(() => {
+				showDealerTitle = false
+				dealerTurnReady = true
+			}, 1200)
+			return () => clearTimeout(timer)
+		}
+	} else if (!isScoring) {
+		showDealerTitle = false
+		dealerTurnReady = false
+	}
+})
+
+$effect(() => {
+	const extra = dealerCards.length - 2
+	if (extra > 0 && dealerExtraRevealCount < extra && dealerTurnReady) {
+		const timer = setTimeout(() => {
+			dealerExtraRevealCount++
+		}, 400)
+		return () => clearTimeout(timer)
+	}
+})
+
+const dealerRevealDone = $derived(
+	dealerTurnReady && dealerExtraRevealCount >= dealerCards.length - 2
+)
+
+// During playing show only up card; during scoring update as dealer cards animate in
+const dealerVisibleValue = $derived(
+	gs.phase === 'playing' && dealerCards.length > 0
+		? handValue([dealerCards[0]])
+		: handValue(dealerCards.slice(0, 2 + dealerExtraRevealCount))
+)
+
 function playerCardVisible(pid: string, cardIdx: number): boolean {
 	if (cardIdx >= 2) return true // HIT cards always visible immediately
 	const pIdx = gs.players.indexOf(pid)
@@ -80,7 +192,7 @@ function playerCardVisible(pid: string, cardIdx: number): boolean {
 }
 
 function dealerCardVisible(cardIdx: number): boolean {
-	if (cardIdx >= 2) return true // dealer draws always show immediately
+	if (cardIdx >= 2) return dealerExtraRevealCount > cardIdx - 2
 	const n = gs.players.length
 	const dealIdx = cardIdx === 0 ? n : 2 * n + 1
 	return revealedCount > dealIdx
@@ -143,7 +255,7 @@ const dealerWins = $derived(
 	<div class="dealer-zone">
 		<div class="dealer-header">
 			<span class="dealer-label">{$t('blackjack.dealer')}</span>
-			{#if isScoring}
+			{#if isScoring && dealerRevealDone}
 				{#if dealerWins}
 					<span class="rbadge rbadge--win"><Trophy size={11} />{$t('blackjack.dealerWins')}</span>
 				{:else}
@@ -156,23 +268,37 @@ const dealerWins = $derived(
 		<div class="card-fan">
 			{#each dealerCards as card, i (card.id)}
 				{#if dealerCardVisible(i)}
-					<div in:fly={{ y: -28, duration: 220, opacity: 0 }}>
-						<PlayingCard {card} size="sm" back={i === 1 && gs.phase === 'playing'} {deckSlug} />
-					</div>
+					{#if i === 1}
+						<div class="hole-flip" class:hole-flip--revealed={dealerTurnReady} in:fly={{ y: -28, duration: 220, opacity: 0 }}>
+							<div class="hole-flip__inner">
+								<div class="hole-flip__face hole-flip__back">
+									<PlayingCard {card} size="sm" back={true} {deckSlug} />
+								</div>
+								<div class="hole-flip__face hole-flip__front">
+									<PlayingCard {card} size="sm" {deckSlug} />
+								</div>
+							</div>
+						</div>
+					{:else}
+						<div in:fly={{ y: -28, duration: 220, opacity: 0 }}>
+							<PlayingCard {card} size="sm" {deckSlug} />
+						</div>
+					{/if}
 				{/if}
 			{/each}
 			{#if !dealerCards.some((_, i) => dealerCardVisible(i))}
 				<div class="card-ghost" aria-hidden="true"></div>
 			{/if}
 		</div>
-		{@render valuePill(dealerVisibleValue, isScoring && dealerBust ? 'bust' : '')}
+		{@render valuePill(dealerVisibleValue, isScoring && dealerVisibleValue > 21 ? 'bust' : '')}
 	</div>
 {/snippet}
 
 {#snippet playerTile(pid: string)}
 	{@const isMe = pid === myPlayerId}
 	{@const cards = zone(`hand_${pid}`)?.cards ?? []}
-	{@const val = handValue(cards)}
+	{@const visibleCards = cards.filter((_, i) => playerCardVisible(pid, i))}
+	{@const val = handValue(visibleCards)}
 	{@const status = gs.playerStatus?.[pid] ?? 'playing'}
 	{@const isActive = gs.turnPlayerId === pid && gs.phase === 'playing'}
 	{@const hasVisibleCard = cards.some((_, i) => playerCardVisible(pid, i))}
@@ -196,7 +322,7 @@ const dealerWins = $derived(
 			{#if hasVisibleCard}
 				{@render valuePill(val, status)}
 			{/if}
-			{#if isScoring && iAmInGame}{@render resultBadge(playerResult(pid))}{/if}
+			{#if isScoring && dealerRevealDone && iAmInGame}{@render resultBadge(playerResult(pid))}{/if}
 		</div>
 	</div>
 {/snippet}
@@ -236,6 +362,24 @@ const dealerWins = $derived(
 				<GameLayout opponents={allPlayers} opponentTile={playerTile} {center} />
 			</div>
 		{/if}
+	</div>
+</div>
+
+<!-- Dealer turn / BJ announcement overlay -->
+<div class="dealer-announcement" aria-live="polite">
+	<div class="dealer-announcement__inner">
+		{#if showBJTitle}
+			<p class="bj-name-label" in:fly={{ y: -10, duration: 220 }}>{currentBJName}</p>
+		{/if}
+		<GameTitle
+			title={announcementTitle}
+			show={showBJTitle || showDealerTitle}
+			entry="bigEntrance"
+			exit="blur"
+			color="gold"
+			rotation="none"
+			size="none"
+		/>
 	</div>
 </div>
 
@@ -287,10 +431,66 @@ const dealerWins = $derived(
 </div>
 
 <style>
+	/* Dealer turn / BJ announcement */
+	.dealer-announcement {
+		position: fixed;
+		inset: 0;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		pointer-events: none;
+		z-index: 20;
+	}
+
+	.dealer-announcement__inner {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 4px;
+	}
+
+	.bj-name-label {
+		font-family: var(--font-heading);
+		font-size: 1rem;
+		letter-spacing: 0.25em;
+		text-transform: uppercase;
+		color: oklch(0.82 0.18 80);
+	}
+
 	.felt {
 		background:
 			radial-gradient(ellipse 85% 55% at 50% 38%, oklch(0.2 0.07 145 / 0.45) 0%, transparent 65%),
 			oklch(0.13 0.04 145);
+	}
+
+	/* Hole card flip */
+	.hole-flip {
+		perspective: 600px;
+		width: 52px;
+		height: 73px;
+	}
+
+	.hole-flip__inner {
+		position: relative;
+		width: 100%;
+		height: 100%;
+		transform-style: preserve-3d;
+		transition: transform 0.5s ease;
+	}
+
+	.hole-flip--revealed .hole-flip__inner {
+		transform: rotateY(180deg);
+	}
+
+	.hole-flip__face {
+		position: absolute;
+		inset: 0;
+		backface-visibility: hidden;
+		-webkit-backface-visibility: hidden;
+	}
+
+	.hole-flip__front {
+		transform: rotateY(180deg);
 	}
 
 	/* Dealer zone */
