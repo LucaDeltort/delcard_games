@@ -4,7 +4,11 @@ import { blackjack } from '$lib/games/blackjack/blackjack'
 import { makePlayers, nameFor } from '$lib/sandbox/players'
 import SandboxShell from '$lib/sandbox/SandboxShell.svelte'
 
-const createState = (count: number) => blackjack.setup(makePlayers(count).map((p) => p.id))
+const createState = (count: number) =>
+	blackjack.setup(
+		makePlayers(count).map((p) => p.id),
+		{ betting: true, startingCoins: 500 }
+	)
 </script>
 
 <SandboxShell

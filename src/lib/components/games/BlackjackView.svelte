@@ -1,13 +1,22 @@
 <script lang="ts">
-import { CircleX, Equal, RefreshCw, Settings, Trophy } from 'lucide-svelte'
+import { CircleX, Coins, Equal, RefreshCw, RotateCcw, Settings, Trophy } from 'lucide-svelte'
 import { fly } from 'svelte/transition'
 import GameTitle from '$lib/components/GameTitle.svelte'
 import GameLayout from '$lib/components/games/GameLayout.svelte'
 import PlayingCard from '$lib/components/PlayingCard.svelte'
 import RulesDrawer from '$lib/components/RulesDrawer.svelte'
-import type { GameStateGeneric } from '$lib/core/types'
+import type { Card, GameStateGeneric } from '$lib/core/types'
 import type { Action } from '$lib/engine'
-import { type BlackjackState, handValue } from '$lib/games/blackjack/blackjack'
+import {
+	type BlackjackState,
+	betNet,
+	handValue,
+	hasSplit,
+	type RoundResult,
+	roundOutcome,
+	splitOutcome,
+	splitZoneId
+} from '$lib/games/blackjack/blackjack'
 import { t } from '$lib/i18n'
 import type { LobbyPlayer } from '$lib/network/messages'
 import { settingsOpen } from '$lib/stores/settings'
@@ -47,11 +56,96 @@ const allPlayers = $derived(gs.players ?? [])
 const iAmInGame = $derived(allPlayers.includes(myPlayerId))
 const isScoring = $derived(gs.phase === 'scoring' || gs.phase === 'gameover')
 
+// --- Betting ---
+const bettingOn = $derived(gs.options?.betting === true)
+const isBetting = $derived(gs.phase === 'betting')
+const coinsOf = (pid: string): number => gs.coins?.[pid] ?? 0
+const betOf = (pid: string): number | undefined => gs.bets?.[pid]
+// >1 means the player went broke and was rebought — surface which buy-in they're on
+const buyInOf = (pid: string): number => gs.buyIns?.[pid] ?? 1
+const myCoins = $derived(coinsOf(myPlayerId))
+const placeBetAction = $derived(validActions.find((a) => a.type === 'PLACE_BET') ?? null)
+const chipValues = $derived([5, 25, 100, 500].filter((v) => v <= myCoins))
+
+let betDraft = $state(0)
+// Reset the draft each time a fresh betting phase opens
+$effect(() => {
+	if (isBetting) betDraft = 0
+})
+
+function addChip(v: number) {
+	betDraft = Math.min(myCoins, betDraft + v)
+}
+function confirmBet() {
+	if (!placeBetAction || betDraft < 1 || betDraft > myCoins) return
+	onAction({ ...placeBetAction, payload: { amount: betDraft } })
+}
+
+// --- Split: a player has 1 hand normally, 2 after splitting ---
+type TileHand = {
+	zoneId: string
+	cards: Card[]
+	status: string
+	bet: number | undefined
+	idx: 0 | 1
+}
+
+function tileHands(pid: string): TileHand[] {
+	const primary: TileHand = {
+		zoneId: `hand_${pid}`,
+		cards: zone(`hand_${pid}`)?.cards ?? [],
+		status: gs.playerStatus?.[pid] ?? 'playing',
+		bet: betOf(pid),
+		idx: 0
+	}
+	if (gs.splitStatus?.[pid] === undefined) return [primary]
+	return [
+		primary,
+		{
+			zoneId: splitZoneId(pid),
+			cards: zone(splitZoneId(pid))?.cards ?? [],
+			status: gs.splitStatus[pid],
+			bet: gs.splitBets?.[pid],
+			idx: 1
+		}
+	]
+}
+
+function handResult(pid: string, h: TileHand): RoundResult {
+	return h.idx === 0 ? roundOutcome(gs, pid) : (splitOutcome(gs, pid) ?? 'push')
+}
+
+// Net coin change for a settled hand, for the scoring badge
+function handDelta(pid: string, h: TileHand): number {
+	const bet = h.bet ?? 0
+	if (bet <= 0) return 0
+	const natural =
+		h.idx === 0 && !hasSplit(gs, pid) && h.cards.length === 2 && handValue(h.cards) === 21
+	return betNet(bet, handResult(pid, h), natural)
+}
+
+// Engine credits payouts the instant scoring starts. Hold the displayed count at
+// its pre-payout value until the dealer finishes revealing, so coins move in sync
+// with the result badges instead of jumping ahead of the reveal.
+function displayedCoins(pid: string): number {
+	const real = coinsOf(pid)
+	if (!bettingOn || !isScoring || dealerRevealDone) return real
+	let payout = 0
+	for (const h of tileHands(pid)) {
+		const bet = h.bet ?? 0
+		if (bet > 0) payout += bet + handDelta(pid, h)
+	}
+	return real - payout
+}
+
 // --- Dealing animation ---
 // Cards appear in casino deal order: P1, P2, …, Dealer(up), P1, P2, …, Dealer(down)
 let revealedCount = $state(0)
 const firstCardId = $derived(gs.zones[`hand_${gs.players?.[0]}`]?.cards[0]?.id ?? '')
 const totalInitialCards = $derived((gs.players.length + 1) * 2)
+const dealDone = $derived(revealedCount >= totalInitialCards)
+// Keep total deal time bounded (~1.8s) so big tables don't stall — faster per card with more players
+const dealInterval = $derived(Math.min(260, Math.round(1800 / totalInitialCards)))
 
 $effect(() => {
 	void firstCardId // reactive dependency — reset animation on new deal
@@ -59,10 +153,10 @@ $effect(() => {
 })
 
 $effect(() => {
-	if (revealedCount < totalInitialCards) {
+	if (!isBetting && revealedCount < totalInitialCards) {
 		const timer = setTimeout(() => {
 			revealedCount++
-		}, 300)
+		}, dealInterval)
 		return () => clearTimeout(timer)
 	}
 })
@@ -77,7 +171,8 @@ let showDealerTitle = $state(false)
 let dealerTurnReady = $state(false)
 
 // Natural BJ announcement state
-let bjQueue = $state<string[]>([])
+let bjList = $state<string[]>([])
+let bjIndex = $state(0)
 let currentBJName = $state('')
 let showBJTitle = $state(false)
 let bjDone = $state(false)
@@ -88,7 +183,8 @@ let announcementTitle = $state('')
 $effect(() => {
 	void firstCardId
 	bjDone = false
-	bjQueue = []
+	bjList = []
+	bjIndex = 0
 	showBJTitle = false
 })
 
@@ -103,32 +199,39 @@ $effect(() => {
 	}
 	if (dealerCards.length === 2 && handValue(dealerCards) === 21) bjs.push($t('blackjack.dealer'))
 	if (bjs.length > 0) {
-		bjQueue = bjs
+		bjList = bjs
+		bjIndex = 0
 	} else {
 		bjDone = true
 	}
 })
 
-// Show each BJ in queue for 1.6s
+// Walk the BJ list by index: show each name 1.6s, ~450ms exit gap, then advance.
+// Driven by bjIndex only (currentBJName/showBJTitle are written, never read here),
+// so writing them doesn't re-trigger this effect and cancel its own timers.
 $effect(() => {
-	if (bjQueue.length === 0 || showBJTitle) return
-	const [name, ...rest] = bjQueue
-	currentBJName = name
-	bjQueue = rest
+	if (bjList.length === 0) return
+	if (bjIndex >= bjList.length) {
+		if (!bjDone) {
+			const t = setTimeout(() => {
+				bjDone = true
+			}, 450)
+			return () => clearTimeout(t)
+		}
+		return
+	}
+	currentBJName = bjList[bjIndex]
 	showBJTitle = true
-	const timer = setTimeout(() => {
+	const idx = bjIndex
+	const hideT = setTimeout(() => {
 		showBJTitle = false
 	}, 1600)
-	return () => clearTimeout(timer)
-})
-
-// After last BJ exit animation (~450ms blur), mark done
-$effect(() => {
-	if (!showBJTitle && !bjDone && bjQueue.length === 0 && bjAnnouncedForKey === firstCardId) {
-		const timer = setTimeout(() => {
-			bjDone = true
-		}, 450)
-		return () => clearTimeout(timer)
+	const nextT = setTimeout(() => {
+		bjIndex = idx + 1
+	}, 2050)
+	return () => {
+		clearTimeout(hideT)
+		clearTimeout(nextT)
 	}
 })
 
@@ -176,9 +279,9 @@ const dealerRevealDone = $derived(
 	dealerTurnReady && dealerExtraRevealCount >= dealerCards.length - 2
 )
 
-// During playing show only up card; during scoring update as dealer cards animate in
+// Before the hole card flips show only the up card; after, update as dealer cards animate in
 const dealerVisibleValue = $derived(
-	gs.phase === 'playing' && dealerCards.length > 0
+	!dealerTurnReady && dealerCards.length > 0
 		? handValue([dealerCards[0]])
 		: handValue(dealerCards.slice(0, 2 + dealerExtraRevealCount))
 )
@@ -202,35 +305,31 @@ function dealerCardVisible(cardIdx: number): boolean {
 const hitAction = $derived(validActions.find((a) => a.type === 'HIT') ?? null)
 const standAction = $derived(validActions.find((a) => a.type === 'STAND') ?? null)
 const doubleAction = $derived(validActions.find((a) => a.type === 'DOUBLE') ?? null)
+const splitAction = $derived(validActions.find((a) => a.type === 'SPLIT') ?? null)
 const newRoundAction = $derived(validActions.find((a) => a.type === 'NEW_ROUND') ?? null)
 const endGameAction = $derived(validActions.find((a) => a.type === 'END_GAME') ?? null)
-const hasPlayActions = $derived(!!(hitAction || standAction || doubleAction))
+const hasPlayActions = $derived(!!(hitAction || standAction || doubleAction || splitAction))
 const hasScoringActions = $derived(!!(newRoundAction || endGameAction))
-
-function playerResult(pid: string): 'win' | 'lose' | 'push' {
-	const status = gs.playerStatus?.[pid]
-	if (status === 'bust') return 'lose'
-	const val = handValue(zone(`hand_${pid}`)?.cards ?? [])
-	if (dealerBust) return 'win'
-	if (val > dealerValue) return 'win'
-	if (val === dealerValue) return 'push'
-	return 'lose'
-}
 
 const currentTurnName = $derived(
 	gs.turnPlayerId && allPlayers.includes(gs.turnPlayerId) ? playerName(gs.turnPlayerId) : ''
 )
 
-// dealerWins = true only when ALL players strictly lose (no pushes, no wins)
+// A single hand strictly loses (no push, no win) when busted or below the dealer
+function handLoses(cards: Card[], busted: boolean): boolean {
+	return busted || handValue(cards) < dealerValue
+}
+
+// dealerWins = true only when EVERY hand of every player strictly loses
 const dealerWins = $derived(
 	isScoring &&
 		!dealerBust &&
-		(allPlayers.every((p) => {
-			const s = gs.playerStatus?.[p]
-			if (s === 'bust') return true
-			return handValue(zone(`hand_${p}`)?.cards ?? []) < dealerValue
-		}) ??
-			false)
+		allPlayers.every((p) => {
+			const lose0 = handLoses(zone(`hand_${p}`)?.cards ?? [], gs.playerStatus?.[p] === 'bust')
+			if (gs.splitStatus?.[p] === undefined) return lose0
+			const loseS = handLoses(zone(splitZoneId(p))?.cards ?? [], gs.splitStatus[p] === 'bust')
+			return lose0 && loseS
+		})
 )
 </script>
 
@@ -290,39 +389,78 @@ const dealerWins = $derived(
 				<div class="card-ghost" aria-hidden="true"></div>
 			{/if}
 		</div>
-		{@render valuePill(dealerVisibleValue, isScoring && dealerVisibleValue > 21 ? 'bust' : '')}
+		{#if dealerCards.length > 0}
+			{@render valuePill(dealerVisibleValue, isScoring && dealerVisibleValue > 21 ? 'bust' : '')}
+		{/if}
 	</div>
 {/snippet}
 
 {#snippet playerTile(pid: string)}
 	{@const isMe = pid === myPlayerId}
-	{@const cards = zone(`hand_${pid}`)?.cards ?? []}
-	{@const visibleCards = cards.filter((_, i) => playerCardVisible(pid, i))}
-	{@const val = handValue(visibleCards)}
-	{@const status = gs.playerStatus?.[pid] ?? 'playing'}
+	{@const hands = tileHands(pid)}
+	{@const split = hands.length > 1}
 	{@const isActive = gs.turnPlayerId === pid && gs.phase === 'playing'}
-	{@const hasVisibleCard = cards.some((_, i) => playerCardVisible(pid, i))}
+	{@const activeSub = gs.activeHand?.[pid] ?? 0}
 	<div class="player-tile" class:player-tile--me={isMe} class:player-tile--active={isActive}>
 		<span class="seat-label" class:seat-label--me={isMe}>
 			{isMe ? $t('common.you') : playerName(pid)}
 		</span>
-		<div class="card-fan">
-			{#each cards as card, i (card.id)}
-				{#if playerCardVisible(pid, i)}
-					<div in:fly={{ y: -28, duration: 220, opacity: 0 }}>
-						<PlayingCard {card} size="sm" {deckSlug} />
-					</div>
+		{#if bettingOn}
+			{@const pBet = betOf(pid)}
+			<div class="bet-row">
+				<span class="coin-badge"><Coins size={11} />{displayedCoins(pid)}</span>
+				{#if buyInOf(pid) > 1}
+					<span class="rebuy-badge" title={$t('blackjack.rebuyTitle')}>
+						<RotateCcw size={10} />{$t('blackjack.buyIn', { n: buyInOf(pid) })}
+					</span>
 				{/if}
+				{#if isBetting}
+					{#if pBet !== undefined}
+						<span class="bet-chip bet-chip--placed">{pBet}</span>
+					{:else}
+						<span class="bet-status">{$t('blackjack.placingBets')}</span>
+					{/if}
+				{:else if !split && pBet !== undefined && pBet > 0}
+					<span class="bet-chip">{pBet}</span>
+				{/if}
+			</div>
+		{/if}
+		<div class="hands-row" class:hands-row--split={split}>
+			{#each hands as h (h.zoneId)}
+				{@const visible = h.idx === 0 ? h.cards.filter((_, i) => playerCardVisible(pid, i)) : h.cards}
+				{@const hasVisibleCard = visible.length > 0}
+				<div class="subhand" class:subhand--active={split && isActive && h.idx === activeSub}>
+					{#if bettingOn && split && (h.bet ?? 0) > 0}
+						<span class="bet-chip">{h.bet}</span>
+					{/if}
+					<div class="card-fan">
+						{#each h.cards as card, i (card.id)}
+							{#if h.idx === 1 || playerCardVisible(pid, i)}
+								<div in:fly|global={{ y: -28, duration: 220, opacity: 0 }}>
+									<PlayingCard {card} size="sm" {deckSlug} />
+								</div>
+							{/if}
+						{/each}
+						{#if !hasVisibleCard}
+							<div class="card-ghost" aria-hidden="true"></div>
+						{/if}
+					</div>
+					<div class="tile-bottom">
+						{#if hasVisibleCard}
+							{@render valuePill(handValue(visible), h.status)}
+						{/if}
+						{#if isScoring && dealerRevealDone && iAmInGame}
+							{@render resultBadge(handResult(pid, h))}
+							{#if bettingOn && (h.bet ?? 0) > 0}
+								{@const d = handDelta(pid, h)}
+								<span class="bet-delta" class:bet-delta--up={d > 0} class:bet-delta--down={d < 0}>
+									{d > 0 ? '+' : ''}{d}
+								</span>
+							{/if}
+						{/if}
+					</div>
+				</div>
 			{/each}
-			{#if !hasVisibleCard}
-				<div class="card-ghost" aria-hidden="true"></div>
-			{/if}
-		</div>
-		<div class="tile-bottom">
-			{#if hasVisibleCard}
-				{@render valuePill(val, status)}
-			{/if}
-			{#if isScoring && dealerRevealDone && iAmInGame}{@render resultBadge(playerResult(pid))}{/if}
 		</div>
 	</div>
 {/snippet}
@@ -334,9 +472,14 @@ const dealerWins = $derived(
 <div class="felt flex min-h-screen flex-col pb-24">
 	<!-- Header -->
 	<header class="flex items-center justify-between px-4 py-2">
-		<span class="font-heading text-xs uppercase tracking-[0.3em] text-emerald-500/50">
-			{$t('blackjack.name')}
-		</span>
+		<div class="flex items-center gap-3">
+			<span class="font-heading text-xs uppercase tracking-[0.3em] text-emerald-500/50">
+				{$t('blackjack.name')}
+			</span>
+			{#if bettingOn && iAmInGame}
+				<span class="coin-badge coin-badge--header"><Coins size={13} />{displayedCoins(myPlayerId)}</span>
+			{/if}
+		</div>
 		<div class="flex items-center gap-1">
 			<button
 				onclick={() => ($settingsOpen = true)}
@@ -386,7 +529,43 @@ const dealerWins = $derived(
 <!-- Sticky action footer -->
 <div class="action-footer">
 	{#if !isSpectator}
-		{#if hasPlayActions}
+		{#if isBetting}
+			{#if placeBetAction}
+				<div class="bet-builder">
+					<div class="bet-builder__top">
+						<span class="bet-builder__label">{$t('blackjack.placeBet')}</span>
+						<span class="bet-builder__amount">{betDraft}</span>
+						<span class="coin-badge"><Coins size={12} />{myCoins}</span>
+					</div>
+					<div class="bet-builder__chips">
+						{#each chipValues as v (v)}
+							<button class="chip" onclick={() => addChip(v)}>+{v}</button>
+						{/each}
+						<button class="chip chip--clear" onclick={() => (betDraft = 0)}>
+							{$t('blackjack.clearBet')}
+						</button>
+						<button class="chip chip--all" onclick={() => (betDraft = myCoins)}>
+							{$t('blackjack.allIn')}
+						</button>
+					</div>
+					<button
+						class="bj-btn bj-btn--new-round bet-confirm"
+						disabled={betDraft < 1 || betDraft > myCoins}
+						onclick={confirmBet}
+					>
+						{$t('blackjack.confirmBet')} · {betDraft}
+					</button>
+				</div>
+			{:else}
+				<div class="footer-wait">
+					<p class="wait-msg">{$t('blackjack.betPlaced')}</p>
+				</div>
+			{/if}
+		{:else if !dealDone}
+			<div class="footer-wait">
+				<p class="wait-msg">{$t('blackjack.dealing')}</p>
+			</div>
+		{:else if hasPlayActions}
 			<div class="footer-inner">
 				{#if hitAction}
 					<button class="bj-btn bj-btn--hit" onclick={() => onAction(hitAction)}>
@@ -401,6 +580,11 @@ const dealerWins = $derived(
 				{#if doubleAction}
 					<button class="bj-btn bj-btn--double" onclick={() => onAction(doubleAction)}>
 						2× {$t('blackjack.double')}
+					</button>
+				{/if}
+				{#if splitAction}
+					<button class="bj-btn bj-btn--split" onclick={() => onAction(splitAction)}>
+						{$t('blackjack.split')}
 					</button>
 				{/if}
 			</div>
@@ -660,6 +844,33 @@ const dealerWins = $derived(
 		justify-content: center;
 	}
 
+	/* Split: side-by-side sub-hands */
+	.hands-row {
+		display: flex;
+		gap: 6px;
+		align-items: flex-start;
+		justify-content: center;
+	}
+
+	.subhand {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 6px;
+	}
+
+	.hands-row--split .subhand {
+		padding: 6px 8px;
+		border-radius: 10px;
+		border: 1px solid transparent;
+	}
+
+	.subhand--active {
+		border-color: oklch(0.6 0.16 300 / 0.6);
+		background: oklch(0.18 0.05 300 / 0.4);
+		box-shadow: 0 0 10px oklch(0.4 0.14 300 / 0.3);
+	}
+
 	/* Sticky action footer */
 	.action-footer {
 		position: fixed;
@@ -776,6 +987,21 @@ const dealerWins = $derived(
 		filter: brightness(1.2);
 	}
 
+	.bj-btn--split {
+		background: linear-gradient(
+			135deg,
+			oklch(0.22 0.1 300) 0%,
+			oklch(0.34 0.14 300) 45%,
+			oklch(0.22 0.1 300) 100%
+		);
+		color: oklch(0.85 0.12 300);
+		box-shadow: 0 0 0 1px oklch(0.5 0.17 300 / 0.34);
+	}
+
+	.bj-btn--split:hover {
+		filter: brightness(1.2);
+	}
+
 	.bj-btn--new-round {
 		background: linear-gradient(
 			135deg,
@@ -802,5 +1028,182 @@ const dealerWins = $derived(
 
 	.bj-btn--end:hover {
 		filter: brightness(1.3);
+	}
+
+	/* --- Betting --- */
+	.coin-badge {
+		display: inline-flex;
+		align-items: center;
+		gap: 3px;
+		padding: 2px 8px;
+		border-radius: 9999px;
+		font-family: var(--font-heading);
+		font-size: 0.7rem;
+		font-weight: 700;
+		letter-spacing: 0.04em;
+		color: oklch(0.85 0.16 85);
+		background: oklch(0.22 0.06 85 / 0.55);
+		border: 1px solid oklch(0.72 0.15 85 / 0.35);
+	}
+
+	.coin-badge--header {
+		font-size: 0.78rem;
+	}
+
+	.rebuy-badge {
+		display: inline-flex;
+		align-items: center;
+		gap: 3px;
+		padding: 1px 7px;
+		border-radius: 9999px;
+		font-family: var(--font-heading);
+		font-size: 0.6rem;
+		font-weight: 700;
+		letter-spacing: 0.04em;
+		text-transform: uppercase;
+		color: oklch(0.72 0.18 25);
+		background: oklch(0.24 0.07 25 / 0.55);
+		border: 1px solid oklch(0.6 0.18 25 / 0.4);
+	}
+
+	.bet-row {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 6px;
+		flex-wrap: wrap;
+	}
+
+	.bet-chip {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		min-width: 26px;
+		padding: 1px 7px;
+		border-radius: 9999px;
+		font-family: var(--font-heading);
+		font-size: 0.68rem;
+		font-weight: 700;
+		color: oklch(0.86 0.02 240);
+		background: oklch(0.28 0.08 250 / 0.6);
+		border: 1px solid oklch(0.6 0.16 250 / 0.4);
+	}
+
+	.bet-chip--placed {
+		color: oklch(0.88 0.16 145);
+		background: oklch(0.24 0.08 145 / 0.6);
+		border-color: oklch(0.55 0.18 145 / 0.45);
+	}
+
+	.bet-status {
+		font-size: 0.6rem;
+		letter-spacing: 0.04em;
+		color: oklch(0.5 0 0);
+		font-style: italic;
+	}
+
+	.bet-delta {
+		font-family: var(--font-heading);
+		font-size: 0.7rem;
+		font-weight: 700;
+		letter-spacing: 0.03em;
+		color: oklch(0.6 0 0);
+	}
+
+	.bet-delta--up {
+		color: oklch(0.82 0.18 145);
+	}
+
+	.bet-delta--down {
+		color: oklch(0.7 0.2 15);
+	}
+
+	/* Bet builder (footer) */
+	.bet-builder {
+		display: flex;
+		flex-direction: column;
+		align-items: stretch;
+		gap: 10px;
+		width: 100%;
+		max-width: 420px;
+	}
+
+	.bet-builder__top {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 12px;
+	}
+
+	.bet-builder__label {
+		font-family: var(--font-heading);
+		font-size: 0.62rem;
+		letter-spacing: 0.18em;
+		text-transform: uppercase;
+		color: oklch(0.55 0 0);
+	}
+
+	.bet-builder__amount {
+		font-family: var(--font-heading);
+		font-size: 1.5rem;
+		font-weight: 700;
+		color: oklch(0.85 0.16 85);
+		min-width: 2ch;
+		text-align: center;
+	}
+
+	.bet-builder__chips {
+		display: flex;
+		gap: 6px;
+		flex-wrap: wrap;
+		justify-content: center;
+	}
+
+	.chip {
+		min-width: 44px;
+		padding: 0.45rem 0.7rem;
+		border-radius: 9999px;
+		font-family: var(--font-heading);
+		font-size: 0.78rem;
+		font-weight: 700;
+		letter-spacing: 0.02em;
+		cursor: pointer;
+		color: oklch(0.85 0.16 85);
+		background: oklch(0.2 0.05 85 / 0.7);
+		border: 1px solid oklch(0.6 0.14 85 / 0.4);
+		transition:
+			filter 0.12s ease,
+			transform 0.08s ease;
+	}
+
+	.chip:hover {
+		filter: brightness(1.2);
+	}
+
+	.chip:active {
+		transform: scale(0.94);
+	}
+
+	.chip--clear {
+		color: oklch(0.6 0 0);
+		background: oklch(0.18 0 0);
+		border-color: oklch(1 0 0 / 0.1);
+	}
+
+	.chip--all {
+		color: oklch(0.85 0.05 145);
+		background: oklch(0.22 0.08 145 / 0.7);
+		border-color: oklch(0.55 0.16 145 / 0.45);
+	}
+
+	.bet-confirm {
+		justify-content: center;
+		width: 100%;
+	}
+
+	.bet-confirm:disabled {
+		opacity: 0.4;
+		cursor: default;
+		filter: none;
 	}
 </style>

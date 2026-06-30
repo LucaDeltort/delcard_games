@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { createCard } from '$lib/engine/cards'
 import { createZone } from '$lib/engine/zones'
-import { type BlackjackState, blackjack, handValue } from './blackjack'
+import { type BlackjackState, blackjack, handValue, splitZoneId } from './blackjack'
 
 const P1 = 'p1'
 const P2 = 'p2'
@@ -485,5 +485,397 @@ describe('blackjack.applyAction NEW_ROUND', () => {
 		})
 		const next = blackjack.applyAction(scoring, { type: 'NEW_ROUND', playerId: P1 })
 		PLAYERS.forEach((p) => expect(next.playerStatus[p]).not.toBe('bust'))
+	})
+})
+
+// --- betting ---
+
+// Betting playing-phase state for P1 alone: 50 staked (coins already debited), 19 vs dealer 17
+function playingBet(overrides: Partial<BlackjackState> = {}): BlackjackState {
+	const base = blackjack.setup([P1], { betting: true, startingCoins: 500 })
+	return {
+		...base,
+		phase: 'playing',
+		playerStatus: { [P1]: 'playing' },
+		turnPlayerId: P1,
+		coins: { [P1]: 450 },
+		bets: { [P1]: 50 },
+		zones: {
+			deck: createZone('deck', 'hidden', [createCard('K')]),
+			hand_dealer: createZone('hand_dealer', 'fan', [createCard('10'), createCard('7')]),
+			hand_p1: createZone('hand_p1', 'fan', [createCard('10'), createCard('9')], P1)
+		},
+		...overrides
+	}
+}
+
+describe('blackjack betting — setup & bets', () => {
+	it('non-betting setup has betting disabled and no coins', () => {
+		const s = blackjack.setup(PLAYERS)
+		expect(s.options.betting).toBe(false)
+		expect(s.coins).toEqual({})
+	})
+
+	it('betting setup opens a betting phase with starting coins', () => {
+		const s = blackjack.setup(PLAYERS, { betting: true, startingCoins: 300 })
+		expect(s.phase).toBe('betting')
+		expect(s.coins[P1]).toBe(300)
+		expect(s.coins[P2]).toBe(300)
+		expect(s.bets).toEqual({})
+	})
+
+	it('only PLACE_BET is valid in betting, and only until you bet', () => {
+		const s = blackjack.setup(PLAYERS, { betting: true, startingCoins: 100 })
+		expect(blackjack.getValidActions(s, P1).map((a) => a.type)).toEqual(['PLACE_BET'])
+		const after = blackjack.applyAction(s, {
+			type: 'PLACE_BET',
+			playerId: P1,
+			payload: { amount: 10 }
+		})
+		expect(blackjack.getValidActions(after, P1)).toHaveLength(0)
+		expect(blackjack.getValidActions(after, P2).map((a) => a.type)).toEqual(['PLACE_BET'])
+	})
+
+	it('PLACE_BET debits the stake and waits for others', () => {
+		const s = blackjack.setup(PLAYERS, { betting: true, startingCoins: 300 })
+		const next = blackjack.applyAction(s, {
+			type: 'PLACE_BET',
+			playerId: P1,
+			payload: { amount: 50 }
+		})
+		expect(next.bets[P1]).toBe(50)
+		expect(next.coins[P1]).toBe(250)
+		expect(next.phase).toBe('betting')
+	})
+
+	it('rejects illegal bets (over balance, below 1, duplicate)', () => {
+		const s = blackjack.setup([P1], { betting: true, startingCoins: 100 })
+		expect(
+			blackjack.applyAction(s, { type: 'PLACE_BET', playerId: P1, payload: { amount: 101 } })
+		).toBe(s)
+		expect(
+			blackjack.applyAction(s, { type: 'PLACE_BET', playerId: P1, payload: { amount: 0 } })
+		).toBe(s)
+		const after = blackjack.applyAction(s, {
+			type: 'PLACE_BET',
+			playerId: P1,
+			payload: { amount: 10 }
+		})
+		// already dealt (single player) — no further PLACE_BET
+		expect(
+			blackjack.applyAction(after, { type: 'PLACE_BET', playerId: P1, payload: { amount: 5 } })
+		).toBe(after)
+	})
+
+	it('deals once every player has bet, stake stays debited', () => {
+		const s = blackjack.setup([P1], { betting: true, startingCoins: 100 })
+		const next = blackjack.applyAction(s, {
+			type: 'PLACE_BET',
+			playerId: P1,
+			payload: { amount: 20 }
+		})
+		expect(['playing', 'scoring']).toContain(next.phase)
+		expect(next.zones['hand_p1'].cards).toHaveLength(2)
+		expect(next.coins[P1]).toBe(80)
+		expect(next.bets[P1]).toBe(20)
+	})
+})
+
+describe('blackjack betting — payouts', () => {
+	it('win pays 1:1', () => {
+		const next = blackjack.applyAction(playingBet({}), { type: 'STAND', playerId: P1 })
+		expect(next.phase).toBe('scoring')
+		expect(next.coins[P1]).toBe(550) // 450 + stake 50 + win 50
+	})
+
+	it('natural blackjack pays 3:2', () => {
+		const s = playingBet({
+			zones: {
+				deck: createZone('deck', 'hidden', []),
+				hand_dealer: createZone('hand_dealer', 'fan', [createCard('10'), createCard('7')]),
+				hand_p1: createZone('hand_p1', 'fan', [createCard('A'), createCard('K')], P1)
+			}
+		})
+		const next = blackjack.applyAction(s, { type: 'STAND', playerId: P1 })
+		expect(next.coins[P1]).toBe(575) // 450 + 50 + floor(50*1.5)=75
+	})
+
+	it('push returns the stake', () => {
+		const s = playingBet({
+			zones: {
+				deck: createZone('deck', 'hidden', []),
+				hand_dealer: createZone('hand_dealer', 'fan', [createCard('10'), createCard('9')]),
+				hand_p1: createZone('hand_p1', 'fan', [createCard('10'), createCard('9')], P1)
+			}
+		})
+		const next = blackjack.applyAction(s, { type: 'STAND', playerId: P1 })
+		expect(next.coins[P1]).toBe(500) // 450 + 50
+	})
+
+	it('bust loses the stake', () => {
+		const s = playingBet({
+			zones: {
+				deck: createZone('deck', 'hidden', [createCard('K')]),
+				hand_dealer: createZone('hand_dealer', 'fan', [createCard('10'), createCard('7')]),
+				hand_p1: createZone('hand_p1', 'fan', [createCard('K'), createCard('Q')], P1)
+			}
+		})
+		const next = blackjack.applyAction(s, { type: 'HIT', playerId: P1 })
+		expect(next.playerStatus[P1]).toBe('bust')
+		expect(next.coins[P1]).toBe(450) // stake stays lost
+	})
+})
+
+describe('blackjack betting — double & rebuy', () => {
+	it('DOUBLE debits a second stake and doubles the bet', () => {
+		const s = playingBet({
+			zones: {
+				deck: createZone('deck', 'hidden', [createCard('2')]),
+				hand_dealer: createZone('hand_dealer', 'fan', [createCard('10'), createCard('7')]),
+				hand_p1: createZone('hand_p1', 'fan', [createCard('10'), createCard('9')], P1)
+			}
+		})
+		const next = blackjack.applyAction(s, { type: 'DOUBLE', playerId: P1 })
+		expect(next.bets[P1]).toBe(100)
+		expect(next.phase).toBe('scoring')
+		expect(next.coins[P1]).toBe(600) // 450 -50 (double) +100 stake +100 win
+	})
+
+	it('DOUBLE rejected when balance below current bet', () => {
+		const s = playingBet({ coins: { [P1]: 20 }, bets: { [P1]: 50 } })
+		expect(blackjack.getValidActions(s, P1).map((a) => a.type)).not.toContain('DOUBLE')
+		expect(blackjack.applyAction(s, { type: 'DOUBLE', playerId: P1 })).toBe(s)
+	})
+
+	it('NEW_ROUND reopens betting and rebuys broke players', () => {
+		const s = playingBet({ phase: 'scoring', coins: { [P1]: 0 }, bets: { [P1]: 50 } })
+		const next = blackjack.applyAction(s, { type: 'NEW_ROUND', playerId: P1 })
+		expect(next.phase).toBe('betting')
+		expect(next.coins[P1]).toBe(500)
+		expect(next.bets).toEqual({})
+	})
+
+	it('first betting setup marks everyone on buy-in #1', () => {
+		const s = blackjack.setup(PLAYERS, { betting: true, startingCoins: 200 })
+		expect(s.buyIns[P1]).toBe(1)
+		expect(s.buyIns[P2]).toBe(1)
+	})
+
+	it('rebuy bumps the buy-in counter, solvent players keep theirs', () => {
+		const s = playingBet({ phase: 'scoring', coins: { [P1]: 0 }, bets: { [P1]: 50 } })
+		const next = blackjack.applyAction(s, { type: 'NEW_ROUND', playerId: P1 })
+		expect(next.buyIns[P1]).toBe(2)
+
+		const solvent = playingBet({ phase: 'scoring', coins: { [P1]: 320 }, bets: { [P1]: 50 } })
+		const after = blackjack.applyAction(solvent, { type: 'NEW_ROUND', playerId: P1 })
+		expect(after.buyIns[P1]).toBe(1)
+	})
+
+	it('NEW_ROUND keeps coins for solvent players', () => {
+		const s = playingBet({ phase: 'scoring', coins: { [P1]: 320 }, bets: { [P1]: 50 } })
+		const next = blackjack.applyAction(s, { type: 'NEW_ROUND', playerId: P1 })
+		expect(next.coins[P1]).toBe(320)
+	})
+})
+
+// --- split ---
+
+// Single-player playing state with a same-rank pair and a known deck.
+function splittable(overrides: Partial<BlackjackState> = {}): BlackjackState {
+	const base = blackjack.setup([P1])
+	return {
+		...base,
+		phase: 'playing',
+		playerStatus: { [P1]: 'playing' },
+		splitStatus: {},
+		splitBets: {},
+		activeHand: {},
+		turnPlayerId: P1,
+		zones: {
+			deck: createZone('deck', 'hidden', [
+				createCard('5'),
+				createCard('6'),
+				createCard('K'),
+				createCard('K')
+			]),
+			hand_dealer: createZone('hand_dealer', 'fan', [createCard('10'), createCard('7')]),
+			hand_p1: createZone('hand_p1', 'fan', [createCard('8'), createCard('8')], P1)
+		},
+		...overrides
+	}
+}
+
+function splittableBet(overrides: Partial<BlackjackState> = {}): BlackjackState {
+	const base = blackjack.setup([P1], { betting: true, startingCoins: 500 })
+	return {
+		...base,
+		phase: 'playing',
+		playerStatus: { [P1]: 'playing' },
+		splitStatus: {},
+		splitBets: {},
+		activeHand: {},
+		turnPlayerId: P1,
+		coins: { [P1]: 400 },
+		bets: { [P1]: 50 },
+		zones: {
+			deck: createZone('deck', 'hidden', [createCard('K'), createCard('K'), createCard('K')]),
+			hand_dealer: createZone('hand_dealer', 'fan', [createCard('10'), createCard('7')]),
+			hand_p1: createZone('hand_p1', 'fan', [createCard('8'), createCard('8')], P1)
+		},
+		...overrides
+	}
+}
+
+describe('blackjack split — availability', () => {
+	it('offers SPLIT on a same-rank pair', () => {
+		const types = blackjack.getValidActions(splittable(), P1).map((a) => a.type)
+		expect(types).toContain('SPLIT')
+	})
+
+	it('offers SPLIT on two ten-value cards of different rank (K|Q)', () => {
+		const s = splittable({
+			zones: {
+				...splittable().zones,
+				hand_p1: createZone('hand_p1', 'fan', [createCard('K'), createCard('Q')], P1)
+			}
+		})
+		const next = blackjack.applyAction(s, { type: 'SPLIT', playerId: P1 })
+		expect(blackjack.getValidActions(s, P1).map((a) => a.type)).toContain('SPLIT')
+		expect(next.zones[splitZoneId(P1)].cards).toHaveLength(2)
+	})
+
+	it('does not offer SPLIT on a non-pair', () => {
+		const s = splittable({
+			zones: {
+				...splittable().zones,
+				hand_p1: createZone('hand_p1', 'fan', [createCard('8'), createCard('9')], P1)
+			}
+		})
+		expect(blackjack.getValidActions(s, P1).map((a) => a.type)).not.toContain('SPLIT')
+	})
+
+	it('does not offer SPLIT once already split', () => {
+		const after = blackjack.applyAction(splittable(), { type: 'SPLIT', playerId: P1 })
+		expect(blackjack.getValidActions(after, P1).map((a) => a.type)).not.toContain('SPLIT')
+	})
+})
+
+describe('blackjack split — mechanics', () => {
+	it('creates two 2-card hands, one drawn card each', () => {
+		const next = blackjack.applyAction(splittable(), { type: 'SPLIT', playerId: P1 })
+		expect(next.zones[`hand_${P1}`].cards).toHaveLength(2)
+		expect(next.zones[splitZoneId(P1)].cards).toHaveLength(2)
+		// 8|8 split, draws 5 then 6 → hands of 13 and 14
+		expect(handValue(next.zones[`hand_${P1}`].cards)).toBe(13)
+		expect(handValue(next.zones[splitZoneId(P1)].cards)).toBe(14)
+		expect(next.zones['deck'].cards).toHaveLength(2)
+		expect(next.splitStatus[P1]).toBe('playing')
+		expect(next.activeHand[P1]).toBe(0)
+		expect(next.turnPlayerId).toBe(P1)
+	})
+
+	it('standing the first hand switches to the split hand (same player)', () => {
+		const split = blackjack.applyAction(splittable(), { type: 'SPLIT', playerId: P1 })
+		const next = blackjack.applyAction(split, { type: 'STAND', playerId: P1 })
+		expect(next.turnPlayerId).toBe(P1)
+		expect(next.activeHand[P1]).toBe(1)
+		expect(next.playerStatus[P1]).toBe('standing')
+		expect(next.splitStatus[P1]).toBe('playing')
+	})
+
+	it('standing both hands resolves the round', () => {
+		let s = blackjack.applyAction(splittable(), { type: 'SPLIT', playerId: P1 })
+		s = blackjack.applyAction(s, { type: 'STAND', playerId: P1 })
+		s = blackjack.applyAction(s, { type: 'STAND', playerId: P1 })
+		expect(s.phase).toBe('scoring')
+	})
+
+	it('HIT acts on the active split hand', () => {
+		let s = blackjack.applyAction(splittable(), { type: 'SPLIT', playerId: P1 })
+		s = blackjack.applyAction(s, { type: 'STAND', playerId: P1 }) // hand 0 done → active hand 1
+		const before = s.zones[splitZoneId(P1)].cards.length
+		s = blackjack.applyAction(s, { type: 'HIT', playerId: P1 })
+		expect(s.zones[splitZoneId(P1)].cards).toHaveLength(before + 1)
+		expect(s.zones[`hand_${P1}`].cards).toHaveLength(2) // primary untouched
+	})
+
+	it('split aces get one card each then auto-resolve', () => {
+		const s = splittable({
+			zones: {
+				deck: createZone('deck', 'hidden', [createCard('9'), createCard('9'), createCard('K')]),
+				hand_dealer: createZone('hand_dealer', 'fan', [createCard('10'), createCard('7')]),
+				hand_p1: createZone('hand_p1', 'fan', [createCard('A'), createCard('A')], P1)
+			}
+		})
+		const next = blackjack.applyAction(s, { type: 'SPLIT', playerId: P1 })
+		expect(next.playerStatus[P1]).toBe('standing')
+		expect(next.splitStatus[P1]).toBe('standing')
+		expect(next.zones[`hand_${P1}`].cards).toHaveLength(2)
+		expect(next.zones[splitZoneId(P1)].cards).toHaveLength(2)
+		expect(next.phase).toBe('scoring') // single player → straight to dealer/scoring
+	})
+})
+
+describe('blackjack split — betting', () => {
+	it('SPLIT debits a matching second stake', () => {
+		const next = blackjack.applyAction(splittableBet(), { type: 'SPLIT', playerId: P1 })
+		expect(next.coins[P1]).toBe(350) // 400 - 50 matching stake
+		expect(next.bets[P1]).toBe(50)
+		expect(next.splitBets[P1]).toBe(50)
+	})
+
+	it('SPLIT rejected when balance below the bet', () => {
+		const s = splittableBet({ coins: { [P1]: 20 }, bets: { [P1]: 50 } })
+		expect(blackjack.getValidActions(s, P1).map((a) => a.type)).not.toContain('SPLIT')
+		expect(blackjack.applyAction(s, { type: 'SPLIT', playerId: P1 })).toBe(s)
+	})
+
+	it('pays each split hand independently', () => {
+		// 8|8 split, both draw K → two 18s vs dealer 17 → both win 1:1
+		let s = blackjack.applyAction(splittableBet(), { type: 'SPLIT', playerId: P1 })
+		s = blackjack.applyAction(s, { type: 'STAND', playerId: P1 })
+		s = blackjack.applyAction(s, { type: 'STAND', playerId: P1 })
+		expect(s.phase).toBe('scoring')
+		// 400 -50 split = 350, then +100 (hand0 stake+win) +100 (split stake+win)
+		expect(s.coins[P1]).toBe(550)
+	})
+
+	it('DOUBLE after split doubles only the split hand stake', () => {
+		// hand0 stays 18 (wins); split doubles, draws K → 28 (busts) → round resolves
+		let s = blackjack.applyAction(splittableBet(), { type: 'SPLIT', playerId: P1 })
+		s = blackjack.applyAction(s, { type: 'STAND', playerId: P1 }) // move to split hand
+		s = blackjack.applyAction(s, { type: 'DOUBLE', playerId: P1 })
+		expect(s.splitBets[P1]).toBe(100)
+		expect(s.bets[P1]).toBe(50) // primary stake untouched
+		expect(s.zones[splitZoneId(P1)].cards).toHaveLength(3)
+		expect(s.phase).toBe('scoring')
+		// 350 -50 double = 300; hand0 win +100 → 400; doubled split busts → +0
+		expect(s.coins[P1]).toBe(400)
+	})
+})
+
+describe('blackjack split — getWinner', () => {
+	it("uses a player's best non-bust hand", () => {
+		const base = splittable()
+		const state: BlackjackState = {
+			...base,
+			phase: 'gameover',
+			playerStatus: { [P1]: 'standing' },
+			splitStatus: { [P1]: 'standing' },
+			splitBets: {},
+			activeHand: { [P1]: 1 },
+			zones: {
+				...base.zones,
+				hand_dealer: createZone('hand_dealer', 'fan', [createCard('K'), createCard('7')]),
+				hand_p1: createZone('hand_p1', 'fan', [createCard('5'), createCard('6')], P1), // 11, loses
+				[splitZoneId(P1)]: createZone(
+					splitZoneId(P1),
+					'fan',
+					[createCard('K'), createCard('Q')],
+					P1
+				) // 20, wins
+			}
+		}
+		expect(blackjack.getWinner(state)).toBe(P1)
 	})
 })

@@ -380,6 +380,9 @@ export default {
 		hit: 'Tirer',
 		stand: 'Rester',
 		double: 'Doubler',
+		split: 'Séparer',
+		buyIn: 'Cave n°{n}',
+		rebuyTitle: 'A tout perdu et est revenu',
 		endGame: 'Terminer',
 		newRound: 'Nouvelle partie',
 		bust: 'Bust',
@@ -388,7 +391,22 @@ export default {
 		lose: 'Perdu',
 		push: 'Égalité',
 		dealerWins: 'Le croupier gagne',
-		yourTurn: 'À toi !'
+		yourTurn: 'À toi !',
+		dealing: 'Distribution…',
+		coins: 'Jetons',
+		bet: 'Mise',
+		placeBet: 'Place ta mise',
+		confirmBet: 'Valider la mise',
+		clearBet: 'Effacer',
+		allIn: 'Tapis',
+		betPlaced: 'Mise placée',
+		placingBets: 'Mises en cours…',
+		options: {
+			betting: 'Mises',
+			bettingDesc: 'Jouer avec des jetons — choisis une mise avant chaque manche.',
+			startingCoins: 'Jetons de départ',
+			startingCoinsDesc: 'Nombre de jetons de chaque joueur au départ.'
+		}
 	},
 	settings: {
 		title: 'Paramètres',

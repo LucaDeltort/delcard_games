@@ -376,6 +376,9 @@ export default {
 		hit: 'Hit',
 		stand: 'Stand',
 		double: 'Double',
+		split: 'Split',
+		buyIn: 'Buy-in #{n}',
+		rebuyTitle: 'Went broke and bought back in',
 		endGame: 'End Game',
 		newRound: 'New Round',
 		bust: 'Bust',
@@ -384,7 +387,22 @@ export default {
 		lose: 'Lose',
 		push: 'Push',
 		dealerWins: 'Dealer wins',
-		yourTurn: 'Your Turn!'
+		yourTurn: 'Your Turn!',
+		dealing: 'Dealing…',
+		coins: 'Coins',
+		bet: 'Bet',
+		placeBet: 'Place your bet',
+		confirmBet: 'Confirm bet',
+		clearBet: 'Clear',
+		allIn: 'All-in',
+		betPlaced: 'Bet placed',
+		placingBets: 'Placing bets…',
+		options: {
+			betting: 'Betting',
+			bettingDesc: 'Play for coins — choose a bet before each round.',
+			startingCoins: 'Starting coins',
+			startingCoinsDesc: 'How many coins each player starts with.'
+		}
 	},
 	settings: {
 		title: 'Settings',
