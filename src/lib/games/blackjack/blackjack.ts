@@ -426,15 +426,17 @@ export const blackjack: GameDefinition<BlackjackState> = {
 		}
 
 		if (action.type === 'NEW_ROUND') {
+			if (state.phase !== 'scoring' || pid !== state.players[0]) return state
 			return newRound(state)
 		}
 
 		if (action.type === 'END_GAME') {
+			if (state.phase !== 'scoring' || pid !== state.players[0]) return state
 			return { ...state, phase: 'gameover' }
 		}
 
 		if (action.type === 'HIT') {
-			if (state.turnPlayerId !== pid) return state
+			if (state.phase !== 'playing' || state.turnPlayerId !== pid) return state
 			const idx = activeIndex(state, pid)
 			const zoneId = activeZone(state, pid)
 			const result = drawCard(state.zones['deck'].cards)
@@ -455,13 +457,13 @@ export const blackjack: GameDefinition<BlackjackState> = {
 		}
 
 		if (action.type === 'STAND') {
-			if (state.turnPlayerId !== pid) return state
+			if (state.phase !== 'playing' || state.turnPlayerId !== pid) return state
 			const idx = activeIndex(state, pid)
 			return advanceTurn(setHandStatus(state, pid, idx, 'standing'), pid)
 		}
 
 		if (action.type === 'DOUBLE') {
-			if (state.turnPlayerId !== pid) return state
+			if (state.phase !== 'playing' || state.turnPlayerId !== pid) return state
 			const idx = activeIndex(state, pid)
 			const zoneId = activeZone(state, pid)
 			const result = drawCard(state.zones['deck'].cards)
@@ -554,6 +556,12 @@ export const blackjack: GameDefinition<BlackjackState> = {
 
 	getWinner(state) {
 		if (state.phase !== 'gameover') return null
+
+		// Betting mode: the score is the coin balance — the richest player wins.
+		if (state.options.betting) {
+			if (state.players.length === 0) return null
+			return state.players.reduce((a, b) => ((state.coins[b] ?? 0) > (state.coins[a] ?? 0) ? b : a))
+		}
 
 		const dealerValue = handValue(state.zones['hand_dealer'].cards)
 		const dealerBust = dealerValue > 21
