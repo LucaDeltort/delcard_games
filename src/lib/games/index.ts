@@ -1,5 +1,7 @@
 import type { GameStateGeneric } from '$lib/core/types'
 import type { GameDefinition } from '$lib/engine'
+import { blackjack } from './blackjack/blackjack'
+import blackjackRules from './blackjack/rules.json'
 import { color } from './color/color'
 import colorRules from './color/rules.json'
 import { fight } from './fight/fight'
@@ -15,10 +17,16 @@ import { werewolf } from './werewolf/werewolf'
 import yamsRules from './yams/rules.json'
 import { yams } from './yams/yams'
 
-export const games = { war, fight, color, presidents, purple, werewolf, yams } as unknown as Record<
-	string,
-	GameDefinition<GameStateGeneric>
->
+export const games = {
+	war,
+	fight,
+	color,
+	presidents,
+	purple,
+	werewolf,
+	yams,
+	blackjack
+} as unknown as Record<string, GameDefinition<GameStateGeneric>>
 
 export const gameList: { id: string; minPlayers: number; maxPlayers: number; isNew?: boolean }[] =
 	Object.values(games as Record<string, GameDefinition<GameStateGeneric>>).map((g) => ({
@@ -35,5 +43,6 @@ export const gameRules: Record<string, { en: string; fr: string }> = {
 	presidents: presidentsRules,
 	purple: purpleRules,
 	werewolf: werewolfRules,
-	yams: yamsRules
+	yams: yamsRules,
+	blackjack: blackjackRules
 }

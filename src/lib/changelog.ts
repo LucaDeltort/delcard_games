@@ -3,6 +3,25 @@ type ReleaseNote = { version: string; date: string; items: ReleaseItem[] }
 
 const changelog: ReleaseNote[] = [
 	{
+		version: '0.9.0',
+		date: '2026-07-01',
+		items: [
+			{ fr: 'Nouveau jeu : Blackjack', en: 'New game: Blackjack' },
+			{
+				fr: 'Blackjack : split de main et système de mises',
+				en: 'Blackjack: hand split and buy-in betting'
+			},
+			{
+				fr: 'Blackjack : carte cachée, donne casino, annonces BJ',
+				en: 'Blackjack: hole card, casino deal order, BJ announcements'
+			},
+			{
+				fr: 'Blackjack : correction du classement final par jetons',
+				en: 'Blackjack: fix final winner ranking by coins'
+			}
+		]
+	},
+	{
 		version: '0.8.0',
 		date: '2026-06-02',
 		items: [
