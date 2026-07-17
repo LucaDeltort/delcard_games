@@ -34,19 +34,17 @@ Take note of: title format, body sections, how changes are grouped, version refe
    - What other changes were made (`chore`, `refactor`, etc.)
 
 ### Step 3 — Determine version bump
-Follow semantic versioning based on commit types:
-- Any `feat` commit → **minor** bump (e.g. 0.2.3 → 0.3.0, patch resets to zero)
-- Only `fix`/`chore`/`refactor` commits → **patch** bump (e.g. 0.2.3 → 0.2.4)
-- Breaking changes (noted in commit message with `!` or `BREAKING CHANGE`) → **minor** bump (same as feat, since major is capped — see below)
+Versions use a two-part `X.Y` format (not semver `X.Y.Z`). Any change in the PR bumps the second number by one:
+- `X.Y` → `X.Y+1` (e.g. `0.4` → `0.5`) — regardless of commit types (`feat`, `fix`, `chore`, `refactor`, etc.)
 
-**Version cap:** Never bump the major version to `1.0.0` or higher unless the user explicitly instructs you to. While the current major is `0`, treat breaking changes as minor bumps. If a bump would produce `1.0.0`, stop and ask the user first.
+**Version cap:** Never bump the first number (`X`) unless the user explicitly instructs you to. While `X` is `0`, always bump only `Y`. If a bump would produce `1.0` or higher, stop and ask the user first.
 
-Read the current version from **`main` branch** (`git show main:package.json | grep version`) — not from `dev:package.json`, which may already have an unreleased bump commit. Compute the new version and update `package.json` accordingly. Do not update `package-lock.json` manually — run `npm install --package-lock-only` if needed, or just update `package.json`.
+Read the current version from **`main` branch** (`git show main:package.json | grep version`) — not from `dev:package.json`, which may already have an unreleased bump commit. If `main` still holds an old three-part version (e.g. `0.3.2`), drop the patch segment and bump the minor: `0.3.2` → `0.4`. Compute the new version and update `package.json` accordingly. Do not update `package-lock.json` manually — run `npm install --package-lock-only` if needed, or just update `package.json`.
 
 ### Step 4 — Update the changelog
 1. Read `src/lib/changelog.ts`.
 2. Prepend a new entry at the top of the `changelog` array with:
-   - `version`: the new version string (e.g. `'0.3.0'`)
+   - `version`: the new version string (e.g. `'0.5'`)
    - `date`: today's date in `YYYY-MM-DD` format
    - `items`: 3–5 user-facing changes derived from the commit analysis, each with `fr` and `en` fields
 3. Rules for writing items:
@@ -60,7 +58,7 @@ Read the current version from **`main` branch** (`git show main:package.json | g
 1. Stage `package.json` and `src/lib/changelog.ts` together.
 2. Commit following the convention:
    ```
-   chore(scope): bump version to X.Y.Z
+   chore(scope): bump version to X.Y
    ```
    (scope is the current branch name)
 3. Push to `dev`.
