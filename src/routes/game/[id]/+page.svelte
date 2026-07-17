@@ -229,7 +229,11 @@ onMount(() => {
 		setupClientCallbacks(client)
 		// Read state that may have arrived before onMount ran
 		myPlayerId = client.playerId ?? ''
-		if (client.gameId) resolvedGameId = client.gameId
+		if (client.gameId) {
+			resolvedGameId = client.gameId
+			const def = games[client.gameId]
+			if (def) client.setDef(def)
+		}
 		lobbyOptions = client.options
 		if (client.lobbyPlayers.length > 0) lobbyPlayers = client.lobbyPlayers
 		if (client.lastState) gameState = client.lastState

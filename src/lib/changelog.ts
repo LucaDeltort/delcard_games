@@ -18,6 +18,10 @@ const changelog: ReleaseNote[] = [
 			{
 				fr: 'Blackjack : correction du classement final par jetons',
 				en: 'Blackjack: fix final winner ranking by coins'
+			},
+			{
+				fr: "La partie survit au départ de l'hôte (migration automatique)",
+				en: 'Game survives host departure (automatic migration)'
 			}
 		]
 	},

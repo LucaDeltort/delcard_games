@@ -92,7 +92,7 @@ Online card games platform for friends. P2P full client-side, no backend.
 - Host receives actions → validates → updates state → rediffuses to all
 - Join: short code or direct link
 - Reconnection: host sends full state to reconnected player
-- Host disconnected → game over (migration = future feature)
+- Host disconnected → game migrates to another player (see `src/lib/network/`)
 - No anti-cheat: game between friends, everything client-side
 
 ## Game Engine
@@ -106,13 +106,16 @@ type GameDefinition<S> = {
 	deckType: DeckType;
 	minPlayers: number;
 	maxPlayers: number;
-	setup: (players: string[]) => S;
+	setup: (players: string[], options?: Record<string, unknown>) => S;
 	getValidActions: (state: S, playerId: string) => Action[];
 	applyAction: (state: S, action: Action) => S;
 	isOver: (state: S) => boolean;
 	getWinner: (state: S) => string | null;
+	onPlayerDisconnect?: (state: S, playerId: string) => S; // host migration support
 };
 ```
+
+The optional `onPlayerDisconnect` is called when a player leaves mid-game. It returns a new state that either continues the game (player removed/skipped) or ends it. If omitted, the host falls back to a generic gameover when remaining players drop below minPlayers.
 
 ## Deck System
 
