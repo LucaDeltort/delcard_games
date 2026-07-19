@@ -228,6 +228,14 @@ export class GameHost {
 						clearTimeout(migrationTimer)
 						this._pendingMigrationReconnects.delete(msg.resumePlayerId)
 					}
+					// Deduplicate: if another live connection already claims this playerId, close it first
+					for (const [existingPeer, existingEntry] of this.clients) {
+						if (existingEntry.playerId === msg.resumePlayerId) {
+							existingEntry.conn.close()
+							this.clients.delete(existingPeer)
+							break
+						}
+					}
 					const entry: ClientEntry = {
 						conn,
 						name: msg.playerName,
@@ -411,9 +419,9 @@ export class GameHost {
 		}
 	}
 
-	kick(peerId: string) {
-		const client = this.clients.get(peerId)
-		if (!client) return
+	kick(playerId: string) {
+		const [peerId, client] = this.clients.entries().find(([, c]) => c.playerId === playerId) ?? [null, null]
+		if (!client || !peerId) return
 		client.conn.send({ type: 'HOST_GONE', message: get(t)('network.kicked') } as HostMessage)
 		this.clients.delete(peerId)
 		this.pendingPlayerIds.delete(peerId)
