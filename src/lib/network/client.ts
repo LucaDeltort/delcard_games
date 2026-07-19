@@ -384,7 +384,15 @@ export class GameClient {
 				racePeer.off('error', onError)
 				resolve(racePeer) // won — keep peer alive, pass to GameHost.resume
 			}
-			const onError = () => {
+			const onError = (err: { type?: string }) => {
+				if (err.type === 'unavailable-id') {
+					// Someone else claimed the reserved host ID — lost the race
+					clearTimeout(timeout)
+					racePeer.destroy()
+					resolve(null)
+				}
+				// Any other error (network, ICE, etc.): also abort — but distinguish
+				// semantically from "lost the election"
 				clearTimeout(timeout)
 				racePeer.destroy()
 				resolve(null)
