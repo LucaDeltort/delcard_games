@@ -5,19 +5,22 @@ export type TimeFormat = '12' | '24'
 
 export type Settings = {
 	timeFormat: TimeFormat
+	muted: boolean
 }
 
 const STORAGE_KEY = 'settings'
 
+const DEFAULTS: Settings = { timeFormat: '24', muted: false }
+
 function load(): Settings {
-	if (!browser) return { timeFormat: '24' }
+	if (!browser) return { ...DEFAULTS }
 	try {
 		const raw = localStorage.getItem(STORAGE_KEY)
-		if (raw) return { timeFormat: '24', ...JSON.parse(raw) }
+		if (raw) return { ...DEFAULTS, ...JSON.parse(raw) }
 	} catch {
 		// ignore parse errors
 	}
-	return { timeFormat: '24' }
+	return { ...DEFAULTS }
 }
 
 function createSettingsStore() {

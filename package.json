@@ -24,6 +24,7 @@
 		"@sveltejs/vite-plugin-svelte": "^6.2.1",
 		"@tailwindcss/vite": "^4.1.17",
 		"@types/node": "^24",
+		"@vitest/coverage-v8": "^4.1.10",
 		"globals": "^16.5.0",
 		"husky": "^9.1.7",
 		"svelte": "^5.45.6",

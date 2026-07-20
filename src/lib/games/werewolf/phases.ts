@@ -6,6 +6,7 @@ export function enterNight(state: WerewolfState, now: number): WerewolfState {
 	const fresh: WerewolfState = {
 		...state,
 		phase: 'night',
+		nightGap: null,
 		nightVotes: {},
 		protectedId: null,
 		witchKillTarget: null,
@@ -15,7 +16,17 @@ export function enterNight(state: WerewolfState, now: number): WerewolfState {
 	}
 	const first = firstActiveStep(fresh)
 	if (!first) return enterDay(fresh, now)
-	return startStep(fresh, first, now)
+	// Leading standby pause so "night falls" narration plays before the first
+	// role's turn timer starts. NEXT_PHASE (auto-fired at the gap end) starts it.
+	const gapMs = fresh.options.narrationGapSeconds * 1000
+	if (gapMs <= 0) return startStep(fresh, first, now)
+	return {
+		...fresh,
+		nightStep: null,
+		nightGap: first,
+		phaseEndTime: now + gapMs,
+		phaseDurationMs: gapMs
+	}
 }
 
 export function enterDay(state: WerewolfState, now: number): WerewolfState {

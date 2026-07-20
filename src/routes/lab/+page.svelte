@@ -14,6 +14,11 @@ const entries = [
 		label: 'Sandbox',
 		href: '/lab/sandbox',
 		description: 'Preview a game UI with live, editable state — no host, no peers'
+	},
+	{
+		label: 'Sound',
+		href: '/lab/sound',
+		description: 'Play every registered sound effect and voice cue; flags missing files'
 	}
 ].sort((a, b) => a.label.localeCompare(b.label))
 </script>
@@ -37,6 +42,7 @@ const entries = [
 .entry:nth-child(1) { animation-delay: 0.08s; }
 .entry:nth-child(2) { animation-delay: 0.16s; }
 .entry:nth-child(3) { animation-delay: 0.24s; }
+.entry:nth-child(4) { animation-delay: 0.32s; }
 
 @keyframes entry-in {
 	from { opacity: 0; transform: translateY(12px); }

@@ -20,6 +20,7 @@ export type WerewolfOptions = {
 	roleTimerSeconds: number
 	talkTimerSeconds: number
 	voteTimerSeconds: number
+	narrationGapSeconds: number
 }
 
 export type RoleCountsOnly = Omit<
@@ -30,6 +31,7 @@ export type RoleCountsOnly = Omit<
 	| 'roleTimerSeconds'
 	| 'talkTimerSeconds'
 	| 'voteTimerSeconds'
+	| 'narrationGapSeconds'
 >
 
 export type NightStepKey = 'cupid' | 'defender' | 'wolves' | 'witch' | 'seer'
@@ -37,6 +39,7 @@ export type NightStepKey = 'cupid' | 'defender' | 'wolves' | 'witch' | 'seer'
 export type WerewolfState = GameStateGeneric & {
 	phase: 'night' | 'day' | 'gameover'
 	nightStep: NightStepKey | null
+	nightGap: NightStepKey | 'resolve' | null
 	daySubPhase: 'electing' | 'talking' | 'voting'
 	phaseEndTime: number | null
 	phaseDurationMs: number | null
