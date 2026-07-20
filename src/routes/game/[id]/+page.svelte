@@ -38,13 +38,15 @@ import { gameList, games } from '$lib/games/index'
 import type { PurpleState } from '$lib/games/purple/purple'
 import type { WerewolfState } from '$lib/games/werewolf/werewolf'
 import { t } from '$lib/i18n'
+import type { GameClient, MigrationResult } from '$lib/network/client'
+import type { GameHost } from '$lib/network/host'
 import type { LobbyPlayer } from '$lib/network/messages'
 import { loadGameOptions, saveGameOptions } from '$lib/stores/gameOptions'
 import { activeClient, activeHost } from '$lib/stores/session'
 import { settingsOpen } from '$lib/stores/settings'
 
 const code = $page.params.id
-const isHost = $page.url.searchParams.get('role') === 'host'
+let isHost = $state($page.url.searchParams.get('role') === 'host')
 let resolvedGameId = $state($page.url.searchParams.get('game') ?? '')
 
 let gameState = $state<GameStateGeneric | null>(null)
@@ -58,6 +60,7 @@ let codeCopied = $state(false)
 let confirmOpen = $state(false)
 let connectionQuality = $state<'good' | 'warn' | 'poor' | null>(null)
 let reconnectFailed = $state(false)
+let migrating = $state(false)
 let _reconnectTimeout: ReturnType<typeof setTimeout> | null = null
 let pendingDestination = ''
 let _skipConfirm = false
@@ -114,6 +117,91 @@ $effect(() => {
 let _hostVisibilityHandler: (() => void) | null = null
 let _hostOnlineHandler: (() => void) | null = null
 
+function setupHostCallbacks(host: GameHost) {
+	if (_hostVisibilityHandler) {
+		document.removeEventListener('visibilitychange', _hostVisibilityHandler)
+	}
+	if (_hostOnlineHandler) {
+		window.removeEventListener('online', _hostOnlineHandler)
+	}
+	host.onLobbyChange = (players) => {
+		lobbyPlayers = players
+		lobbyOptions = get(activeHost)?.options ?? {}
+	}
+	host.onState = (state) => {
+		gameState = state
+	}
+	host.onError = (msg) => {
+		hostError = msg
+	}
+	_hostVisibilityHandler = () => {
+		if (document.visibilityState === 'visible') host.reconnectSignaling()
+	}
+	_hostOnlineHandler = () => host.reconnectSignaling()
+	document.addEventListener('visibilitychange', _hostVisibilityHandler)
+	window.addEventListener('online', _hostOnlineHandler)
+}
+
+function setupClientCallbacks(client: GameClient) {
+	client.onWelcome = (id) => {
+		myPlayerId = id
+		if (client.gameId) {
+			resolvedGameId = client.gameId
+			const def = games[client.gameId]
+			if (def) client.setDef(def)
+		}
+	}
+	client.onLobby = (players) => {
+		lobbyPlayers = players
+		lobbyOptions = client.options
+	}
+	client.onState = (state) => {
+		reconnecting = false
+		migrating = false
+		gameState = state
+	}
+	client.onDisconnected = (msg) => {
+		reconnecting = false
+		migrating = false
+		disconnectedMsg = msg
+	}
+	client.onReconnecting = () => {
+		reconnecting = true
+	}
+	client.onMigrating = () => {
+		reconnecting = false
+		migrating = true
+	}
+	client.onQualityChange = (q) => {
+		connectionQuality = q
+	}
+	client.onMigration = handleMigration
+}
+
+function handleMigration(result: MigrationResult) {
+	migrating = false
+	reconnecting = false
+	const oldClient = get(activeClient)
+	if (result.role === 'host') {
+		const host = result.host
+		isHost = true
+		activeClient.set(null)
+		activeHost.set(host)
+		myPlayerId = host.playerId
+		lobbyOptions = host.options
+		lobbyPlayers = host.lobbyPlayers
+		if (host.lastState) gameState = host.lastState
+		setupHostCallbacks(host)
+	} else {
+		const client = result.client
+		activeClient.set(client)
+		setupClientCallbacks(client)
+		// Carry over known state while new client connects
+		myPlayerId = client.playerId ?? myPlayerId
+	}
+	oldClient?.close()
+}
+
 onMount(() => {
 	if (!browser) return
 
@@ -131,53 +219,21 @@ onMount(() => {
 			if (key in lobbyOptions) host.updateOption(key, value)
 		}
 		lobbyOptions = host.options
-		host.onLobbyChange = (players) => {
-			lobbyPlayers = players
-			lobbyOptions = get(activeHost)?.options ?? {}
-		}
-		host.onState = (state) => {
-			gameState = state
-		}
-		host.onError = (msg) => {
-			hostError = msg
-		}
-		_hostVisibilityHandler = () => {
-			if (document.visibilityState === 'visible') host.reconnectSignaling()
-		}
-		_hostOnlineHandler = () => host.reconnectSignaling()
-		document.addEventListener('visibilitychange', _hostVisibilityHandler)
-		window.addEventListener('online', _hostOnlineHandler)
+		setupHostCallbacks(host)
 	} else {
 		const client = get(activeClient)
 		if (!client) {
 			goto('/join')
 			return
 		}
-		client.onWelcome = (id) => {
-			myPlayerId = id
-			if (client.gameId) resolvedGameId = client.gameId
-		}
-		client.onLobby = (players) => {
-			lobbyPlayers = players
-			lobbyOptions = client.options
-		}
-		client.onState = (state) => {
-			reconnecting = false
-			gameState = state
-		}
-		client.onDisconnected = (msg) => {
-			reconnecting = false
-			disconnectedMsg = msg
-		}
-		client.onReconnecting = () => {
-			reconnecting = true
-		}
-		client.onQualityChange = (q) => {
-			connectionQuality = q
-		}
+		setupClientCallbacks(client)
 		// Read state that may have arrived before onMount ran
 		myPlayerId = client.playerId ?? ''
-		if (client.gameId) resolvedGameId = client.gameId
+		if (client.gameId) {
+			resolvedGameId = client.gameId
+			const def = games[client.gameId]
+			if (def) client.setDef(def)
+		}
 		lobbyOptions = client.options
 		if (client.lobbyPlayers.length > 0) lobbyPlayers = client.lobbyPlayers
 		if (client.lastState) gameState = client.lastState
@@ -190,8 +246,9 @@ onDestroy(() => {
 			document.removeEventListener('visibilitychange', _hostVisibilityHandler)
 		if (_hostOnlineHandler) window.removeEventListener('online', _hostOnlineHandler)
 	}
-	if (isHost) get(activeHost)?.close()
-	else get(activeClient)?.close()
+	// Both stores may be populated after migration; close whichever is active
+	get(activeHost)?.close()
+	get(activeClient)?.close()
 })
 
 beforeNavigate(({ cancel, to, willUnload, type }) => {
@@ -209,8 +266,17 @@ beforeNavigate(({ cancel, to, willUnload, type }) => {
 	confirmOpen = true
 })
 
-function confirmLeave() {
+async function confirmLeave() {
 	confirmOpen = false
+	// If host leaves mid-game, migrate rather than terminate the session
+	if (isHost && gameState && gameState.phase !== 'gameover') {
+		const host = get(activeHost)
+		if (host) {
+			host.migrateAway(host.migrationIndex + 1)
+			// Brief pause so MIGRATE_HOST message can be flushed before peer closes
+			await new Promise<void>((r) => setTimeout(r, 150))
+		}
+	}
 	_skipConfirm = true
 	goto(pendingDestination)
 }
@@ -271,6 +337,14 @@ $effect(() => {
 	canonical="/game"
 	noindex={true}
 />
+
+<!-- ── Migrating overlay ─────────────────────────────────────── -->
+{#if migrating}
+	<div class="fixed inset-0 z-50 flex flex-col items-center justify-center gap-4 bg-background/80 backdrop-blur-sm">
+		<Loader2 class="size-6 animate-spin text-muted-foreground" aria-hidden="true" />
+		<p class="text-sm text-muted-foreground">{$t('network.migrating')}</p>
+	</div>
+{/if}
 
 <!-- ── Reconnecting overlay ──────────────────────────────────── -->
 {#if reconnecting}

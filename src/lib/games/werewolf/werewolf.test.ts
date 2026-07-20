@@ -9,7 +9,7 @@ const P4 = 'p4'
 const PLAYERS = [P1, P2, P3, P4]
 
 function setup() {
-	return werewolf.setup(PLAYERS)
+	return werewolf.setup(PLAYERS, { narrationGapSeconds: 0 })
 }
 
 type Role = WerewolfState['roles'][string]
@@ -606,7 +606,7 @@ describe('werewolf roles: special behaviours', () => {
 		const P5 = 'p5'
 		const P6 = 'p6'
 		const six = [P1, P2, P3, P4, P5, P6]
-		const base = werewolf.setup(six)
+		const base = werewolf.setup(six, { narrationGapSeconds: 0 })
 		const state: WerewolfState = {
 			...base,
 			roles: {
@@ -705,5 +705,88 @@ describe('werewolf.onPlayerDisconnect', () => {
 		const next = werewolf.onPlayerDisconnect!(state, P2)
 		expect(next.phase).toBe('gameover')
 		expect(next.winTeam).toBe('werewolves')
+	})
+})
+
+describe('werewolf between-turn pause', () => {
+	// A two-step night (defender then wolves) with the pause enabled.
+	function gappedNight(): WerewolfState {
+		const base = werewolf.setup(PLAYERS, { narrationGapSeconds: 3 })
+		return {
+			...base,
+			roles: {
+				[P1]: 'werewolf',
+				[P2]: 'defender',
+				[P3]: 'villager',
+				[P4]: 'villager'
+			} as Record<string, Role>,
+			readyPlayers: [...PLAYERS],
+			nightStep: 'defender'
+		}
+	}
+
+	it('night entry pauses before the first step (narration plays first)', () => {
+		let state = werewolf.setup(PLAYERS, { narrationGapSeconds: 3 })
+		for (const p of PLAYERS) {
+			state = werewolf.applyAction(state, { type: 'PLAYER_READY', playerId: p })
+		}
+		expect(state.phase).toBe('night')
+		expect(state.nightStep).toBeNull()
+		expect(state.nightGap).not.toBeNull()
+	})
+
+	it('pauses (no active step) after a turn instead of starting the next', () => {
+		const state = gappedNight()
+		const next = werewolf.applyAction(state, {
+			type: 'PROTECT',
+			playerId: P2,
+			payload: { target: P3 }
+		})
+		expect(next.nightStep).toBeNull()
+		expect(next.nightGap).toBe('wolves')
+		expect(next.phase).toBe('night')
+	})
+
+	it('starts the queued step when the pause timer fires', () => {
+		const paused = werewolf.applyAction(gappedNight(), {
+			type: 'PROTECT',
+			playerId: P2,
+			payload: { target: P3 }
+		})
+		const resumed = werewolf.applyAction(paused, { type: 'NEXT_PHASE', playerId: P1 })
+		expect(resumed.nightGap).toBeNull()
+		expect(resumed.nightStep).toBe('wolves')
+	})
+
+	it('offers no turn actions during the pause', () => {
+		const paused = werewolf.applyAction(gappedNight(), {
+			type: 'PROTECT',
+			playerId: P2,
+			payload: { target: P3 }
+		})
+		// Wolf cannot vote yet — only the host's NEXT_PHASE is available.
+		expect(werewolf.getValidActions(paused, P1).map((a) => a.type)).toEqual(['NEXT_PHASE'])
+	})
+
+	it('pauses before resolving the night after the last step', () => {
+		const single: WerewolfState = {
+			...werewolf.setup(PLAYERS, { narrationGapSeconds: 3 }),
+			roles: {
+				[P1]: 'werewolf',
+				[P2]: 'villager',
+				[P3]: 'villager',
+				[P4]: 'villager'
+			} as Record<string, Role>,
+			readyPlayers: [...PLAYERS],
+			nightStep: 'wolves',
+			nightVotes: { [P1]: P2 }
+		}
+		const paused = werewolf.applyAction(single, { type: 'NEXT_PHASE', playerId: P1 })
+		expect(paused.phase).toBe('night')
+		expect(paused.nightGap).toBe('resolve')
+		expect(paused.alive).toContain(P2) // not resolved yet
+		const day = werewolf.applyAction(paused, { type: 'NEXT_PHASE', playerId: P1 })
+		expect(day.phase).toBe('day')
+		expect(day.alive).not.toContain(P2)
 	})
 })

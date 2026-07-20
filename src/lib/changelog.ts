@@ -3,6 +3,24 @@ type ReleaseNote = { version: string; date: string; items: ReleaseItem[] }
 
 const changelog: ReleaseNote[] = [
 	{
+		version: '0.10',
+		date: '2026-07-15',
+		items: [
+			{
+				fr: 'Effets sonores : cartes, dés et ambiance',
+				en: 'Sound effects: cards, dice and ambience'
+			},
+			{
+				fr: 'Voix narrative pour le Loup-Garou',
+				en: 'Narrator voice for Werewolf'
+			},
+			{
+				fr: 'Migration hôte plus robuste (reconnexion spectateurs)',
+				en: 'More robust host migration (spectator reconnect)'
+			}
+		]
+	},
+	{
 		version: '0.9.0',
 		date: '2026-07-01',
 		items: [
@@ -18,6 +36,10 @@ const changelog: ReleaseNote[] = [
 			{
 				fr: 'Blackjack : correction du classement final par jetons',
 				en: 'Blackjack: fix final winner ranking by coins'
+			},
+			{
+				fr: "La partie survit au départ de l'hôte (migration automatique)",
+				en: 'Game survives host departure (automatic migration)'
 			}
 		]
 	},

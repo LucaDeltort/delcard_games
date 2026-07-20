@@ -410,6 +410,9 @@ export default {
 		timeFormat12: '12h',
 		timeFormat24: '24h',
 		timeFormatHint: 'Used in match history.',
+		sound: 'Sound',
+		soundOn: 'On',
+		soundOff: 'Off',
 		language: 'Language',
 		decks: 'Card decks',
 		changelog: 'Changelog',
@@ -455,6 +458,8 @@ export default {
 		hostGone: 'The host left the game.',
 		kicked: 'You were kicked by the host.',
 		sessionFull: 'Maximum number of players reached in this session.',
-		gameInProgress: 'Game already in progress.'
+		gameInProgress: 'Game already in progress.',
+		migrating: 'Finding a new host…',
+		migrationFailed: 'Could not find a new host.'
 	}
 }

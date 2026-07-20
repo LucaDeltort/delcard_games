@@ -3,12 +3,19 @@ import './layout.css'
 import { Coffee, Settings as SettingsIcon } from 'lucide-svelte'
 import { page } from '$app/stores'
 import favicon from '$lib/assets/favicon.svg'
+import { unlockAudio } from '$lib/audio/player'
 import SettingsModal from '$lib/components/SettingsModal.svelte'
 import WhatsNew from '$lib/components/WhatsNew.svelte'
 import { t } from '$lib/i18n'
 import { settingsOpen } from '$lib/stores/settings'
 
 let { children } = $props()
+
+$effect(() => {
+	const handler = () => unlockAudio()
+	window.addEventListener('pointerdown', handler, { once: true })
+	return () => window.removeEventListener('pointerdown', handler)
+})
 
 // Full-bleed pages (real game + sandbox game views) render their own full-height
 // layout, so the shared footer/buttons are hidden to avoid overflow scroll.

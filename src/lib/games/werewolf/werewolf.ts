@@ -12,9 +12,40 @@ import {
 } from './resolution'
 import { ROLE_DEFS } from './roles'
 import { nextActiveStep, startStep, turnByActionType, turnByKey } from './turns'
-import type { RoleCountsOnly, WerewolfOptions, WerewolfState } from './types'
+import type { NightStepKey, RoleCountsOnly, WerewolfOptions, WerewolfState } from './types'
 
 export type { NightStepKey, Role, WerewolfOptions, WerewolfState } from './types'
+
+/**
+ * Insert a between-turn pause before the next night step (or before resolving
+ * the night). While paused no role is active; the gap's own timer fires
+ * NEXT_PHASE, which then starts `next`. With a zero gap, advance immediately.
+ */
+function pauseBeforeStep(
+	state: WerewolfState,
+	next: NightStepKey | null,
+	now: number
+): WerewolfState {
+	const gapMs = state.options.narrationGapSeconds * 1000
+	if (gapMs <= 0) {
+		return next ? startStep(state, next, now) : resolveNight(state, now)
+	}
+	return {
+		...state,
+		phase: 'night',
+		nightStep: null,
+		nightGap: next ?? 'resolve',
+		phaseEndTime: now + gapMs,
+		phaseDurationMs: gapMs
+	}
+}
+
+/** End a between-turn pause: start the queued step, or resolve the night. */
+function resolveNightGap(state: WerewolfState, now: number): WerewolfState {
+	const next = state.nightGap
+	const cleared: WerewolfState = { ...state, nightGap: null }
+	return next && next !== 'resolve' ? startStep(cleared, next, now) : resolveNight(cleared, now)
+}
 
 export const werewolf: GameDefinition<WerewolfState> = {
 	id: 'werewolf',
@@ -88,6 +119,8 @@ export const werewolf: GameDefinition<WerewolfState> = {
 			max: 180,
 			step: 15
 		}
+		// narrationGapSeconds is intentionally hidden from the options UI — it's an
+		// audio-timing implementation detail. The default (4s) is set in DEFAULT_OPTIONS.
 	],
 
 	setup(players, options = {}) {
@@ -111,7 +144,8 @@ export const werewolf: GameDefinition<WerewolfState> = {
 			wolfTimerSeconds: num('wolfTimerSeconds', 15),
 			roleTimerSeconds: num('roleTimerSeconds', 20),
 			talkTimerSeconds: num('talkTimerSeconds', 120),
-			voteTimerSeconds: num('voteTimerSeconds', 60)
+			voteTimerSeconds: num('voteTimerSeconds', 60),
+			narrationGapSeconds: num('narrationGapSeconds', 4)
 		}
 		if (autoCompose) opts = { ...opts, ...autoComposition(players.length) }
 		return {
@@ -122,6 +156,7 @@ export const werewolf: GameDefinition<WerewolfState> = {
 			turnPlayerId: players[0],
 			phase: 'night',
 			nightStep: null,
+			nightGap: null,
 			daySubPhase: 'talking',
 			phaseEndTime: null,
 			phaseDurationMs: null,
@@ -242,9 +277,10 @@ export const werewolf: GameDefinition<WerewolfState> = {
 			const next = turn.apply(state, action)
 			if (next === state) return state
 			if (!turn.isComplete(next)) return next
-			// Turn finished — advance immediately instead of waiting on the timer.
+			// Turn finished — pause, then advance (or resolve) instead of waiting on
+			// the full turn timer.
 			const further = nextActiveStep(next, next.nightStep)
-			return further ? startStep(next, further, now) : resolveNight(next, now)
+			return pauseBeforeStep(next, further, now)
 		}
 
 		if (action.type === 'DAY_VOTE') {
@@ -292,9 +328,10 @@ export const werewolf: GameDefinition<WerewolfState> = {
 			if (state.pendingHunter) return resumeAfterHunter(state, now)
 			if (state.pendingMayor) return resolveMayorSuccession(state, null, now)
 			if (state.phase === 'night') {
+				// Timer fired during a between-turn pause — start the queued step.
+				if (state.nightGap !== null) return resolveNightGap(state, now)
 				const next = nextActiveStep(state, state.nightStep)
-				if (next) return startStep(state, next, now)
-				return resolveNight(state, now)
+				return pauseBeforeStep(state, next, now)
 			}
 			if (state.phase === 'day') {
 				if (state.daySubPhase === 'electing') return resolveMayorElection(state, now)

@@ -64,6 +64,23 @@ $effect(() => {
 					</div>
 					<p class="text-xs text-muted-foreground">{$t('settings.timeFormatHint')}</p>
 				</div>
+				<div class="flex flex-col gap-2">
+					<span class="text-xs tracking-widest text-muted-foreground uppercase">{$t('settings.sound')}</span>
+					<div class="flex overflow-hidden rounded-md border border-border text-xs">
+						<button
+							onclick={() => settings.update((s) => ({ ...s, muted: false }))}
+							class="flex-1 px-3 py-1.5 transition-colors {!$settings.muted ? 'bg-foreground text-background' : 'text-muted-foreground hover:text-foreground'}"
+						>
+							{$t('settings.soundOn')}
+						</button>
+						<button
+							onclick={() => settings.update((s) => ({ ...s, muted: true }))}
+							class="flex-1 border-l border-border px-3 py-1.5 transition-colors {$settings.muted ? 'bg-foreground text-background' : 'text-muted-foreground hover:text-foreground'}"
+						>
+							{$t('settings.soundOff')}
+						</button>
+					</div>
+				</div>
 			</div>
 			<div class="flex flex-col border-t border-border px-4 py-3 gap-4">
 				<a

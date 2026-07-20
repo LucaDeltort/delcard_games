@@ -414,6 +414,9 @@ export default {
 		timeFormat12: '12h',
 		timeFormat24: '24h',
 		timeFormatHint: "Utilisé dans l'historique des parties.",
+		sound: 'Son',
+		soundOn: 'Activé',
+		soundOff: 'Désactivé',
 		language: 'Langue',
 		decks: 'Jeux de cartes',
 		changelog: 'Notes de version',
@@ -445,7 +448,7 @@ export default {
 		sixSided: 'Dé à 6 faces'
 	},
 	network: {
-		connectionLost: 'La connexion avec le host a été perdue.',
+		connectionLost: "La connexion avec l'hôte a été perdue.",
 		connectionError: 'Erreur de connexion.',
 		hostNotFound: 'Salon introuvable — vérifie le code.',
 		reconnecting: 'Reconnexion…',
@@ -456,9 +459,11 @@ export default {
 			warn: 'instable',
 			poor: 'faible'
 		},
-		hostGone: 'Le host a quitté la partie.',
-		kicked: 'Tu as été éjecté par le host.',
+		hostGone: "L'hôte a quitté la partie.",
+		kicked: "Tu as été éjecté par l'hôte.",
 		sessionFull: 'Nombre maximal de joueurs atteint dans la session.',
-		gameInProgress: 'Partie déjà en cours.'
+		gameInProgress: 'Partie déjà en cours.',
+		migrating: "Recherche d'un nouvel hôte…",
+		migrationFailed: 'Impossible de trouver un nouvel hôte.'
 	}
 }
