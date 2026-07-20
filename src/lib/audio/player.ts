@@ -63,20 +63,11 @@ export function preloadSounds(sounds: SoundDef[] = ALL_SOUNDS) {
 	for (const s of sounds) loadBuffer(pathFor(s))
 }
 
-function start(path: string, loop: boolean, gain: number): AudioBufferSourceNode | null {
-	const ac = ensureCtx()
-	if (!ac) return null
-	const buf = buffers.get(path)
-	if (!buf) {
-		// Not decoded yet: load, then fire once ready (skip if looping race).
-		loadBuffer(path).then((b) => {
-			if (b && !loop) start(path, false, gain)
-		})
-		return null
-	}
-	const src = ac.createBufferSource()
-	src.buffer = buf
-	src.loop = loop
+/**
+ * Connect src to destination directly (gain=1) or via a GainNode.
+ * Extracted to avoid duplicating the wiring in start() and playSoundUntilEnd().
+ */
+function wireGain(ac: AudioContext, src: AudioBufferSourceNode, gain: number): void {
 	if (gain === 1) {
 		src.connect(ac.destination)
 	} else {
@@ -84,6 +75,23 @@ function start(path: string, loop: boolean, gain: number): AudioBufferSourceNode
 		g.gain.value = gain
 		src.connect(g).connect(ac.destination)
 	}
+}
+
+function start(path: string, loop: boolean, gain: number): AudioBufferSourceNode | null {
+	const ac = ensureCtx()
+	if (!ac) return null
+	const buf = buffers.get(path)
+	if (!buf) {
+		// Not decoded yet: load, then fire once ready (skip if looping race).
+		loadBuffer(path).then((b) => {
+			if (b && !loop && !get(settings).muted) start(path, false, gain)
+		})
+		return null
+	}
+	const src = ac.createBufferSource()
+	src.buffer = buf
+	src.loop = loop
+	wireGain(ac, src, gain)
 	src.start()
 	return src
 }
@@ -130,26 +138,21 @@ export function playSoundUntilEnd(s: SoundDef, volume?: number): Promise<void> {
 			return
 		}
 		const ac = ensureCtx()
-		if (!ac) {
+		if (!ac || ac.state === 'suspended') {
+			// Context suspended (no user gesture yet): onended would never fire,
+			// so resolve immediately rather than stalling the narration chain.
 			resolve()
 			return
 		}
 		loadBuffer(pathFor(s))
 			.then((buf) => {
-				if (!buf) {
-					resolve() // missing file — skip
+				if (!buf || get(settings).muted) {
+					resolve() // missing file or muted mid-load — skip
 					return
 				}
 				const src = ac.createBufferSource()
 				src.buffer = buf
-				const g = volume ?? s.gain
-				if (g === 1) {
-					src.connect(ac.destination)
-				} else {
-					const node = ac.createGain()
-					node.gain.value = g
-					src.connect(node).connect(ac.destination)
-				}
+				wireGain(ac, src, volume ?? s.gain)
 				src.onended = () => resolve()
 				src.start()
 			})
