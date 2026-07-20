@@ -287,8 +287,7 @@ export default {
 			wolfTimerSeconds: 'Minuteur loups (s)',
 			roleTimerSeconds: 'Minuteur rôle (s)',
 			talkTimerSeconds: 'Minuteur discussion (s)',
-			voteTimerSeconds: 'Minuteur vote (s)',
-			narrationGapSeconds: 'Pause narration (s)'
+			voteTimerSeconds: 'Minuteur vote (s)'
 		},
 		desc: {
 			werewolf: 'Chaque nuit, votez secrètement avec les autres loups pour éliminer un villageois.',

@@ -13,7 +13,7 @@ import {
 } from 'lucide-svelte'
 import { onDestroy } from 'svelte'
 import { fade, fly } from 'svelte/transition'
-import { playSoundUntilEnd, unlockAudio } from '$lib/audio/player'
+import { playSoundUntilEnd, preloadSounds, unlockAudio } from '$lib/audio/player'
 import { type SoundDef, Sounds } from '$lib/audio/sounds'
 import GameLayout from '$lib/components/games/GameLayout.svelte'
 import PlayingCard from '$lib/components/PlayingCard.svelte'
@@ -21,7 +21,6 @@ import RulesDrawer from '$lib/components/RulesDrawer.svelte'
 import { Button } from '$lib/components/ui/button'
 import type { GameStateGeneric } from '$lib/core/types'
 import type { Action } from '$lib/engine'
-import { turnByKey } from '$lib/games/werewolf/turns'
 import type { NightStepKey } from '$lib/games/werewolf/types'
 import type { WerewolfState } from '$lib/games/werewolf/werewolf'
 import { t } from '$lib/i18n'
@@ -117,29 +116,36 @@ $effect(() => {
 // finish (+ a short breath) so they never overlap. The longer pause *between*
 // night turns is enforced by the engine (nightGap), not here. Each client
 // narrates locally; starts once everyone is ready.
+const TURN_VOICES: Record<NightStepKey, { wake: SoundDef; sleep: SoundDef }> = {
+	cupid: { wake: Sounds.voice.CupidWake, sleep: Sounds.voice.CupidSleep },
+	defender: { wake: Sounds.voice.DefenderWake, sleep: Sounds.voice.DefenderSleep },
+	wolves: { wake: Sounds.voice.WolvesWake, sleep: Sounds.voice.WolvesSleep },
+	witch: { wake: Sounds.voice.WitchWake, sleep: Sounds.voice.WitchSleep },
+	seer: { wake: Sounds.voice.SeerWake, sleep: Sounds.voice.SeerSleep }
+}
 const CUE_BREATH_MS = 400
 let narrPhase: string | undefined
 let narrStep: NightStepKey | null | undefined
-let narrQueue: SoundDef[] = []
-let narrRunning = false
+// Chained-promise tail: each cue waits for the previous clip to finish (+ a short
+// breath). Structural sequencing replaces mutable narrRunning/narrQueue state.
+let narrTail: Promise<void> = Promise.resolve()
 let narrAlive = true
-
-async function pump() {
-	if (narrRunning) return
-	narrRunning = true
-	while (narrAlive && narrQueue.length > 0) {
-		await playSoundUntilEnd(narrQueue.shift()!)
-		if (narrAlive && narrQueue.length > 0) {
-			await new Promise((r) => setTimeout(r, CUE_BREATH_MS))
-		}
-	}
-	narrRunning = false
-}
 
 function playCues(cues: SoundDef[]) {
 	unlockAudio()
-	narrQueue.push(...cues)
-	pump()
+	preloadSounds() // warm buffer cache (no-op after first call for current locale)
+
+	// Inter-cue breath between consecutive cues of a single batch
+	for (let i = 0; i < cues.length; i++) {
+		const idx = i
+		narrTail = narrTail.then(async () => {
+			if (!narrAlive) return
+			await playSoundUntilEnd(cues[idx])
+			if (narrAlive && idx < cues.length - 1) {
+				await new Promise((r) => setTimeout(r, CUE_BREATH_MS))
+			}
+		})
+	}
 }
 
 onDestroy(() => {
@@ -151,8 +157,8 @@ $effect(() => {
 	if (!allReady) return
 
 	const cues: SoundDef[] = []
-	const sleepOf = (k: NightStepKey | null | undefined) => (k ? turnByKey(k)?.sleepVoice : undefined)
-	const wakeOf = (k: NightStepKey | null | undefined) => (k ? turnByKey(k)?.wakeVoice : undefined)
+	const sleepOf = (k: NightStepKey | null | undefined) => (k ? TURN_VOICES[k]?.sleep : undefined)
+	const wakeOf = (k: NightStepKey | null | undefined) => (k ? TURN_VOICES[k]?.wake : undefined)
 	const push = (v: SoundDef | undefined) => {
 		if (v) cues.push(v)
 	}
@@ -187,6 +193,9 @@ $effect(() => {
 		}
 	}
 
+	// IMPORTANT: phase tracking must update AFTER computing cues but BEFORE
+	// playCues(). Do not add early returns above this line without updating
+	// narrPhase/narrStep first.
 	narrPhase = phase
 	narrStep = step
 

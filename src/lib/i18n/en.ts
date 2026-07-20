@@ -285,8 +285,7 @@ export default {
 			wolfTimerSeconds: 'Wolf phase timer (s)',
 			roleTimerSeconds: 'Role phase timer (s)',
 			talkTimerSeconds: 'Discussion timer (s)',
-			voteTimerSeconds: 'Vote timer (s)',
-			narrationGapSeconds: 'Narration gap (s)'
+			voteTimerSeconds: 'Vote timer (s)'
 		},
 		desc: {
 			werewolf: 'Each night, secretly vote with the other werewolves to eliminate a villager.',

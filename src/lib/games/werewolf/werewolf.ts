@@ -118,16 +118,9 @@ export const werewolf: GameDefinition<WerewolfState> = {
 			min: 15,
 			max: 180,
 			step: 15
-		},
-		{
-			key: 'narrationGapSeconds',
-			label: 'werewolf.options.narrationGapSeconds',
-			type: 'number',
-			default: 4,
-			min: 0,
-			max: 10,
-			step: 1
 		}
+		// narrationGapSeconds is intentionally hidden from the options UI — it's an
+		// audio-timing implementation detail. The default (4s) is set in DEFAULT_OPTIONS.
 	],
 
 	setup(players, options = {}) {
