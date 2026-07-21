@@ -62,10 +62,12 @@ async function switchPack(packId: string) {
 </script>
 
 <Seo
-	title={entry ? `${entry.name} — Delcard` : 'Deck — Delcard'}
-	description={entry ? `Browse ${entry.name} card packs and styles.` : ''}
+	title={entry ? `${entry.name} | Delcard` : 'Deck | Delcard'}
+	description={entry ? `Browse ${entry.name} card packs and styles. Free, no sign-up.` : ''}
 	canonical="/decks/{slug}"
 	noindex={!entry}
+	titleFr={entry ? `${entry.name} | Delcard` : 'Jeu de cartes | Delcard'}
+	descriptionFr={entry ? `Parcourez les packs et styles de ${entry.name}. Gratuit, sans inscription.` : ''}
 />
 
 <div class="mx-auto w-full max-w-5xl flex-1 px-4 py-8">

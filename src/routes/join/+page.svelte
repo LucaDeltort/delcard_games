@@ -60,9 +60,11 @@ async function joinGame() {
 </script>
 
 <Seo
-	title="Join a game — Delcard"
-	description="Enter your game code to join a friend's card game instantly."
+	title="Join a game | Delcard"
+	description="Enter your game code to join a friend's card game instantly. Free, no sign-up needed."
 	canonical="/join"
+	titleFr="Rejoindre une partie | Delcard"
+	descriptionFr="Entrez votre code de partie pour rejoindre immédiatement une partie de cartes entre amis. Gratuit, sans inscription."
 />
 
 <main class="join-root">

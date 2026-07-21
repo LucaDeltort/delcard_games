@@ -10,6 +10,9 @@ const translations: Record<Locale, typeof fr> = { fr, en }
 
 function getStored(): Locale {
 	if (!browser) return 'fr'
+	const urlParams = new URLSearchParams(window.location.search)
+	const langParam = urlParams.get('lang')
+	if (langParam === 'en' || langParam === 'fr') return langParam
 	const v = localStorage.getItem('locale')
 	return v === 'en' ? 'en' : 'fr'
 }

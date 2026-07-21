@@ -332,7 +332,7 @@ $effect(() => {
 </script>
 
 <Seo
-	title="Game — Delcard"
+	title="Game | Delcard"
 	description="Live card game session."
 	canonical="/game"
 	noindex={true}

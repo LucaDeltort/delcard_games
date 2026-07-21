@@ -45,7 +45,7 @@ const isImmersive = $derived(
 <div class="flex min-h-dvh flex-col">
     {@render children()}
     {#if !isImmersive}
-        <footer class="py-4 text-center text-xs text-muted-foreground">© 2026 Luca Deltort — MIT License</footer>
+        <footer class="py-4 text-center text-xs text-muted-foreground">© 2026 Luca Deltort · MIT License</footer>
     {/if}
 </div>
 {#if !isImmersive}

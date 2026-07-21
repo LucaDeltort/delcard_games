@@ -43,9 +43,11 @@ async function createGame() {
 </script>
 
 <Seo
-	title="Delcard — Card games with friends"
-	description="Play War, Presidents, Werewolf and more with friends — free, no sign-up, peer-to-peer."
+	title="Delcard | Free online card games with friends"
+	description="Play War, Presidents, Werewolf and more with friends. Free, no sign-up, directly in your browser. Peer-to-peer, no server needed."
 	canonical="/"
+	titleFr="Delcard | Jeux de cartes en ligne gratuits avec des amis"
+	descriptionFr="Jouez à la Bataille, au Président, au Loup-Garou et plus encore entre amis. Gratuit, sans inscription, directement dans votre navigateur. En pair-à-pair, sans serveur."
 />
 
 <div class="bg-diamond" aria-hidden="true">◆</div>

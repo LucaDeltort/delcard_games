@@ -21,10 +21,12 @@ $effect(() => {
 </script>
 
 <Seo
-	title={entry ? `${entry.name} — Delcard` : 'Dice — Delcard'}
-	description={entry ? `Browse ${entry.name} dice packs and styles.` : ''}
+	title={entry ? `${entry.name} | Delcard` : 'Dice | Delcard'}
+	description={entry ? `Browse ${entry.name} dice packs and styles. Free, no sign-up.` : ''}
 	canonical="/dice/{slug}"
 	noindex={!entry}
+	titleFr={entry ? `${entry.name} | Delcard` : 'Dés | Delcard'}
+	descriptionFr={entry ? `Parcourez les packs et styles de dés ${entry.name}. Gratuit, sans inscription.` : ''}
 />
 
 <div class="mx-auto w-full max-w-5xl flex-1 px-4 py-8">
