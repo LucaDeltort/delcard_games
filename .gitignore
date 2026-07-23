@@ -28,3 +28,6 @@ graphify-out/
 .claude/agent-memory*
 
 Beacode/
+
+# Test coverage
+coverage/
