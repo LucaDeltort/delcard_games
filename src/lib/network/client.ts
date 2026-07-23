@@ -71,7 +71,7 @@ export class GameClient {
 		this.initPeer()
 	}
 
-	// ── sessionStorage helpers ──────────────────────────────────
+	// ── localStorage helpers ──────────────────────────────────
 
 	private storageKey(): string {
 		return `delcard-peerid-${this._code}`
@@ -82,45 +82,95 @@ export class GameClient {
 	}
 
 	private loadStoredPeerId(): string | undefined {
-		if (typeof sessionStorage === 'undefined') return undefined
+		if (typeof localStorage === 'undefined') return undefined
 		try {
-			return sessionStorage.getItem(this.storageKey()) ?? undefined
+			return localStorage.getItem(this.storageKey()) ?? undefined
 		} catch {
 			return undefined
 		}
 	}
 
 	private saveStoredPeerId(id: string) {
-		if (typeof sessionStorage === 'undefined') return
+		if (typeof localStorage === 'undefined') return
 		try {
-			sessionStorage.setItem(this.storageKey(), id)
+			localStorage.setItem(this.storageKey(), id)
+			this.saveStoredPlayerName(this._playerName)
 		} catch {
 			// ignore quota / privacy-mode errors
 		}
 	}
 
 	private clearStoredPeerId() {
-		if (typeof sessionStorage === 'undefined') return
+		if (typeof localStorage === 'undefined') return
 		try {
-			sessionStorage.removeItem(this.storageKey())
+			localStorage.removeItem(this.storageKey())
+			this.clearStoredPlayerName()
+		} catch {
+			// ignore
+		}
+	}
+
+	private playerNameKey(): string {
+		return `delcard-playername-${this._code}`
+	}
+
+	private saveStoredPlayerName(name: string) {
+		if (typeof localStorage === 'undefined') return
+		try {
+			localStorage.setItem(this.playerNameKey(), name)
+		} catch {
+			// ignore quota / privacy-mode errors
+		}
+	}
+
+	private clearStoredPlayerName() {
+		if (typeof localStorage === 'undefined') return
+		try {
+			localStorage.removeItem(this.playerNameKey())
+		} catch {
+			// ignore
+		}
+	}
+
+	static getStoredSession(code: string): { peerId: string; playerName: string } | null {
+		if (typeof localStorage === 'undefined') return null
+		try {
+			const peerId = localStorage.getItem(`delcard-peerid-${code}`)
+			const playerName = localStorage.getItem(`delcard-playername-${code}`)
+			if (peerId && playerName) return { peerId, playerName }
+			return null
+		} catch {
+			return null
+		}
+	}
+
+	static hasStoredSession(code: string): boolean {
+		return GameClient.getStoredSession(code) !== null
+	}
+
+	static clearStoredSession(code: string) {
+		if (typeof localStorage === 'undefined') return
+		try {
+			localStorage.removeItem(`delcard-peerid-${code}`)
+			localStorage.removeItem(`delcard-playername-${code}`)
 		} catch {
 			// ignore
 		}
 	}
 
 	private loadMigrationIndex(): number {
-		if (typeof sessionStorage === 'undefined') return 0
+		if (typeof localStorage === 'undefined') return 0
 		try {
-			return parseInt(sessionStorage.getItem(this.migrationStorageKey()) ?? '0', 10) || 0
+			return parseInt(localStorage.getItem(this.migrationStorageKey()) ?? '0', 10) || 0
 		} catch {
 			return 0
 		}
 	}
 
 	private saveMigrationIndex(index: number) {
-		if (typeof sessionStorage === 'undefined') return
+		if (typeof localStorage === 'undefined') return
 		try {
-			sessionStorage.setItem(this.migrationStorageKey(), String(index))
+			localStorage.setItem(this.migrationStorageKey(), String(index))
 		} catch {
 			// ignore
 		}
@@ -325,7 +375,7 @@ export class GameClient {
 				const now = Date.now()
 				this._lastPongAt = now
 				const rtt = now - msg.t
-				const quality = rtt < 100 ? 'good' : rtt < 300 ? 'warn' : 'poor'
+				const quality = rtt < 250 ? 'good' : rtt < 600 ? 'warn' : 'poor'
 				if (quality !== this._lastQuality) {
 					this._lastQuality = quality
 					this.onQualityChange?.(quality)

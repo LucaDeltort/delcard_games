@@ -446,20 +446,26 @@ export default {
 	network: {
 		connectionLost: 'Connection with host was lost.',
 		connectionError: 'Connection error.',
-		hostNotFound: 'Room not found — check the code.',
+		hostNotFound: 'Room not found - check the code.',
 		reconnecting: 'Reconnecting…',
-		reconnectFailed: 'Could not reconnect.',
+		reconnectFailed: 'Could not reconnect. Try again or go back home.',
+		retry: 'Retry',
+		goHome: 'Go home',
 		connection: 'Connection',
 		quality: {
 			good: 'good',
 			warn: 'unstable',
 			poor: 'poor'
 		},
+		ping: 'Ping',
+		ms: 'ms',
 		hostGone: 'The host left the game.',
 		kicked: 'You were kicked by the host.',
 		sessionFull: 'Maximum number of players reached in this session.',
 		gameInProgress: 'Game already in progress.',
 		migrating: 'Finding a new host…',
+		migrationTitle: 'Host migration',
+		migrationDescription: 'The previous host left. Finding a replacement…',
 		migrationFailed: 'Could not find a new host.'
 	}
 }

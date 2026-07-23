@@ -46,7 +46,47 @@ export class GameHost {
 		this.hostName = hostName
 		this._code = generateCode()
 		this._options = defaultOptions(def.optionsSchema ?? [])
+		this.saveHostSession()
 		this.initPeer()
+	}
+
+	// ── localStorage helpers for host reload ─────────────────
+
+	private hostStorageKey(): string {
+		return `delcard-host-${this._code}`
+	}
+
+	private saveHostSession() {
+		if (typeof localStorage === 'undefined') return
+		try {
+			localStorage.setItem(this.hostStorageKey(), this.hostName)
+		} catch {
+			// ignore quota / privacy-mode errors
+		}
+	}
+
+	static getStoredHostSession(code: string): { playerName: string } | null {
+		if (typeof localStorage === 'undefined') return null
+		try {
+			const playerName = localStorage.getItem(`delcard-host-${code}`)
+			if (playerName) return { playerName }
+			return null
+		} catch {
+			return null
+		}
+	}
+
+	static hasStoredHostSession(code: string): boolean {
+		return GameHost.getStoredHostSession(code) !== null
+	}
+
+	static clearStoredHostSession(code: string) {
+		if (typeof localStorage === 'undefined') return
+		try {
+			localStorage.removeItem(`delcard-host-${code}`)
+		} catch {
+			// ignore
+		}
 	}
 
 	/**
@@ -70,6 +110,7 @@ export class GameHost {
 		instance._options = defaultOptions(def.optionsSchema ?? [])
 		instance._hostPlayerId = hostPlayerId
 		instance._isMigrated = true
+		instance.saveHostSession()
 		instance.clients = new Map()
 		instance.pendingDisconnects = new Map()
 		instance.pendingPlayerIds = new Set()
@@ -344,6 +385,7 @@ export class GameHost {
 				const filtered = this.state.players.filter((p) => p !== playerId)
 				let nextTurn = this.state.turnPlayerId
 				if (nextTurn === playerId) {
+					if (filtered.length === 0) return
 					const idx = this.state.players.indexOf(playerId)
 					nextTurn = this.state.players[(idx + 1) % this.state.players.length]
 					if (nextTurn === playerId) nextTurn = filtered[0] ?? playerId
@@ -476,6 +518,7 @@ export class GameHost {
 		for (const timer of this._pendingMigrationReconnects.values()) clearTimeout(timer)
 		this.pendingDisconnects.clear()
 		this._pendingMigrationReconnects.clear()
+		GameHost.clearStoredHostSession(this._code)
 		// If peer is already destroyed (migrateAway was called), skip HOST_GONE
 		if (!this.peer?.destroyed) {
 			this.broadcast({ type: 'HOST_GONE', message: message ?? get(t)('network.hostGone') })

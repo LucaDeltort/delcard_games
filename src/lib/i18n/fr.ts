@@ -450,20 +450,26 @@ export default {
 	network: {
 		connectionLost: "La connexion avec l'hôte a été perdue.",
 		connectionError: 'Erreur de connexion.',
-		hostNotFound: 'Salon introuvable — vérifie le code.',
+		hostNotFound: 'Salon introuvable - verifie le code.',
 		reconnecting: 'Reconnexion…',
-		reconnectFailed: 'Reconnexion impossible.',
+		reconnectFailed: "Reconnexion impossible. Reessaye ou retourne a l'accueil.",
+		retry: 'Reessayer',
+		goHome: 'Accueil',
 		connection: 'Connexion',
 		quality: {
 			good: 'bonne',
 			warn: 'instable',
 			poor: 'faible'
 		},
-		hostGone: "L'hôte a quitté la partie.",
-		kicked: "Tu as été éjecté par l'hôte.",
+		ping: 'Ping',
+		ms: 'ms',
+		hostGone: "L'hôte a quitte la partie.",
+		kicked: "Tu as ete ejecte par l'hôte.",
 		sessionFull: 'Nombre maximal de joueurs atteint dans la session.',
-		gameInProgress: 'Partie déjà en cours.',
+		gameInProgress: 'Partie deja en cours.',
 		migrating: "Recherche d'un nouvel hôte…",
+		migrationTitle: 'Migration hôte',
+		migrationDescription: "L'ancien hôte a quitte. Recherche d'un remplaçant…",
 		migrationFailed: 'Impossible de trouver un nouvel hôte.'
 	}
 }
