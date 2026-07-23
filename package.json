@@ -13,7 +13,8 @@
 		"format": "biome format --write .",
 		"lint": "biome check --write .",
 		"test": "vitest run",
-		"test:watch": "vitest"
+		"test:watch": "vitest",
+		"test:coverage": "vitest run --coverage"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "^2.4.13",
@@ -27,6 +28,7 @@
 		"@vitest/coverage-v8": "^4.1.10",
 		"globals": "^16.5.0",
 		"husky": "^9.1.7",
+		"jsdom": "^29.1.1",
 		"svelte": "^5.45.6",
 		"svelte-check": "^4.3.4",
 		"tailwind-variants": "^3.2.2",
