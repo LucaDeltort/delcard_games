@@ -576,8 +576,14 @@ describe('blackjack betting — setup & bets', () => {
 		})
 		expect(['playing', 'scoring']).toContain(next.phase)
 		expect(next.zones['hand_p1'].cards).toHaveLength(2)
-		expect(next.coins[P1]).toBe(80)
 		expect(next.bets[P1]).toBe(20)
+		if (next.phase === 'playing') {
+			// No natural blackjack — stake debited, turn continues
+			expect(next.coins[P1]).toBe(80)
+		} else {
+			// Natural blackjack — payout applied immediately (3:2 → +30 on top of stake back)
+			expect(next.coins[P1]).toBe(130) // 100 - 20 + 50 (stake back + 3:2 win)
+		}
 	})
 })
 
