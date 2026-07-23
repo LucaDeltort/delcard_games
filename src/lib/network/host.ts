@@ -50,25 +50,25 @@ export class GameHost {
 		this.initPeer()
 	}
 
-	// ── sessionStorage helpers for host reload ─────────────────
+	// ── localStorage helpers for host reload ─────────────────
 
 	private hostStorageKey(): string {
 		return `delcard-host-${this._code}`
 	}
 
 	private saveHostSession() {
-		if (typeof sessionStorage === 'undefined') return
+		if (typeof localStorage === 'undefined') return
 		try {
-			sessionStorage.setItem(this.hostStorageKey(), this.hostName)
+			localStorage.setItem(this.hostStorageKey(), this.hostName)
 		} catch {
 			// ignore quota / privacy-mode errors
 		}
 	}
 
 	static getStoredHostSession(code: string): { playerName: string } | null {
-		if (typeof sessionStorage === 'undefined') return null
+		if (typeof localStorage === 'undefined') return null
 		try {
-			const playerName = sessionStorage.getItem(`delcard-host-${code}`)
+			const playerName = localStorage.getItem(`delcard-host-${code}`)
 			if (playerName) return { playerName }
 			return null
 		} catch {
@@ -81,9 +81,9 @@ export class GameHost {
 	}
 
 	static clearStoredHostSession(code: string) {
-		if (typeof sessionStorage === 'undefined') return
+		if (typeof localStorage === 'undefined') return
 		try {
-			sessionStorage.removeItem(`delcard-host-${code}`)
+			localStorage.removeItem(`delcard-host-${code}`)
 		} catch {
 			// ignore
 		}

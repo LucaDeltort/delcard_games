@@ -256,7 +256,7 @@ onMount(async () => {
 	} else {
 		let client = get(activeClient)
 		if (!client) {
-			// Page reload — try to recover the client session from sessionStorage
+			// Page reload or reopen - try to recover the client session from localStorage
 			const stored = GameClient.getStoredSession(code)
 			if (stored) {
 				_reconnectingFromReload = true
@@ -472,18 +472,18 @@ $effect(() => {
 	</div>
 {/if}
 
-<!-- ── Connection quality + ping indicator ──────────────────────── -->
+<!-- ── Connection quality indicator ──────────────────────────── -->
 {#if !isHost && connectionQuality && gameState && gameState.phase !== 'gameover'}
-	<div class="fixed right-4 bottom-4 z-40 flex items-center gap-1.5 rounded-full border border-border bg-card/90 px-2.5 py-1.5 text-xs text-muted-foreground backdrop-blur-sm">
+	<div class="fixed right-4 bottom-4 z-40 flex items-center justify-center rounded-full border border-border bg-card/90 p-1.5 backdrop-blur-sm">
 		<span
-			class="h-2 w-2 shrink-0 rounded-full {connectionQuality === 'good'
+			class="block h-2.5 w-2.5 rounded-full {connectionQuality === 'good'
 				? 'bg-green-500'
 				: connectionQuality === 'warn'
 					? 'bg-yellow-500'
 					: 'bg-red-500'}"
-			aria-hidden="true"
+			role="status"
+			aria-label="{$t('network.connection')}: {$t(`network.quality.${connectionQuality}`)}"
 		></span>
-		<span>{$t(`network.quality.${connectionQuality}`)}</span>
 	</div>
 {/if}
 
