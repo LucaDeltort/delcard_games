@@ -23,11 +23,10 @@ function refillDeckIfNeeded(state: PurpleState, required: number): PurpleState {
 	const newZones = { ...state.zones }
 	const newScores = { ...state.scores }
 
-	const turnBank = newZones[`penaltyBank_${state.turnPlayerId}`]
-	newScores[state.turnPlayerId] = (newScores[state.turnPlayerId] || 0) + turnBank.cards.length
-
+	// Score ALL players' penalty banks before returning cards to the deck
 	state.players.forEach((pId) => {
 		const pBank = newZones[`penaltyBank_${pId}`]
+		newScores[pId] = (newScores[pId] || 0) + pBank.cards.length
 		newCards = [...newCards, ...pBank.cards]
 		newZones[`penaltyBank_${pId}`] = { ...pBank, cards: [] }
 	})
