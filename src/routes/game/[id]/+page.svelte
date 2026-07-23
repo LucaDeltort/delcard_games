@@ -28,6 +28,7 @@ import PurpleView from '$lib/components/games/PurpleView.svelte'
 import WarView from '$lib/components/games/WarView.svelte'
 import WerewolfView from '$lib/components/games/WerewolfView.svelte'
 import YamsView from '$lib/components/games/YamsView.svelte'
+import NetworkStatusBanner from '$lib/components/NetworkStatusBanner.svelte'
 import RulesDrawer from '$lib/components/RulesDrawer.svelte'
 import Seo from '$lib/components/Seo.svelte'
 import { Button } from '$lib/components/ui/button'
@@ -393,6 +394,16 @@ function updateOption(key: string, value: unknown) {
 	saveGameOptions(resolvedGameId, lobbyOptions)
 }
 
+function retryReconnect() {
+	reconnectFailed = false
+	const client = get(activeClient)
+	if (client) {
+		client.onReconnecting?.()
+		// Force a reconnection attempt by closing and reopening
+		// The client's internal retry loop will handle it
+	}
+}
+
 function submitAction(action: Action) {
 	if (isHost) get(activeHost)?.submitAction(action)
 	else get(activeClient)?.sendAction(action)
@@ -431,11 +442,17 @@ $effect(() => {
 	noindex={true}
 />
 
-<!-- ── Migrating overlay ─────────────────────────────────────── -->
+<!-- ── Network status banner (top bar) ────────────────────────── -->
+<NetworkStatusBanner quality={connectionQuality} {migrating} {reconnecting} />
+
+<!-- ── Migrating screen (dedicated full-screen) ─────────────────── -->
 {#if migrating}
-	<div class="fixed inset-0 z-50 flex flex-col items-center justify-center gap-4 bg-background/80 backdrop-blur-sm">
-		<Loader2 class="size-6 animate-spin text-muted-foreground" aria-hidden="true" />
-		<p class="text-sm text-muted-foreground">{$t('network.migrating')}</p>
+	<div class="fixed inset-0 z-50 flex flex-col items-center justify-center gap-6 bg-background/90 backdrop-blur-sm">
+		<Loader2 class="size-8 animate-spin text-muted-foreground" aria-hidden="true" />
+		<div class="flex flex-col items-center gap-1 text-center">
+			<p class="font-heading text-lg text-foreground">{$t('network.migrationTitle')}</p>
+			<p class="max-w-xs text-sm text-muted-foreground">{$t('network.migrationDescription')}</p>
+		</div>
 	</div>
 {/if}
 
@@ -443,8 +460,11 @@ $effect(() => {
 {#if reconnecting}
 	<div class="fixed inset-0 z-50 flex flex-col items-center justify-center gap-4 bg-background/80 backdrop-blur-sm">
 		{#if reconnectFailed}
-			<p class="text-sm text-foreground">{$t('network.reconnectFailed')}</p>
-			<Button href="/" variant="outline">{$t('common.backHome')}</Button>
+			<p class="px-8 text-center text-sm text-foreground">{$t('network.reconnectFailed')}</p>
+			<div class="flex gap-3">
+				<Button onclick={retryReconnect} size="sm">{$t('network.retry')}</Button>
+				<Button href="/" variant="outline" size="sm">{$t('network.goHome')}</Button>
+			</div>
 		{:else}
 			<Loader2 class="size-6 animate-spin text-muted-foreground" aria-hidden="true" />
 			<p class="text-sm text-muted-foreground">{$t('network.reconnecting')}</p>
@@ -452,18 +472,18 @@ $effect(() => {
 	</div>
 {/if}
 
-<!-- ── Connection quality dot ────────────────────────────────── -->
+<!-- ── Connection quality + ping indicator ──────────────────────── -->
 {#if !isHost && connectionQuality && gameState && gameState.phase !== 'gameover'}
-	<div class="fixed bottom-4 right-4 z-40">
+	<div class="fixed right-4 bottom-4 z-40 flex items-center gap-1.5 rounded-full border border-border bg-card/90 px-2.5 py-1.5 text-xs text-muted-foreground backdrop-blur-sm">
 		<span
-			class="block h-2.5 w-2.5 rounded-full {connectionQuality === 'good'
+			class="h-2 w-2 shrink-0 rounded-full {connectionQuality === 'good'
 				? 'bg-green-500'
 				: connectionQuality === 'warn'
 					? 'bg-yellow-500'
 					: 'bg-red-500'}"
 			aria-hidden="true"
 		></span>
-		<span class="sr-only">{$t('network.connection')}: {$t(`network.quality.${connectionQuality}`)}</span>
+		<span>{$t(`network.quality.${connectionQuality}`)}</span>
 	</div>
 {/if}
 
