@@ -38,14 +38,14 @@ import { gameList, games } from '$lib/games/index'
 import type { PurpleState } from '$lib/games/purple/purple'
 import type { WerewolfState } from '$lib/games/werewolf/werewolf'
 import { t } from '$lib/i18n'
-import type { GameClient, MigrationResult } from '$lib/network/client'
-import type { GameHost } from '$lib/network/host'
+import { GameClient, type MigrationResult } from '$lib/network/client'
+import { GameHost } from '$lib/network/host'
 import type { LobbyPlayer } from '$lib/network/messages'
 import { loadGameOptions, saveGameOptions } from '$lib/stores/gameOptions'
 import { activeClient, activeHost } from '$lib/stores/session'
 import { settingsOpen } from '$lib/stores/settings'
 
-const code = $page.params.id
+const code = $page.params.id ?? ''
 let isHost = $state($page.url.searchParams.get('role') === 'host')
 let resolvedGameId = $state($page.url.searchParams.get('game') ?? '')
 
@@ -61,6 +61,7 @@ let confirmOpen = $state(false)
 let connectionQuality = $state<'good' | 'warn' | 'poor' | null>(null)
 let reconnectFailed = $state(false)
 let migrating = $state(false)
+let _reconnectingFromReload = false
 let _reconnectTimeout: ReturnType<typeof setTimeout> | null = null
 let pendingDestination = ''
 let _skipConfirm = false
@@ -202,13 +203,44 @@ function handleMigration(result: MigrationResult) {
 	oldClient?.close()
 }
 
-onMount(() => {
+onMount(async () => {
 	if (!browser) return
 
 	if (isHost) {
-		const host = get(activeHost)
+		let host = get(activeHost)
 		if (!host) {
-			goto('/')
+			// Page reload — try to recover the host session from sessionStorage
+			const stored = GameHost.getStoredHostSession(code)
+			if (stored) {
+				_reconnectingFromReload = true
+				reconnecting = true
+				// We need a game definition; if we don't know the game ID yet,
+				// we can't resume. Try to read it from URL or wait for RESYNC.
+				if (!resolvedGameId) {
+					// Can't resume without knowing which game — redirect home
+					GameHost.clearStoredHostSession(code)
+					reconnecting = false
+					_reconnectingFromReload = false
+					await goto('/')
+					return
+				}
+				const def = games[resolvedGameId]
+				if (!def) {
+					GameHost.clearStoredHostSession(code)
+					reconnecting = false
+					_reconnectingFromReload = false
+					await goto('/')
+					return
+				}
+				// Host reload is not supported for in-progress games because
+				// the host peer ID would collide with the old one. Redirect home.
+				GameHost.clearStoredHostSession(code)
+				reconnecting = false
+				_reconnectingFromReload = false
+				await goto('/')
+				return
+			}
+			await goto('/')
 			return
 		}
 		myPlayerId = host.playerId
@@ -221,9 +253,59 @@ onMount(() => {
 		lobbyOptions = host.options
 		setupHostCallbacks(host)
 	} else {
-		const client = get(activeClient)
+		let client = get(activeClient)
 		if (!client) {
-			goto('/join')
+			// Page reload — try to recover the client session from sessionStorage
+			const stored = GameClient.getStoredSession(code)
+			if (stored) {
+				_reconnectingFromReload = true
+				reconnecting = true
+				const reconnectedClient = new GameClient(
+					code,
+					stored.playerName,
+					undefined,
+					-1,
+					stored.peerId
+				)
+				client = reconnectedClient
+				activeClient.set(reconnectedClient)
+				setupClientCallbacks(reconnectedClient)
+				reconnectedClient.onWelcome = () => {
+					reconnecting = false
+					_reconnectingFromReload = false
+					myPlayerId = reconnectedClient.playerId ?? ''
+					if (reconnectedClient.gameId) {
+						resolvedGameId = reconnectedClient.gameId
+						const def = games[reconnectedClient.gameId]
+						if (def) reconnectedClient.setDef(def)
+					}
+					lobbyOptions = reconnectedClient.options
+					if (reconnectedClient.lobbyPlayers.length > 0)
+						lobbyPlayers = reconnectedClient.lobbyPlayers
+					if (reconnectedClient.lastState) gameState = reconnectedClient.lastState
+				}
+				// Fallback: if no welcome within timeout, redirect to join
+				const reloadTimeout = setTimeout(() => {
+					if (_reconnectingFromReload) {
+						reconnecting = false
+						_reconnectingFromReload = false
+						GameClient.clearStoredSession(code)
+						reconnectedClient.close()
+						activeClient.set(null)
+						goto('/join')
+					}
+				}, 10000)
+				reconnectedClient.onDisconnected = () => {
+					clearTimeout(reloadTimeout)
+					reconnecting = false
+					_reconnectingFromReload = false
+					GameClient.clearStoredSession(code)
+					activeClient.set(null)
+					disconnectedMsg = get(t)('network.connectionLost')
+				}
+				return
+			}
+			await goto('/join')
 			return
 		}
 		setupClientCallbacks(client)
@@ -251,6 +333,14 @@ onDestroy(() => {
 	get(activeClient)?.close()
 })
 
+// Clean up stored sessions when game ends — prevents stale reconnection attempts
+$effect(() => {
+	if (gameState?.phase === 'gameover' && browser) {
+		GameClient.clearStoredSession(code)
+		GameHost.clearStoredHostSession(code)
+	}
+})
+
 beforeNavigate(({ cancel, to, willUnload, type }) => {
 	if (willUnload) return
 	if (type === 'popstate' && !gameState) return
@@ -268,6 +358,9 @@ beforeNavigate(({ cancel, to, willUnload, type }) => {
 
 async function confirmLeave() {
 	confirmOpen = false
+	// Clean up stored sessions so reload after leaving doesn't try to reconnect
+	GameClient.clearStoredSession(code)
+	GameHost.clearStoredHostSession(code)
 	// If host leaves mid-game, migrate rather than terminate the session
 	if (isHost && gameState && gameState.phase !== 'gameover') {
 		const host = get(activeHost)

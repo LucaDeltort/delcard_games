@@ -94,6 +94,7 @@ export class GameClient {
 		if (typeof sessionStorage === 'undefined') return
 		try {
 			sessionStorage.setItem(this.storageKey(), id)
+			this.saveStoredPlayerName(this._playerName)
 		} catch {
 			// ignore quota / privacy-mode errors
 		}
@@ -103,6 +104,55 @@ export class GameClient {
 		if (typeof sessionStorage === 'undefined') return
 		try {
 			sessionStorage.removeItem(this.storageKey())
+			this.clearStoredPlayerName()
+		} catch {
+			// ignore
+		}
+	}
+
+	private playerNameKey(): string {
+		return `delcard-playername-${this._code}`
+	}
+
+	private saveStoredPlayerName(name: string) {
+		if (typeof sessionStorage === 'undefined') return
+		try {
+			sessionStorage.setItem(this.playerNameKey(), name)
+		} catch {
+			// ignore quota / privacy-mode errors
+		}
+	}
+
+	private clearStoredPlayerName() {
+		if (typeof sessionStorage === 'undefined') return
+		try {
+			sessionStorage.removeItem(this.playerNameKey())
+		} catch {
+			// ignore
+		}
+	}
+
+	static getStoredSession(code: string): { peerId: string; playerName: string } | null {
+		if (typeof sessionStorage === 'undefined') return null
+		try {
+			const peerId = sessionStorage.getItem(`delcard-peerid-${code}`)
+			const playerName = sessionStorage.getItem(`delcard-playername-${code}`)
+			if (peerId && playerName) return { peerId, playerName }
+			return null
+		} catch {
+			return null
+		}
+	}
+
+	static hasStoredSession(code: string): boolean {
+		return GameClient.getStoredSession(code) !== null
+	}
+
+	static clearStoredSession(code: string) {
+		if (typeof sessionStorage === 'undefined') return
+		try {
+			sessionStorage.removeItem(`delcard-peerid-${code}`)
+			sessionStorage.removeItem(`delcard-playername-${code}`)
 		} catch {
 			// ignore
 		}
