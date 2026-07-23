@@ -385,6 +385,7 @@ export class GameHost {
 				const filtered = this.state.players.filter((p) => p !== playerId)
 				let nextTurn = this.state.turnPlayerId
 				if (nextTurn === playerId) {
+					if (filtered.length === 0) return
 					const idx = this.state.players.indexOf(playerId)
 					nextTurn = this.state.players[(idx + 1) % this.state.players.length]
 					if (nextTurn === playerId) nextTurn = filtered[0] ?? playerId

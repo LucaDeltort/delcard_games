@@ -396,12 +396,37 @@ function updateOption(key: string, value: unknown) {
 
 function retryReconnect() {
 	reconnectFailed = false
-	const client = get(activeClient)
-	if (client) {
-		client.onReconnecting?.()
-		// Force a reconnection attempt by closing and reopening
-		// The client's internal retry loop will handle it
-	}
+	const oldClient = get(activeClient)
+	if (!oldClient) return
+	// Manually trigger a fresh reconnection attempt.
+	// Creates a new GameClient from the stored session, replacing the old one.
+	reconnecting = true
+	setTimeout(() => {
+		const session = GameClient.getStoredSession(code)
+		if (!session) {
+			reconnecting = false
+			disconnectedMsg = get(t)('network.connectionLost')
+			return
+		}
+		const newClient = new GameClient(code, session.playerName, undefined, -1, session.peerId)
+		activeClient.set(newClient)
+		setupClientCallbacks(newClient)
+		newClient.onWelcome = () => {
+			reconnecting = false
+			myPlayerId = newClient.playerId ?? ''
+			if (newClient.gameId) {
+				resolvedGameId = newClient.gameId
+				const def = games[newClient.gameId]
+				if (def) newClient.setDef(def)
+			}
+		}
+		newClient.onDisconnected = (msg) => {
+			reconnecting = false
+			migrating = false
+			disconnectedMsg = msg
+		}
+		oldClient.close()
+	}, 100)
 }
 
 function submitAction(action: Action) {
@@ -443,7 +468,7 @@ $effect(() => {
 />
 
 <!-- ── Network status banner (top bar) ────────────────────────── -->
-<NetworkStatusBanner quality={connectionQuality} {migrating} {reconnecting} />
+<NetworkStatusBanner quality={connectionQuality} {migrating} />
 
 <!-- ── Migrating screen (dedicated full-screen) ─────────────────── -->
 {#if migrating}

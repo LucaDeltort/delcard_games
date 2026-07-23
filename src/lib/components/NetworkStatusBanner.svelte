@@ -5,10 +5,9 @@ import { t } from '$lib/i18n'
 type Props = {
 	quality?: 'good' | 'warn' | 'poor' | null
 	migrating?: boolean
-	reconnecting?: boolean
 }
 
-let { quality = null, migrating = false, reconnecting = false }: Props = $props()
+let { quality = null, migrating = false }: Props = $props()
 
 const showBanner = $derived(quality === 'warn' || quality === 'poor' || migrating)
 </script>
