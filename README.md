@@ -45,7 +45,7 @@ src/lib/
   engine/     # pure utility functions (shuffle, deal, zones…)
   games/      # one file per game
   decks/      # deck types and visual themes
-  network/    # PeerJS host/client wrappers (in progress)
+  network/    # PeerJS host/client wrappers
 src/routes/
   /           # lobby — create or join a game
   /game/[id]  # game room
