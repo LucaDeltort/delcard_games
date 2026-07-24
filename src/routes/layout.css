@@ -118,4 +118,26 @@
 	h6 {
 		font-family: var(--font-heading);
 	}
+
+	/* Ensure touch targets meet 44x44px minimum on small screens */
+	@media (max-width: 768px) {
+		button:not([disabled]),
+		a:not([aria-disabled="true"]),
+		[role="button"]:not([disabled]) {
+			min-height: 44px;
+			min-width: 44px;
+		}
+		/* Exclude very small inline buttons that shouldn't expand */
+		button.player-kick {
+			min-height: unset;
+			min-width: unset;
+		}
+	}
+
+	/* Prevent horizontal scroll on mobile */
+	html,
+	body {
+		max-width: 100vw;
+		overflow-x: hidden;
+	}
 }

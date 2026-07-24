@@ -12,7 +12,7 @@ import {
 } from 'lucide-svelte'
 import { onDestroy, onMount } from 'svelte'
 import { get } from 'svelte/store'
-import { fade, fly } from 'svelte/transition'
+import { fade } from 'svelte/transition'
 import { browser } from '$app/environment'
 import { beforeNavigate, goto } from '$app/navigation'
 import { page } from '$app/stores'
@@ -20,6 +20,7 @@ import ConfirmDialog from '$lib/components/ConfirmDialog.svelte'
 import DeckPackPicker from '$lib/components/DeckPackPicker.svelte'
 import DicePackPicker from '$lib/components/DicePackPicker.svelte'
 import GameOptionsPanel from '$lib/components/GameOptionsPanel.svelte'
+import GameOverOverlay from '$lib/components/GameOverOverlay.svelte'
 import BlackjackView from '$lib/components/games/BlackjackView.svelte'
 import ColorView from '$lib/components/games/ColorView.svelte'
 import FightView from '$lib/components/games/FightView.svelte'
@@ -435,7 +436,21 @@ function submitAction(action: Action) {
 }
 
 async function copyShareLink() {
-	await navigator.clipboard.writeText(`${window.location.origin}/join?code=${code}`)
+	const link = `${window.location.origin}/join?code=${code}`
+	const shareData = {
+		title: $t('game.shareTitle'),
+		text: $t('game.shareText', { game: gameMeta ? $t(`${gameMeta.id}.name`) : 'Delcard', code }),
+		url: link
+	}
+	if (navigator.share && window.matchMedia('(pointer: coarse)').matches) {
+		try {
+			await navigator.share(shareData)
+			return
+		} catch {
+			// user cancelled — fall through to clipboard
+		}
+	}
+	await navigator.clipboard.writeText(link)
 	codeCopied = true
 	setTimeout(() => (codeCopied = false), 3000)
 }
@@ -820,45 +835,21 @@ $effect(() => {
 	</div>
 {/if}
 
-<!-- ── Game over banner ───────────────────────────────────────── -->
+<!-- ── Game over overlay ─────────────────────────────────────── -->
 {#if gameState?.phase === 'gameover'}
 	{@const winner = games[gameState.activeGameId]?.getWinner(gameState)}
-	{@const winnerName = enrichedPlayers.find((p) => p.id === winner)?.name ?? winner ?? '?'}
-	<div
-		in:fly={{ y: -80, duration: 400 }}
-		class="fixed inset-x-0 top-0 z-50 flex items-center justify-between border-b border-border bg-card/95 px-6 py-4 shadow-lg backdrop-blur-sm"
-	>
-		<div>
-			<p class="text-xs uppercase tracking-widest text-muted-foreground">{$t('game.over')}</p>
-			<p class="font-heading text-xl text-foreground">{winnerName} — {$t('game.wins')}</p>
-			{#if pendingLobbyPlayers.length > 0}
-				<p class="mt-1 text-xs text-muted-foreground">
-					{pendingLobbyPlayers.map((p) => p.name).join(', ')} — {$t('game.joiningNextGame')}
-				</p>
-			{/if}
-		</div>
-		<div class="flex gap-2">
-			{#if isHost}
-				{@const notEnoughPlayers2 = !!gameMeta && lobbyPlayers.length < gameMeta.minPlayers}
-				{@const optionsInvalid2 = !notEnoughPlayers2 && gameDef?.canStart != null && !gameDef.canStart(lobbyOptions, lobbyPlayers.length)}
-				{#if notEnoughPlayers2}
-					<p class="text-xs text-muted-foreground">
-						{$t('game.minPlayersRequired', { n: gameMeta.minPlayers })}
-					</p>
-				{:else if optionsInvalid2}
-					<p class="text-xs text-muted-foreground">{$t('game.optionsInvalid')}</p>
-				{/if}
-				<Button
-					onclick={() => get(activeHost)?.startGame()}
-					disabled={!gameMeta || notEnoughPlayers2 || optionsInvalid2}
-					size="sm"
-				>
-					{$t('game.rematch')}
-				</Button>
-			{/if}
-			<Button href="/" variant="outline" size="sm">{$t('common.backHome')}</Button>
-		</div>
-	</div>
+	{@const _notEnough = !!gameMeta && lobbyPlayers.length < gameMeta.minPlayers}
+	{@const _optionsBad = !_notEnough && gameDef?.canStart != null && !gameDef.canStart(lobbyOptions, lobbyPlayers.length)}
+	<GameOverOverlay
+		gameState={gameState}
+		gameDef={gameDef}
+		gameName={gameMeta ? $t(`${gameMeta.id}.name`) : 'Delcard'}
+		players={enrichedPlayers}
+		winnerId={winner}
+		{isHost}
+		canRematch={!!gameMeta && !_notEnough && !_optionsBad}
+		onRematch={() => get(activeHost)?.startGame()}
+	/>
 {/if}
 
 <ConfirmDialog
