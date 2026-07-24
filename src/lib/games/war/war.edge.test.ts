@@ -63,13 +63,9 @@ describe('War — edge cases (#70)', () => {
 
 	it('does not lose cards during non-tie rounds', () => {
 		const s = setup()
-		// Ensure different face values to avoid tie discard
-		const card1 = s.zones[`deck_${P1}`].cards[0]
-		const card2 = s.zones[`deck_${P2}`].cards[0]
-		// If they happen to be same value, swap one
-		if (card1.face === card2.face) {
-			s.zones[`deck_${P2}`].cards[0] = s.zones[`deck_${P2}`].cards[1]
-		}
+		// Force different face values to avoid tie discard
+		s.zones[`deck_${P1}`].cards[0] = { id: 'fix-1', face: 'A', suit: 'spades', isHidden: true }
+		s.zones[`deck_${P2}`].cards[0] = { id: 'fix-2', face: '2', suit: 'hearts', isHidden: true }
 
 		const totalBefore = s.zones[`deck_${P1}`].cards.length + s.zones[`deck_${P2}`].cards.length
 

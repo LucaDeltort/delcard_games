@@ -45,6 +45,9 @@ export default {
 	game: {
 		linkCopied: 'Link copied!',
 		copyLink: 'Copy invite link',
+		shareLink: 'Share invite',
+		shareTitle: 'Join my card game on Delcard',
+		shareText: "You're invited to play {game} — code: {code}",
 		players: 'Players ({n})',
 		start: 'Start game',
 		minPlayersRequired: 'Minimum {n} players required',
@@ -70,7 +73,11 @@ export default {
 		spectating: "Watching — you'll join the next game",
 		waitingToJoin: '{n} waiting to join',
 		joiningNextGame: 'Joining next game',
-		optionsInvalid: 'Total cards must equal player count.'
+		optionsInvalid: 'Total cards must equal player count.',
+		shareResult: 'Share result',
+		resultShared: 'Result shared!',
+		finalScores: 'Final scores',
+		placement: 'Place'
 	},
 	card: {
 		hidden: 'Hidden card',
@@ -395,6 +402,7 @@ export default {
 		confirmBet: 'Confirm bet',
 		clearBet: 'Clear',
 		allIn: 'All-in',
+		addChip: 'Add {n} chips',
 		betPlaced: 'Bet placed',
 		placingBets: 'Placing bets…',
 		options: {
