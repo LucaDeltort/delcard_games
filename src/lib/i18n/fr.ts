@@ -428,9 +428,7 @@ export default {
 		language: 'Langue',
 		decks: 'Jeux de cartes',
 		changelog: 'Notes de version',
-		bugReport: 'Signaler un bug',
-		proposeCardPack: 'Proposer un jeu de cartes',
-		proposeGame: 'Proposer un jeu'
+		feedback: 'Retour & suggestions'
 	},
 	decks: {
 		title: 'Jeux de cartes',
@@ -493,5 +491,11 @@ export default {
 		desc: 'Annule et passe automatiquement après le délai.',
 		off: 'Désactivé',
 		seconds: '{n}s'
+	},
+	chat: {
+		title: 'Chat',
+		placeholder: 'Écris un message…',
+		send: 'Envoyer',
+		empty: 'Aucun message pour le moment.'
 	}
 }

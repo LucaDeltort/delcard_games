@@ -17,6 +17,7 @@ import { browser } from '$app/environment'
 import { beforeNavigate, goto } from '$app/navigation'
 import { page } from '$app/stores'
 import { onGameStateChange } from '$lib/audio/gameAudio'
+import ChatPanel from '$lib/components/ChatPanel.svelte'
 import ConfirmDialog from '$lib/components/ConfirmDialog.svelte'
 import DeckPackPicker from '$lib/components/DeckPackPicker.svelte'
 import DicePackPicker from '$lib/components/DicePackPicker.svelte'
@@ -44,6 +45,7 @@ import { t } from '$lib/i18n'
 import { GameClient, type MigrationResult } from '$lib/network/client'
 import { GameHost } from '$lib/network/host'
 import type { LobbyPlayer } from '$lib/network/messages'
+import { chatMessages, clearChat, pushChatMessage } from '$lib/stores/chat'
 import { loadGameOptions, saveGameOptions } from '$lib/stores/gameOptions'
 import { activeClient, activeHost } from '$lib/stores/session'
 import { settingsOpen } from '$lib/stores/settings'
@@ -161,6 +163,9 @@ function setupHostCallbacks(host: GameHost) {
 	host.onError = (msg) => {
 		hostError = msg
 	}
+	host.onChat = (playerId, playerName, text) => {
+		pushChatMessage(playerId, playerName, text)
+	}
 	_hostVisibilityHandler = () => {
 		if (document.visibilityState === 'visible') host.reconnectSignaling()
 	}
@@ -201,6 +206,9 @@ function setupClientCallbacks(client: GameClient) {
 	}
 	client.onQualityChange = (q) => {
 		connectionQuality = q
+	}
+	client.onChat = (playerId, playerName, text) => {
+		pushChatMessage(playerId, playerName, text)
 	}
 	client.onMigration = handleMigration
 }
@@ -354,6 +362,7 @@ onDestroy(() => {
 			document.removeEventListener('visibilitychange', _hostVisibilityHandler)
 		if (_hostOnlineHandler) window.removeEventListener('online', _hostOnlineHandler)
 	}
+	clearChat()
 	// Both stores may be populated after migration; close whichever is active
 	get(activeHost)?.close()
 	get(activeClient)?.close()
@@ -457,6 +466,11 @@ function retryReconnect() {
 function submitAction(action: Action) {
 	if (isHost) get(activeHost)?.submitAction(action)
 	else get(activeClient)?.sendAction(action)
+}
+
+function sendChat(text: string) {
+	if (isHost) get(activeHost)?.sendChat(text)
+	else get(activeClient)?.sendChat(text)
 }
 
 async function copyShareLink() {
@@ -909,6 +923,10 @@ $effect(() => {
 	onConfirm={confirmKick}
 	onCancel={() => (kickTarget = null)}
 />
+
+{#if gameState && !isSpectator}
+	<ChatPanel {isHost} onSend={sendChat} />
+{/if}
 
 <style>
 	/* ── Lobby atmospheric background ── */

@@ -424,9 +424,7 @@ export default {
 		language: 'Language',
 		decks: 'Card decks',
 		changelog: 'Changelog',
-		bugReport: 'Report a bug',
-		proposeCardPack: 'Propose a card pack',
-		proposeGame: 'Propose a game'
+		feedback: 'Feedback & suggestions'
 	},
 	decks: {
 		title: 'Card Decks',
@@ -489,5 +487,11 @@ export default {
 		desc: 'Auto-pass after the delay expires.',
 		off: 'Off',
 		seconds: '{n}s'
+	},
+	chat: {
+		title: 'Chat',
+		placeholder: 'Type a message…',
+		send: 'Send',
+		empty: 'No messages yet.'
 	}
 }

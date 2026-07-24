@@ -53,6 +53,7 @@ export class GameClient {
 	onMigrating?: () => void
 	onQualityChange?: (quality: 'good' | 'warn' | 'poor') => void
 	onMigration?: (result: MigrationResult) => void
+	onChat?: (playerId: string, playerName: string, text: string) => void
 
 	constructor(
 		code: string,
@@ -382,6 +383,9 @@ export class GameClient {
 				}
 				break
 			}
+			case 'CHAT_RECEIVE':
+				this.onChat?.(msg.playerId, msg.playerName, msg.text)
+				break
 		}
 	}
 
@@ -560,6 +564,13 @@ export class GameClient {
 			return
 		}
 		this.conn.send({ type: 'ACTION', action } as ClientMessage)
+	}
+
+	sendChat(text: string) {
+		if (!this.conn || !this.conn.open) return
+		const trimmed = text.trim().slice(0, 200)
+		if (!trimmed) return
+		this.conn.send({ type: 'CHAT_SEND', text: trimmed } as ClientMessage)
 	}
 
 	close() {
