@@ -88,6 +88,15 @@ $effect(() => {
 	for (const p of lobbyPlayers) knownNames[p.id] = p.name
 })
 
+// Also populate from game state — late joiners/spectators appear in gameState
+// but may not be in the current lobby list.
+$effect(() => {
+	if (!gameState) return
+	for (const id of gameState.players) {
+		if (!knownNames[id]) knownNames[id] = id
+	}
+})
+
 const enrichedPlayers = $derived(
 	gameState ? gameState.players.map((id) => ({ id, name: knownNames[id] ?? id })) : lobbyPlayers
 )

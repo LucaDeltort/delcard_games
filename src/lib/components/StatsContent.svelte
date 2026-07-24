@@ -1,5 +1,4 @@
 <script lang="ts">
-import { Trophy, X } from 'lucide-svelte'
 import { fly } from 'svelte/transition'
 import { gameList } from '$lib/games'
 import { t } from '$lib/i18n'
