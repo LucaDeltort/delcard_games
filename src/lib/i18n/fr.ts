@@ -484,7 +484,45 @@ export default {
 		played: 'Jouées',
 		wins: 'Victoires',
 		losses: 'Défaites',
-		winRate: 'Taux de victoire'
+		winRate: 'Taux de victoire',
+		war: {
+			cardsWon: 'Cartes gagnées',
+			totalCards: 'Total cartes'
+		},
+		fight: {
+			damageDealt: 'Dégâts infligés',
+			damageTaken: 'Dégâts subis',
+			attacks: 'Attaques portées',
+			charges: 'Charges placées'
+		},
+		color: {
+			cardsLeftInHand: 'Cartes restantes (moy)'
+		},
+		presidents: {
+			wasPresident: 'Fois Président',
+			wasScum: 'Fois Trou du Cul',
+			finalRank: 'Rang final (moy)'
+		},
+		purple: {
+			finalScore: 'Score final (moy)'
+		},
+		werewolf: {
+			wasWerewolf: 'Parties en loup-garou',
+			wasVillager: 'Parties en villageois',
+			wasLover: 'Parties en amoureux',
+			survived: 'Survies'
+		},
+		yams: {
+			scoreTotal: 'Score total (moy)',
+			upperSection: 'Section haute (moy)',
+			lowerSection: 'Section basse (moy)',
+			yamsRolled: 'Yams réalisés'
+		},
+		blackjack: {
+			netGainLoss: 'Gains/pertes nets',
+			rebuys: 'Recaves',
+			coinsFinal: 'Jetons finaux'
+		}
 	},
 	timer: {
 		label: 'Minuteur par tour',

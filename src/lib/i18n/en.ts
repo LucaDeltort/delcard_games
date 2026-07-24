@@ -480,7 +480,45 @@ export default {
 		played: 'Played',
 		wins: 'Wins',
 		losses: 'Losses',
-		winRate: 'Win rate'
+		winRate: 'Win rate',
+		war: {
+			cardsWon: 'Cards won',
+			totalCards: 'Total cards'
+		},
+		fight: {
+			damageDealt: 'Damage dealt',
+			damageTaken: 'Damage taken',
+			attacks: 'Attacks made',
+			charges: 'Charges placed'
+		},
+		color: {
+			cardsLeftInHand: 'Cards left (avg)'
+		},
+		presidents: {
+			wasPresident: 'Times President',
+			wasScum: 'Times Scum',
+			finalRank: 'Final rank (avg)'
+		},
+		purple: {
+			finalScore: 'Final score (avg)'
+		},
+		werewolf: {
+			wasWerewolf: 'Games as werewolf',
+			wasVillager: 'Games as villager',
+			wasLover: 'Games as lover',
+			survived: 'Survivals'
+		},
+		yams: {
+			scoreTotal: 'Total score (avg)',
+			upperSection: 'Upper section (avg)',
+			lowerSection: 'Lower section (avg)',
+			yamsRolled: 'Yams rolled'
+		},
+		blackjack: {
+			netGainLoss: 'Net gain/loss',
+			rebuys: 'Rebuys',
+			coinsFinal: 'Final chips'
+		}
 	},
 	timer: {
 		label: 'Per-turn timer',
