@@ -487,5 +487,11 @@ export default {
 		wins: 'Victoires',
 		losses: 'Défaites',
 		winRate: 'Taux de victoire'
+	},
+	timer: {
+		label: 'Minuteur par tour',
+		desc: 'Annule et passe automatiquement après le délai.',
+		off: 'Désactivé',
+		seconds: '{n}s'
 	}
 }

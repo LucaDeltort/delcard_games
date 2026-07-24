@@ -483,5 +483,11 @@ export default {
 		wins: 'Wins',
 		losses: 'Losses',
 		winRate: 'Win rate'
+	},
+	timer: {
+		label: 'Per-turn timer',
+		desc: 'Auto-pass after the delay expires.',
+		off: 'Off',
+		seconds: '{n}s'
 	}
 }

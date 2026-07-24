@@ -425,15 +425,34 @@ export class GameHost {
 			clearTimeout(this._autoTimer)
 			this._autoTimer = null
 		}
+
+		// Game-specific scheduled action (e.g. Werewolf night phase)
 		const sched = this.def.scheduleAction?.(state)
-		if (!sched) return
-		this._autoTimer = setTimeout(
-			() => {
-				this._autoTimer = null
-				this.handleAction(sched.action.playerId, sched.action)
-			},
-			Math.max(0, sched.delayMs)
-		)
+		if (sched) {
+			this._autoTimer = setTimeout(
+				() => {
+					this._autoTimer = null
+					this.handleAction(sched.action.playerId, sched.action)
+				},
+				Math.max(0, sched.delayMs)
+			)
+			return
+		}
+
+		// Global per-turn timer option
+		const timerSeconds = this._options?.timerSeconds as number | undefined
+		if (!timerSeconds || !state.turnPlayerId) return
+		const validActions = this.def.getValidActions(state, state.turnPlayerId)
+		if (validActions.length === 0) return
+
+		// Pick a "pass"-like action if available, otherwise the first valid one
+		const passAction =
+			validActions.find((a: Action) => a.type === 'PASS' || a.type === 'SKIP') ?? validActions[0]
+
+		this._autoTimer = setTimeout(() => {
+			this._autoTimer = null
+			this.handleAction(passAction.playerId, passAction)
+		}, timerSeconds * 1000)
 	}
 
 	private broadcastLobby() {

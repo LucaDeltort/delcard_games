@@ -652,7 +652,7 @@ $effect(() => {
 					{/each}
 				</ul>
 
-				{#if gameDef?.optionsSchema?.length}
+				{#if gameDef?.optionsSchema?.length || isHost}
 					<Dialog.Root>
 						<Dialog.Trigger
 							class="flex w-full items-center justify-center gap-2 rounded-lg border border-border bg-transparent px-4 py-3 text-sm text-foreground transition-colors hover:border-primary"
@@ -677,12 +677,32 @@ $effect(() => {
 									</Dialog.Close>
 								</div>
 								<div class="flex-1 overflow-y-auto px-4 py-4">
-									<GameOptionsPanel
-										schema={gameDef.optionsSchema}
-										options={lobbyOptions}
-										{isHost}
-										onChange={updateOption}
-									/>
+									{#if gameDef?.optionsSchema?.length}
+										<GameOptionsPanel
+											schema={gameDef.optionsSchema}
+											options={lobbyOptions}
+											{isHost}
+											onChange={updateOption}
+										/>
+									{/if}
+									<!-- Per-turn timer (global, host-only) -->
+									<div class="mt-4 flex items-center justify-between rounded-lg border border-border bg-card px-4 py-3 {isHost ? '' : 'opacity-40'}">
+										<div class="flex flex-col gap-0.5">
+											<span class="text-sm text-foreground">{$t('timer.label')}</span>
+											<span class="text-xs text-muted-foreground">{$t('timer.desc')}</span>
+										</div>
+										<select
+											disabled={!isHost}
+											value={(lobbyOptions.timerSeconds as number) ?? 0}
+											onchange={(e) => updateOption('timerSeconds', Number(e.currentTarget.value))}
+											class="ml-4 shrink-0 rounded-md border border-border bg-secondary px-2 py-1 text-sm text-foreground"
+										>
+											<option value={0}>{$t('timer.off')}</option>
+											<option value={15}>{$t('timer.seconds', { n: 15 })}</option>
+											<option value={30}>{$t('timer.seconds', { n: 30 })}</option>
+											<option value={60}>{$t('timer.seconds', { n: 60 })}</option>
+										</select>
+									</div>
 								</div>
 							</Dialog.Content>
 						</Dialog.Portal>
