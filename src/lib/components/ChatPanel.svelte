@@ -2,7 +2,7 @@
 import { MessageSquare, Send, X } from 'lucide-svelte'
 import { fly } from 'svelte/transition'
 import { t } from '$lib/i18n'
-import { chatMessages, clearChat, pushChatMessage } from '$lib/stores/chat'
+import { chatMessages } from '$lib/stores/chat'
 
 let {
 	isHost,
@@ -24,9 +24,14 @@ function send() {
 }
 
 function handleKeydown(e: KeyboardEvent) {
+	// Stop all keys from bubbling to <svelte:window> handlers (WarView etc.)
+	e.stopPropagation()
 	if (e.key === 'Enter' && !e.shiftKey) {
 		e.preventDefault()
 		send()
+	} else if (e.key === 'Escape') {
+		e.preventDefault()
+		open = false
 	}
 }
 
@@ -69,8 +74,8 @@ $effect(() => {
 			</span>
 			<button
 				onclick={() => (open = false)}
-				class="text-muted-foreground transition-colors hover:text-foreground"
-				aria-label="Close"
+				class="flex size-8 shrink-0 items-center justify-center text-muted-foreground transition-colors hover:text-foreground"
+				aria-label={$t('common.close')}
 			>
 				<X size={14} />
 			</button>

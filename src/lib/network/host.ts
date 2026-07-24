@@ -349,12 +349,14 @@ export class GameHost {
 				const clientEntry = this.clients.get(conn.peer)
 				const senderId = clientEntry?.playerId ?? conn.peer
 				const senderName = clientEntry?.name ?? this.hostName
-				this.onChat?.(senderId, senderName, msg.text.slice(0, 200))
+				const text = msg.text.trim().slice(0, 200)
+				if (!text) return
+				this.onChat?.(senderId, senderName, text)
 				this.broadcast({
 					type: 'CHAT_RECEIVE',
 					playerId: senderId,
 					playerName: senderName,
-					text: msg.text.slice(0, 200)
+					text
 				} as HostMessage)
 			}
 		})

@@ -95,21 +95,21 @@ $effect(() => {
 					{$t('settings.feedback')}
 				</a>
 				<button
-				onclick={() => { $settingsOpen = false; statsOpen = true }}
-				class="flex items-center gap-2 text-xs text-muted-foreground transition-colors hover:text-foreground"
-			>
-				<Trophy size={14} />
-				{$t('stats.title')}
-			</button>
-			<button
-				onclick={() => { $settingsOpen = false; changelogOpen = true }}
-				class="flex items-center gap-2 text-xs text-muted-foreground transition-colors hover:text-foreground"
-			>
-				<ScrollText size={14} />
-				{$t('settings.changelog')}
-			</button>
-			<span class="text-xs text-muted-foreground/50">v{version}</span>
-		</div>
+					onclick={() => { $settingsOpen = false; statsOpen = true }}
+					class="flex items-center gap-2 text-xs text-muted-foreground transition-colors hover:text-foreground"
+				>
+					<Trophy size={14} />
+					{$t('stats.title')}
+				</button>
+				<button
+					onclick={() => { $settingsOpen = false; changelogOpen = true }}
+					class="flex items-center gap-2 text-xs text-muted-foreground transition-colors hover:text-foreground"
+				>
+					<ScrollText size={14} />
+					{$t('settings.changelog')}
+				</button>
+				<span class="text-xs text-muted-foreground/50">v{version}</span>
+			</div>
 	</Dialog.Content>
 </Dialog.Portal>
 </Dialog.Root>
@@ -169,7 +169,7 @@ $effect(() => {
 					<X size={16} />
 				</Dialog.Close>
 			</div>
-			<div class="flex-1 overflow-y-auto p-4">
+			<div class="flex-1 overflow-y-auto overscroll-contain p-4">
 				<StatsContent />
 			</div>
 		</Dialog.Content>

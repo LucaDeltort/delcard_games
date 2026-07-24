@@ -45,11 +45,12 @@ import { t } from '$lib/i18n'
 import { GameClient, type MigrationResult } from '$lib/network/client'
 import { GameHost } from '$lib/network/host'
 import type { LobbyPlayer } from '$lib/network/messages'
+import { extractGameStats } from '$lib/stats/extractors'
 import { chatMessages, clearChat, pushChatMessage } from '$lib/stores/chat'
 import { loadGameOptions, saveGameOptions } from '$lib/stores/gameOptions'
 import { activeClient, activeHost } from '$lib/stores/session'
 import { settingsOpen } from '$lib/stores/settings'
-import { recordGame } from '$lib/stores/stats'
+import { recordGameResult } from '$lib/stores/stats'
 
 const code = $page.params.id ?? ''
 let isHost = $state($page.url.searchParams.get('role') === 'host')
@@ -88,6 +89,15 @@ $effect(() => {
 	for (const p of lobbyPlayers) knownNames[p.id] = p.name
 })
 
+// Also populate from game state — late joiners/spectators appear in gameState
+// but may not be in the current lobby list.
+$effect(() => {
+	if (!gameState) return
+	for (const id of gameState.players) {
+		if (!knownNames[id]) knownNames[id] = id
+	}
+})
+
 const enrichedPlayers = $derived(
 	gameState ? gameState.players.map((id) => ({ id, name: knownNames[id] ?? id })) : lobbyPlayers
 )
@@ -120,8 +130,9 @@ $effect(() => {
 
 	// Record stats when game transitions to over
 	if (prevAudioState && !isPhaseOver(prevAudioState) && isPhaseOver(next)) {
-		const myName = myPlayerId ? knownNames[myPlayerId] : undefined
-		if (myName) recordGame(myName, next.activeGameId, winner === myPlayerId)
+		const won = winner === myPlayerId || (winner !== null && winner === myPlayerId)
+		const extra = extractGameStats(next.activeGameId, next, myPlayerId)
+		recordGameResult(next.activeGameId, won, extra)
 	}
 
 	prevAudioState = next
