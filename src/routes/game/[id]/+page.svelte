@@ -16,6 +16,7 @@ import { fade } from 'svelte/transition'
 import { browser } from '$app/environment'
 import { beforeNavigate, goto } from '$app/navigation'
 import { page } from '$app/stores'
+import { onGameStateChange } from '$lib/audio/gameAudio'
 import ConfirmDialog from '$lib/components/ConfirmDialog.svelte'
 import DeckPackPicker from '$lib/components/DeckPackPicker.svelte'
 import DicePackPicker from '$lib/components/DicePackPicker.svelte'
@@ -99,6 +100,16 @@ $effect(() => {
 	}
 	const def = games[gameState.activeGameId]
 	validActions = def ? def.getValidActions(gameState, myPlayerId) : []
+})
+
+// Reactive game audio: play SFX on state changes
+let prevAudioState: GameStateGeneric | null = null
+$effect(() => {
+	if (!gameState) return
+	const next = gameState
+	const winner = next ? games[next.activeGameId]?.getWinner(next) : undefined
+	onGameStateChange(prevAudioState, next, winner, myPlayerId)
+	prevAudioState = next
 })
 
 $effect(() => {

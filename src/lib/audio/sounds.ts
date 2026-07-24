@@ -21,7 +21,9 @@ export const Sounds = {
 	sfx: {
 		CardFlip: sfx('card-flip'),
 		DiceRoll: sfx('dice-roll'),
-		Boom: sfx('boom')
+		Boom: sfx('boom'),
+		Win: sfx('win', 0.7),
+		Lose: sfx('lose', 0.7)
 	},
 	voice: {
 		// Werewolf narration. wake/sleep pairs per night role + phase + game over.
