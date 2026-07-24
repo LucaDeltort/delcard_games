@@ -1,5 +1,5 @@
 <script lang="ts">
-import { ArrowRight, Club, Diamond, Heart, LogIn, Spade } from 'lucide-svelte'
+import { ArrowRight, Club, Diamond, Heart, LogIn, Spade, Trophy } from 'lucide-svelte'
 import { get } from 'svelte/store'
 import { browser } from '$app/environment'
 import { goto } from '$app/navigation'
@@ -204,10 +204,28 @@ async function createGame() {
 			</div>
 		</a>
 	</div>
+
+	<a href="/stats" class="stats-link">
+		<Trophy size={16} />
+		{$t('stats.title')}
+	</a>
 </main>
 
 <style>
 	/* ── Background atmospheric elements ── */
+	.stats-link {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.4rem;
+		margin-top: 1.5rem;
+		font-size: 0.875rem;
+		color: var(--muted-foreground);
+		opacity: 0.7;
+		text-decoration: none;
+		transition: opacity 0.2s;
+	}
+	.stats-link:hover { opacity: 1; }
+
 	.bg-diamond {
 		position: fixed;
 		font-size: min(60vw, 55vh);

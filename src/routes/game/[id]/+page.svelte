@@ -47,6 +47,7 @@ import type { LobbyPlayer } from '$lib/network/messages'
 import { loadGameOptions, saveGameOptions } from '$lib/stores/gameOptions'
 import { activeClient, activeHost } from '$lib/stores/session'
 import { settingsOpen } from '$lib/stores/settings'
+import { recordGame } from '$lib/stores/stats'
 
 const code = $page.params.id ?? ''
 let isHost = $state($page.url.searchParams.get('role') === 'host')
@@ -104,11 +105,23 @@ $effect(() => {
 
 // Reactive game audio: play SFX on state changes
 let prevAudioState: GameStateGeneric | null = null
+
+function isPhaseOver(state: GameStateGeneric): boolean {
+	return state.phase === 'gameover' || state.phase === 'finished' || state.phase === 'done'
+}
+
 $effect(() => {
 	if (!gameState) return
 	const next = gameState
 	const winner = next ? games[next.activeGameId]?.getWinner(next) : undefined
 	onGameStateChange(prevAudioState, next, winner, myPlayerId)
+
+	// Record stats when game transitions to over
+	if (prevAudioState && !isPhaseOver(prevAudioState) && isPhaseOver(next)) {
+		const myName = myPlayerId ? knownNames[myPlayerId] : undefined
+		if (myName) recordGame(myName, next.activeGameId, winner === myPlayerId)
+	}
+
 	prevAudioState = next
 })
 

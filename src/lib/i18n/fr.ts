@@ -479,5 +479,13 @@ export default {
 		migrationTitle: 'Migration hôte',
 		migrationDescription: "L'ancien hôte a quitte. Recherche d'un remplaçant…",
 		migrationFailed: 'Impossible de trouver un nouvel hôte.'
+	},
+	stats: {
+		title: 'Statistiques',
+		noData: 'Aucune partie jouée pour le moment.',
+		played: 'Jouées',
+		wins: 'Victoires',
+		losses: 'Défaites',
+		winRate: 'Taux de victoire'
 	}
 }

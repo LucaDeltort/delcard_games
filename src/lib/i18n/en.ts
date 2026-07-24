@@ -475,5 +475,13 @@ export default {
 		migrationTitle: 'Host migration',
 		migrationDescription: 'The previous host left. Finding a replacement…',
 		migrationFailed: 'Could not find a new host.'
+	},
+	stats: {
+		title: 'Statistics',
+		noData: 'No games played yet.',
+		played: 'Played',
+		wins: 'Wins',
+		losses: 'Losses',
+		winRate: 'Win rate'
 	}
 }
