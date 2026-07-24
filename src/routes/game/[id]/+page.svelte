@@ -16,6 +16,8 @@ import { fade } from 'svelte/transition'
 import { browser } from '$app/environment'
 import { beforeNavigate, goto } from '$app/navigation'
 import { page } from '$app/stores'
+import { onGameStateChange } from '$lib/audio/gameAudio'
+import ChatPanel from '$lib/components/ChatPanel.svelte'
 import ConfirmDialog from '$lib/components/ConfirmDialog.svelte'
 import DeckPackPicker from '$lib/components/DeckPackPicker.svelte'
 import DicePackPicker from '$lib/components/DicePackPicker.svelte'
@@ -43,9 +45,11 @@ import { t } from '$lib/i18n'
 import { GameClient, type MigrationResult } from '$lib/network/client'
 import { GameHost } from '$lib/network/host'
 import type { LobbyPlayer } from '$lib/network/messages'
+import { chatMessages, clearChat, pushChatMessage } from '$lib/stores/chat'
 import { loadGameOptions, saveGameOptions } from '$lib/stores/gameOptions'
 import { activeClient, activeHost } from '$lib/stores/session'
 import { settingsOpen } from '$lib/stores/settings'
+import { recordGame } from '$lib/stores/stats'
 
 const code = $page.params.id ?? ''
 let isHost = $state($page.url.searchParams.get('role') === 'host')
@@ -101,6 +105,28 @@ $effect(() => {
 	validActions = def ? def.getValidActions(gameState, myPlayerId) : []
 })
 
+// Reactive game audio: play SFX on state changes
+let prevAudioState: GameStateGeneric | null = null
+
+function isPhaseOver(state: GameStateGeneric): boolean {
+	return state.phase === 'gameover' || state.phase === 'finished' || state.phase === 'done'
+}
+
+$effect(() => {
+	if (!gameState) return
+	const next = gameState
+	const winner = next ? games[next.activeGameId]?.getWinner(next) : undefined
+	onGameStateChange(prevAudioState, next, winner, myPlayerId)
+
+	// Record stats when game transitions to over
+	if (prevAudioState && !isPhaseOver(prevAudioState) && isPhaseOver(next)) {
+		const myName = myPlayerId ? knownNames[myPlayerId] : undefined
+		if (myName) recordGame(myName, next.activeGameId, winner === myPlayerId)
+	}
+
+	prevAudioState = next
+})
+
 $effect(() => {
 	if (reconnecting) {
 		reconnectFailed = false
@@ -136,6 +162,9 @@ function setupHostCallbacks(host: GameHost) {
 	}
 	host.onError = (msg) => {
 		hostError = msg
+	}
+	host.onChat = (playerId, playerName, text) => {
+		pushChatMessage(playerId, playerName, text)
 	}
 	_hostVisibilityHandler = () => {
 		if (document.visibilityState === 'visible') host.reconnectSignaling()
@@ -177,6 +206,9 @@ function setupClientCallbacks(client: GameClient) {
 	}
 	client.onQualityChange = (q) => {
 		connectionQuality = q
+	}
+	client.onChat = (playerId, playerName, text) => {
+		pushChatMessage(playerId, playerName, text)
 	}
 	client.onMigration = handleMigration
 }
@@ -330,6 +362,7 @@ onDestroy(() => {
 			document.removeEventListener('visibilitychange', _hostVisibilityHandler)
 		if (_hostOnlineHandler) window.removeEventListener('online', _hostOnlineHandler)
 	}
+	clearChat()
 	// Both stores may be populated after migration; close whichever is active
 	get(activeHost)?.close()
 	get(activeClient)?.close()
@@ -433,6 +466,11 @@ function retryReconnect() {
 function submitAction(action: Action) {
 	if (isHost) get(activeHost)?.submitAction(action)
 	else get(activeClient)?.sendAction(action)
+}
+
+function sendChat(text: string) {
+	if (isHost) get(activeHost)?.sendChat(text)
+	else get(activeClient)?.sendChat(text)
 }
 
 async function copyShareLink() {
@@ -628,7 +666,7 @@ $effect(() => {
 					{/each}
 				</ul>
 
-				{#if gameDef?.optionsSchema?.length}
+				{#if gameDef?.optionsSchema?.length || isHost}
 					<Dialog.Root>
 						<Dialog.Trigger
 							class="flex w-full items-center justify-center gap-2 rounded-lg border border-border bg-transparent px-4 py-3 text-sm text-foreground transition-colors hover:border-primary"
@@ -653,12 +691,32 @@ $effect(() => {
 									</Dialog.Close>
 								</div>
 								<div class="flex-1 overflow-y-auto px-4 py-4">
-									<GameOptionsPanel
-										schema={gameDef.optionsSchema}
-										options={lobbyOptions}
-										{isHost}
-										onChange={updateOption}
-									/>
+									{#if gameDef?.optionsSchema?.length}
+										<GameOptionsPanel
+											schema={gameDef.optionsSchema}
+											options={lobbyOptions}
+											{isHost}
+											onChange={updateOption}
+										/>
+									{/if}
+									<!-- Per-turn timer (global, host-only) -->
+									<div class="mt-4 flex items-center justify-between rounded-lg border border-border bg-card px-4 py-3 {isHost ? '' : 'opacity-40'}">
+										<div class="flex flex-col gap-0.5">
+											<span class="text-sm text-foreground">{$t('timer.label')}</span>
+											<span class="text-xs text-muted-foreground">{$t('timer.desc')}</span>
+										</div>
+										<select
+											disabled={!isHost}
+											value={(lobbyOptions.timerSeconds as number) ?? 0}
+											onchange={(e) => updateOption('timerSeconds', Number(e.currentTarget.value))}
+											class="ml-4 shrink-0 rounded-md border border-border bg-secondary px-2 py-1 text-sm text-foreground"
+										>
+											<option value={0}>{$t('timer.off')}</option>
+											<option value={15}>{$t('timer.seconds', { n: 15 })}</option>
+											<option value={30}>{$t('timer.seconds', { n: 30 })}</option>
+											<option value={60}>{$t('timer.seconds', { n: 60 })}</option>
+										</select>
+									</div>
 								</div>
 							</Dialog.Content>
 						</Dialog.Portal>
@@ -865,6 +923,10 @@ $effect(() => {
 	onConfirm={confirmKick}
 	onCancel={() => (kickTarget = null)}
 />
+
+{#if gameState && !isSpectator}
+	<ChatPanel {isHost} onSend={sendChat} />
+{/if}
 
 <style>
 	/* ── Lobby atmospheric background ── */

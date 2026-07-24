@@ -428,9 +428,7 @@ export default {
 		language: 'Langue',
 		decks: 'Jeux de cartes',
 		changelog: 'Notes de version',
-		bugReport: 'Signaler un bug',
-		proposeCardPack: 'Proposer un jeu de cartes',
-		proposeGame: 'Proposer un jeu'
+		feedback: 'Retour & suggestions'
 	},
 	decks: {
 		title: 'Jeux de cartes',
@@ -479,5 +477,25 @@ export default {
 		migrationTitle: 'Migration hôte',
 		migrationDescription: "L'ancien hôte a quitte. Recherche d'un remplaçant…",
 		migrationFailed: 'Impossible de trouver un nouvel hôte.'
+	},
+	stats: {
+		title: 'Statistiques',
+		noData: 'Aucune partie jouée pour le moment.',
+		played: 'Jouées',
+		wins: 'Victoires',
+		losses: 'Défaites',
+		winRate: 'Taux de victoire'
+	},
+	timer: {
+		label: 'Minuteur par tour',
+		desc: 'Annule et passe automatiquement après le délai.',
+		off: 'Désactivé',
+		seconds: '{n}s'
+	},
+	chat: {
+		title: 'Chat',
+		placeholder: 'Écris un message…',
+		send: 'Envoyer',
+		empty: 'Aucun message pour le moment.'
 	}
 }

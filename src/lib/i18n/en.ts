@@ -424,9 +424,7 @@ export default {
 		language: 'Language',
 		decks: 'Card decks',
 		changelog: 'Changelog',
-		bugReport: 'Report a bug',
-		proposeCardPack: 'Propose a card pack',
-		proposeGame: 'Propose a game'
+		feedback: 'Feedback & suggestions'
 	},
 	decks: {
 		title: 'Card Decks',
@@ -475,5 +473,25 @@ export default {
 		migrationTitle: 'Host migration',
 		migrationDescription: 'The previous host left. Finding a replacement…',
 		migrationFailed: 'Could not find a new host.'
+	},
+	stats: {
+		title: 'Statistics',
+		noData: 'No games played yet.',
+		played: 'Played',
+		wins: 'Wins',
+		losses: 'Losses',
+		winRate: 'Win rate'
+	},
+	timer: {
+		label: 'Per-turn timer',
+		desc: 'Auto-pass after the delay expires.',
+		off: 'Off',
+		seconds: '{n}s'
+	},
+	chat: {
+		title: 'Chat',
+		placeholder: 'Type a message…',
+		send: 'Send',
+		empty: 'No messages yet.'
 	}
 }

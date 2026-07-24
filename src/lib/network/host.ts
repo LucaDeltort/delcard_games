@@ -40,6 +40,7 @@ export class GameHost {
 	onLobbyChange?: (players: LobbyPlayer[]) => void
 	onState?: (state: GameStateGeneric) => void
 	onError?: (message: string) => void
+	onChat?: (playerId: string, playerName: string, text: string) => void
 
 	constructor(def: GameDefinition<GameStateGeneric>, hostName: string) {
 		this.def = def
@@ -344,6 +345,17 @@ export class GameHost {
 				if (this.state) this.sendStateTo(conn, this.state)
 			} else if (msg.type === 'PING') {
 				conn.send({ type: 'PONG', t: msg.t } as HostMessage)
+			} else if (msg.type === 'CHAT_SEND') {
+				const clientEntry = this.clients.get(conn.peer)
+				const senderId = clientEntry?.playerId ?? conn.peer
+				const senderName = clientEntry?.name ?? this.hostName
+				this.onChat?.(senderId, senderName, msg.text.slice(0, 200))
+				this.broadcast({
+					type: 'CHAT_RECEIVE',
+					playerId: senderId,
+					playerName: senderName,
+					text: msg.text.slice(0, 200)
+				} as HostMessage)
 			}
 		})
 
@@ -425,15 +437,34 @@ export class GameHost {
 			clearTimeout(this._autoTimer)
 			this._autoTimer = null
 		}
+
+		// Game-specific scheduled action (e.g. Werewolf night phase)
 		const sched = this.def.scheduleAction?.(state)
-		if (!sched) return
-		this._autoTimer = setTimeout(
-			() => {
-				this._autoTimer = null
-				this.handleAction(sched.action.playerId, sched.action)
-			},
-			Math.max(0, sched.delayMs)
-		)
+		if (sched) {
+			this._autoTimer = setTimeout(
+				() => {
+					this._autoTimer = null
+					this.handleAction(sched.action.playerId, sched.action)
+				},
+				Math.max(0, sched.delayMs)
+			)
+			return
+		}
+
+		// Global per-turn timer option
+		const timerSeconds = this._options?.timerSeconds as number | undefined
+		if (!timerSeconds || !state.turnPlayerId) return
+		const validActions = this.def.getValidActions(state, state.turnPlayerId)
+		if (validActions.length === 0) return
+
+		// Pick a "pass"-like action if available, otherwise the first valid one
+		const passAction =
+			validActions.find((a: Action) => a.type === 'PASS' || a.type === 'SKIP') ?? validActions[0]
+
+		this._autoTimer = setTimeout(() => {
+			this._autoTimer = null
+			this.handleAction(passAction.playerId, passAction)
+		}, timerSeconds * 1000)
 	}
 
 	private broadcastLobby() {
@@ -477,6 +508,18 @@ export class GameHost {
 	/** Host submits their own action (skips the network round-trip). */
 	submitAction(action: Action) {
 		this.handleAction(this.playerId, action)
+	}
+
+	sendChat(text: string) {
+		const trimmed = text.trim().slice(0, 200)
+		if (!trimmed) return
+		this.onChat?.(this.playerId, this.hostName, trimmed)
+		this.broadcast({
+			type: 'CHAT_RECEIVE',
+			playerId: this.playerId,
+			playerName: this.hostName,
+			text: trimmed
+		} as HostMessage)
 	}
 
 	/** Start the game. Player order = lobby order (host first). */
