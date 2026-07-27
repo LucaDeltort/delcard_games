@@ -121,10 +121,8 @@ This project uses `@sveltejs/adapter-netlify`.
 
 ## Bug reports & proposals
 
-Found a bug or want a new feature? Use the in-app forms accessible from the Settings drawer:
-- Bug report -> opens a [Tally form](https://tally.so/r/rj27WR)
-- Card pack proposal -> opens a [Tally form](https://tally.so/r/Y5V8b5)
-- Game proposal -> opens a [Tally form](https://tally.so/r/VLog7J)
+Found a bug or want to suggest something? Use the in-app feedback form accessible from
+the Settings drawer — it opens a [Tally form](https://tally.so/r/PdWqYb).
 
 ## License
 
