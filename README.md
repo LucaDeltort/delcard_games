@@ -1,8 +1,13 @@
 # Delcard Games
 
+[![CI](https://github.com/LucaDeltort/delcard_games/actions/workflows/ci.yml/badge.svg)](https://github.com/LucaDeltort/delcard_games/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
 Play card games with friends, right in your browser. No account, no server, no setup.
 Players connect peer-to-peer via [PeerJS](https://peerjs.com/) (WebRTC) - one player hosts,
 the others join with a 4-character code.
+
+**8 games available:** War, The Fight, Color, Presidents, Purple, Werewolf, Yams, and Blackjack.
 
 ## Quick start
 
@@ -75,7 +80,7 @@ src/routes/
 | Document | Description |
 |----------|-------------|
 | [docs/engine.md](docs/engine.md) | How to build a new game using `GameDefinition<State>`. Covers setup, actions, validation, auto-actions, disconnect handling. |
-| [docs/games/](docs/games/) | Rules for each included game (War, The Fight, Color, Presidents, Purple, Werewolf, Yams). |
+| [docs/games/](docs/games/) | Rules for each included game (War, The Fight, Color, Presidents, Purple, Werewolf, Yams, Blackjack). |
 
 ### Assets
 
@@ -102,6 +107,7 @@ src/routes/
 | Document | Description |
 |----------|-------------|
 | [docs/contributing.md](docs/contributing.md) | Contribution guidelines, commit conventions, branch workflow. |
+| [CHANGELOG.md](CHANGELOG.md) | Version history and release notes. |
 | [docs/lab.md](docs/lab.md) | Developer sandbox at `/lab`: component showcase, JSON state editor, single-player testing. |
 
 ## Adding a new game
