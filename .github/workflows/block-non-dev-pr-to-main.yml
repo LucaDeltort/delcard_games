@@ -1,0 +1,25 @@
+name: Block non-dev PRs to main
+
+on:
+  pull_request:
+    types: [opened, reopened, edited, synchronize]
+    branches:
+      - main
+
+permissions:
+  pull-requests: write
+  checks: write
+
+jobs:
+  check-source-branch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify PR source is dev
+        if: github.event.pull_request.head.ref != 'dev'
+        run: |
+          echo "::error::PRs to main are only allowed from dev. Source branch was '${{ github.event.pull_request.head.ref }}'."
+          exit 1
+
+      - name: Pass
+        if: github.event.pull_request.head.ref == 'dev'
+        run: echo "Source branch is dev - OK."
