@@ -672,7 +672,10 @@ export const color: GameDefinition<ColorState> = {
 		if (state.turnPlayerId === playerId) {
 			const oldIdx = state.players.indexOf(playerId)
 			for (let i = 1; i <= state.players.length; i++) {
-				const candidate = state.players[(oldIdx + i * state.direction + state.players.length) % state.players.length]
+				const candidate =
+					state.players[
+						(oldIdx + i * state.direction + state.players.length) % state.players.length
+					]
 				if (players.includes(candidate)) {
 					nextTurn = candidate
 					break

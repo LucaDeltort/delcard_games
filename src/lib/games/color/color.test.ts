@@ -451,7 +451,13 @@ describe('color.onPlayerDisconnect', () => {
 			1,
 			P2
 		)
-		const penaltyState = { ...state, pendingDraw: 4, pendingDrawType: 'four' as const, drewCardId: 'abc', penaltyTurn: true }
+		const penaltyState = {
+			...state,
+			pendingDraw: 4,
+			pendingDrawType: 'four' as const,
+			drewCardId: 'abc',
+			penaltyTurn: true
+		}
 		const next = color.onPlayerDisconnect!(penaltyState, P2)
 		expect(next.pendingDraw).toBe(0)
 		expect(next.pendingDrawType).toBeNull()
@@ -461,7 +467,9 @@ describe('color.onPlayerDisconnect', () => {
 
 	it('removes orphan hand zone of disconnected player', () => {
 		const state = setup()
-		const next = color.onPlayerDisconnect!(state, P3) as typeof state & { zones: Record<string, unknown> }
+		const next = color.onPlayerDisconnect!(state, P3) as typeof state & {
+			zones: Record<string, unknown>
+		}
 		expect(next.zones[`hand_${P3}`]).toBeUndefined()
 	})
 })
