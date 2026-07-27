@@ -121,8 +121,7 @@ This project uses `@sveltejs/adapter-netlify`.
 
 ## Bug reports & proposals
 
-Found a bug or want to suggest something? Use the in-app feedback form accessible from
-the Settings drawer — it opens a [Tally form](https://tally.so/r/PdWqYb).
+Found a bug or want to suggest something? Use the in-app feedback form accessible from the Settings drawer or open this [form](https://tally.so/r/PdWqYb).
 
 ## License
 
