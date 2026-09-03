@@ -436,6 +436,42 @@ describe('color.onPlayerDisconnect', () => {
 		expect(next.players).not.toContain(P3)
 		expect(next.phase).toBe('playing')
 	})
+
+	it('resets pendingDraw and penaltyTurn when player disconnects mid-penalty', () => {
+		const state = makeState(
+			[P1, P2, P3],
+			{
+				p1: [createCard('9', 'red')],
+				p2: [createCard('1', 'blue')],
+				p3: [createCard('2', 'blue')]
+			},
+			createCard('5', 'red'),
+			[createCard('7', 'green')],
+			'red',
+			1,
+			P2
+		)
+		const penaltyState = {
+			...state,
+			pendingDraw: 4,
+			pendingDrawType: 'four' as const,
+			drewCardId: 'abc',
+			penaltyTurn: true
+		}
+		const next = color.onPlayerDisconnect!(penaltyState, P2)
+		expect(next.pendingDraw).toBe(0)
+		expect(next.pendingDrawType).toBeNull()
+		expect(next.drewCardId).toBeNull()
+		expect(next.penaltyTurn).toBe(false)
+	})
+
+	it('removes orphan hand zone of disconnected player', () => {
+		const state = setup()
+		const next = color.onPlayerDisconnect!(state, P3) as typeof state & {
+			zones: Record<string, unknown>
+		}
+		expect(next.zones[`hand_${P3}`]).toBeUndefined()
+	})
 })
 
 describe('color options:accumulation', () => {

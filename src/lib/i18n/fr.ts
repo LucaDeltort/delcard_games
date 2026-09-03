@@ -153,7 +153,7 @@ export default {
 		pass: 'Passer',
 		cards: '{n} cartes',
 		yourTurn: 'Ton tour',
-		newTrick: "Nouveau pli — joue n'importe quoi",
+		newTrick: "Nouveau pli - joue n'importe quoi",
 		finished: 'terminé',
 		single: 'Simple',
 		pair: 'Paire',
