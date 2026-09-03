@@ -152,7 +152,7 @@ export default {
 		pass: 'Pass',
 		cards: '{n} cards',
 		yourTurn: 'Your turn',
-		newTrick: 'New trick — play anything',
+		newTrick: 'New trick - play anything',
 		finished: 'finished',
 		single: 'Single',
 		pair: 'Pair',
