@@ -1,5 +1,15 @@
 # Changelog
 
+## v1.0.0 - 2026-09-03
+
+### Features
+- Version 1.0: 8 card games playable right in your browser, no account, no server
+- In-game chat: talk without leaving the game
+- Configurable per-turn timer (15s, 30s or 60s)
+- Local per-game and per-nickname statistics with charts
+- Reconnect after refresh and automatic host migration when the host leaves
+- Full keyboard accessibility and larger touch targets on mobile
+
 ## v0.10 - 2026-07-15
 
 ### Features

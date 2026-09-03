@@ -3,6 +3,36 @@ type ReleaseNote = { version: string; date: string; items: ReleaseItem[] }
 
 const changelog: ReleaseNote[] = [
 	{
+		version: '1.0.0',
+		date: '2026-09-03',
+		items: [
+			{
+				fr: 'Version 1.0 : 8 jeux de cartes jouables directement dans le navigateur, sans compte ni serveur',
+				en: 'Version 1.0: 8 card games playable right in your browser, no account, no server'
+			},
+			{
+				fr: 'Chat en partie : discutez sans quitter le jeu',
+				en: 'In-game chat: talk without leaving the game'
+			},
+			{
+				fr: 'Minuteur par tour configurable (15s, 30s ou 60s)',
+				en: 'Configurable per-turn timer (15s, 30s or 60s)'
+			},
+			{
+				fr: "Statistiques locales par jeu et par pseudo, avec graphiques",
+				en: 'Local per-game and per-nickname statistics with charts'
+			},
+			{
+				fr: 'Reconnexion après rafraîchissement et migration automatique en cas de départ de l’hôte',
+				en: 'Reconnect after refresh and automatic host migration when the host leaves'
+			},
+			{
+				fr: 'Accessibilité clavier complète et cibles tactiles agrandies sur mobile',
+				en: 'Full keyboard accessibility and larger touch targets on mobile'
+			}
+		]
+	},
+	{
 		version: '0.10',
 		date: '2026-07-15',
 		items: [
