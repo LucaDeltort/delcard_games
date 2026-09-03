@@ -1,6 +1,6 @@
 # Changelog
 
-## v1.0.0 - 2026-09-03
+## v1.0 - 2026-09-03
 
 ### Features
 - Version 1.0: 8 card games playable right in your browser, no account, no server

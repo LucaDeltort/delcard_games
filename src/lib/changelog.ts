@@ -3,7 +3,7 @@ type ReleaseNote = { version: string; date: string; items: ReleaseItem[] }
 
 const changelog: ReleaseNote[] = [
 	{
-		version: '1.0.0',
+		version: '1.0',
 		date: '2026-09-03',
 		items: [
 			{
