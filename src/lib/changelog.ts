@@ -19,7 +19,7 @@ const changelog: ReleaseNote[] = [
 				en: 'Configurable per-turn timer (15s, 30s or 60s)'
 			},
 			{
-				fr: "Statistiques locales par jeu et par pseudo, avec graphiques",
+				fr: 'Statistiques locales par jeu et par pseudo, avec graphiques',
 				en: 'Local per-game and per-nickname statistics with charts'
 			},
 			{
