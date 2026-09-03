@@ -45,6 +45,9 @@ export default {
 	game: {
 		linkCopied: 'Lien copié !',
 		copyLink: "Copier le lien d'invitation",
+		shareLink: 'Partager',
+		shareTitle: 'Rejoins ma partie de cartes sur Delcard',
+		shareText: 'Tu es invité(e) à jouer à {game} — code : {code}',
 		players: 'Joueurs ({n})',
 		start: 'Démarrer la partie',
 		minPlayersRequired: 'Minimum {n} joueurs requis',
@@ -70,7 +73,11 @@ export default {
 		spectating: 'Tu regardes — tu joueras à la prochaine partie',
 		waitingToJoin: '{n} en attente',
 		joiningNextGame: 'Rejoindra la prochaine partie',
-		optionsInvalid: 'Le total des cartes doit correspondre au nombre de joueurs.'
+		optionsInvalid: 'Le total des cartes doit correspondre au nombre de joueurs.',
+		shareResult: 'Partager le résultat',
+		resultShared: 'Résultat partagé !',
+		finalScores: 'Scores finaux',
+		placement: 'Place'
 	},
 	card: {
 		hidden: 'Carte cachée',
@@ -146,7 +153,7 @@ export default {
 		pass: 'Passer',
 		cards: '{n} cartes',
 		yourTurn: 'Ton tour',
-		newTrick: "Nouveau pli — joue n'importe quoi",
+		newTrick: "Nouveau pli - joue n'importe quoi",
 		finished: 'terminé',
 		single: 'Simple',
 		pair: 'Paire',
@@ -399,6 +406,7 @@ export default {
 		confirmBet: 'Valider la mise',
 		clearBet: 'Effacer',
 		allIn: 'Tapis',
+		addChip: 'Ajouter {n} jetons',
 		betPlaced: 'Mise placée',
 		placingBets: 'Mises en cours…',
 		options: {
@@ -420,9 +428,7 @@ export default {
 		language: 'Langue',
 		decks: 'Jeux de cartes',
 		changelog: 'Notes de version',
-		bugReport: 'Signaler un bug',
-		proposeCardPack: 'Proposer un jeu de cartes',
-		proposeGame: 'Proposer un jeu'
+		feedback: 'Retour & suggestions'
 	},
 	decks: {
 		title: 'Jeux de cartes',
@@ -450,20 +456,84 @@ export default {
 	network: {
 		connectionLost: "La connexion avec l'hôte a été perdue.",
 		connectionError: 'Erreur de connexion.',
-		hostNotFound: 'Salon introuvable — vérifie le code.',
+		hostNotFound: 'Salon introuvable - verifie le code.',
 		reconnecting: 'Reconnexion…',
-		reconnectFailed: 'Reconnexion impossible.',
+		reconnectFailed: "Reconnexion impossible. Reessaye ou retourne a l'accueil.",
+		retry: 'Reessayer',
+		goHome: 'Accueil',
 		connection: 'Connexion',
 		quality: {
 			good: 'bonne',
 			warn: 'instable',
 			poor: 'faible'
 		},
-		hostGone: "L'hôte a quitté la partie.",
-		kicked: "Tu as été éjecté par l'hôte.",
+		ping: 'Ping',
+		ms: 'ms',
+		hostGone: "L'hôte a quitte la partie.",
+		kicked: "Tu as ete ejecte par l'hôte.",
 		sessionFull: 'Nombre maximal de joueurs atteint dans la session.',
-		gameInProgress: 'Partie déjà en cours.',
+		gameInProgress: 'Partie deja en cours.',
 		migrating: "Recherche d'un nouvel hôte…",
+		migrationTitle: 'Migration hôte',
+		migrationDescription: "L'ancien hôte a quitte. Recherche d'un remplaçant…",
 		migrationFailed: 'Impossible de trouver un nouvel hôte.'
+	},
+	stats: {
+		title: 'Statistiques',
+		noData: 'Aucune partie jouée pour le moment.',
+		played: 'Jouées',
+		wins: 'Victoires',
+		losses: 'Défaites',
+		winRate: 'Taux de victoire',
+		war: {
+			cardsWon: 'Cartes gagnées',
+			totalCards: 'Total cartes'
+		},
+		fight: {
+			damageDealt: 'Dégâts infligés',
+			damageTaken: 'Dégâts subis',
+			attacks: 'Attaques portées',
+			charges: 'Charges placées'
+		},
+		color: {
+			cardsLeftInHand: 'Cartes restantes (moy)'
+		},
+		presidents: {
+			wasPresident: 'Fois Président',
+			wasScum: 'Fois Trou du Cul',
+			finalRank: 'Rang final (moy)'
+		},
+		purple: {
+			finalScore: 'Score final (moy)'
+		},
+		werewolf: {
+			wasWerewolf: 'Parties en loup-garou',
+			wasVillager: 'Parties en villageois',
+			wasLover: 'Parties en amoureux',
+			survived: 'Survies'
+		},
+		yams: {
+			scoreTotal: 'Score total (moy)',
+			upperSection: 'Section haute (moy)',
+			lowerSection: 'Section basse (moy)',
+			yamsRolled: 'Yams réalisés'
+		},
+		blackjack: {
+			netGainLoss: 'Gains/pertes nets',
+			rebuys: 'Recaves',
+			coinsFinal: 'Jetons finaux'
+		}
+	},
+	timer: {
+		label: 'Minuteur par tour',
+		desc: 'Annule et passe automatiquement après le délai.',
+		off: 'Désactivé',
+		seconds: '{n}s'
+	},
+	chat: {
+		title: 'Chat',
+		placeholder: 'Écris un message…',
+		send: 'Envoyer',
+		empty: 'Aucun message pour le moment.'
 	}
 }

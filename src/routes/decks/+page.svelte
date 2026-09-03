@@ -7,9 +7,11 @@ import { deckPacks, resolvePackFor } from '$lib/stores/deckPacks'
 </script>
 
 <Seo
-	title="Card Decks — Delcard"
-	description="Browse card deck styles for your games — pick your look."
+	title="Card Decks | Delcard"
+	description="Browse card deck styles for your games. Pick your look, all free."
 	canonical="/decks"
+	titleFr="Jeux de cartes | Delcard"
+	descriptionFr="Parcourez les styles de jeux de cartes pour vos parties. Choisissez votre style, tout gratuitement."
 />
 
 <div class="mx-auto w-full max-w-5xl flex-1 px-4 py-8">

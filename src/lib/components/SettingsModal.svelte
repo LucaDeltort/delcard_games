@@ -1,7 +1,8 @@
 <script lang="ts">
 import { Dialog } from 'bits-ui'
-import { Bug, Layers, Lightbulb, ScrollText, X } from 'lucide-svelte'
+import { Bug, ScrollText, Trophy, X } from 'lucide-svelte'
 import { getChangelog } from '$lib/changelog'
+import StatsContent from '$lib/components/StatsContent.svelte'
 import { Select, SelectContent, SelectItem, SelectTrigger } from '$lib/components/ui/select'
 import { type Locale, locale, t } from '$lib/i18n'
 import { settings, settingsOpen } from '$lib/stores/settings'
@@ -9,6 +10,7 @@ import { settings, settingsOpen } from '$lib/stores/settings'
 const version = __APP_VERSION__
 const changelog = getChangelog()
 let changelogOpen = $state(false)
+let statsOpen = $state(false)
 
 const langLabels: Record<Locale, string> = { fr: 'Français', en: 'English' }
 
@@ -84,41 +86,30 @@ $effect(() => {
 			</div>
 			<div class="flex flex-col border-t border-border px-4 py-3 gap-4">
 				<a
-					href="https://tally.so/r/rj27WR"
+					href="https://tally.so/r/PdWqYb"
 					target="_blank"
 					rel="noopener noreferrer"
 					class="flex items-center gap-2 text-xs text-muted-foreground transition-colors hover:text-foreground"
 				>
 					<Bug size={14} />
-					{$t('settings.bugReport')}
-				</a>
-				<a
-					href="https://tally.so/r/Y5V8b5"
-					target="_blank"
-					rel="noopener noreferrer"
-					class="flex items-center gap-2 text-xs text-muted-foreground transition-colors hover:text-foreground"
-				>
-					<Layers size={14} />
-					{$t('settings.proposeCardPack')}
-				</a>
-				<a
-					href="https://tally.so/r/VLog7J"
-					target="_blank"
-					rel="noopener noreferrer"
-					class="flex items-center gap-2 text-xs text-muted-foreground transition-colors hover:text-foreground"
-				>
-					<Lightbulb size={14} />
-					{$t('settings.proposeGame')}
+					{$t('settings.feedback')}
 				</a>
 				<button
-				onclick={() => { $settingsOpen = false; changelogOpen = true }}
-				class="flex items-center gap-2 text-xs text-muted-foreground transition-colors hover:text-foreground"
-			>
-				<ScrollText size={14} />
-				{$t('settings.changelog')}
-			</button>
-			<span class="text-xs text-muted-foreground/50">v{version}</span>
-		</div>
+					onclick={() => { $settingsOpen = false; statsOpen = true }}
+					class="flex items-center gap-2 text-xs text-muted-foreground transition-colors hover:text-foreground"
+				>
+					<Trophy size={14} />
+					{$t('stats.title')}
+				</button>
+				<button
+					onclick={() => { $settingsOpen = false; changelogOpen = true }}
+					class="flex items-center gap-2 text-xs text-muted-foreground transition-colors hover:text-foreground"
+				>
+					<ScrollText size={14} />
+					{$t('settings.changelog')}
+				</button>
+				<span class="text-xs text-muted-foreground/50">v{version}</span>
+			</div>
 	</Dialog.Content>
 </Dialog.Portal>
 </Dialog.Root>
@@ -155,6 +146,31 @@ $effect(() => {
 						</ul>
 					</div>
 				{/each}
+			</div>
+		</Dialog.Content>
+	</Dialog.Portal>
+</Dialog.Root>
+
+<Dialog.Root open={statsOpen} onOpenChange={(v) => (statsOpen = v)}>
+	<Dialog.Portal>
+		<Dialog.Overlay class="fixed inset-0 z-[120] bg-black/20" />
+		<Dialog.Content
+			class="fixed top-1/2 left-1/2 z-[130] flex max-h-[80vh] w-full max-w-lg -translate-x-1/2 -translate-y-1/2 flex-col rounded-xl border border-border bg-card shadow-2xl focus:outline-none"
+		>
+			<div class="flex items-center justify-between border-b border-border px-4 py-3">
+				<Dialog.Title class="flex items-center gap-2 font-heading text-sm tracking-wide text-foreground uppercase">
+					<Trophy size={16} />
+					{$t('stats.title')}
+				</Dialog.Title>
+				<Dialog.Close
+					class="p-2 text-muted-foreground transition-colors hover:text-foreground"
+					aria-label={$t('common.close')}
+				>
+					<X size={16} />
+				</Dialog.Close>
+			</div>
+			<div class="flex-1 overflow-y-auto overscroll-contain p-4">
+				<StatsContent />
 			</div>
 		</Dialog.Content>
 	</Dialog.Portal>

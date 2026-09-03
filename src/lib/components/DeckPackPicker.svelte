@@ -76,7 +76,7 @@ function usePack() {
 </script>
 
 {#if packs.length > 1}
-	<div class="w-full max-w-xs">
+	<div class="mx-auto w-full max-w-xs">
 		<p class="mb-3 text-sm tracking-widest text-muted-foreground uppercase">
 			{$t('game.cardStyle')}
 		</p>

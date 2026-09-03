@@ -40,13 +40,54 @@ export class GameHost {
 	onLobbyChange?: (players: LobbyPlayer[]) => void
 	onState?: (state: GameStateGeneric) => void
 	onError?: (message: string) => void
+	onChat?: (playerId: string, playerName: string, text: string) => void
 
 	constructor(def: GameDefinition<GameStateGeneric>, hostName: string) {
 		this.def = def
 		this.hostName = hostName
 		this._code = generateCode()
 		this._options = defaultOptions(def.optionsSchema ?? [])
+		this.saveHostSession()
 		this.initPeer()
+	}
+
+	// ── localStorage helpers for host reload ─────────────────
+
+	private hostStorageKey(): string {
+		return `delcard-host-${this._code}`
+	}
+
+	private saveHostSession() {
+		if (typeof localStorage === 'undefined') return
+		try {
+			localStorage.setItem(this.hostStorageKey(), this.hostName)
+		} catch {
+			// ignore quota / privacy-mode errors
+		}
+	}
+
+	static getStoredHostSession(code: string): { playerName: string } | null {
+		if (typeof localStorage === 'undefined') return null
+		try {
+			const playerName = localStorage.getItem(`delcard-host-${code}`)
+			if (playerName) return { playerName }
+			return null
+		} catch {
+			return null
+		}
+	}
+
+	static hasStoredHostSession(code: string): boolean {
+		return GameHost.getStoredHostSession(code) !== null
+	}
+
+	static clearStoredHostSession(code: string) {
+		if (typeof localStorage === 'undefined') return
+		try {
+			localStorage.removeItem(`delcard-host-${code}`)
+		} catch {
+			// ignore
+		}
 	}
 
 	/**
@@ -70,6 +111,7 @@ export class GameHost {
 		instance._options = defaultOptions(def.optionsSchema ?? [])
 		instance._hostPlayerId = hostPlayerId
 		instance._isMigrated = true
+		instance.saveHostSession()
 		instance.clients = new Map()
 		instance.pendingDisconnects = new Map()
 		instance.pendingPlayerIds = new Set()
@@ -303,6 +345,19 @@ export class GameHost {
 				if (this.state) this.sendStateTo(conn, this.state)
 			} else if (msg.type === 'PING') {
 				conn.send({ type: 'PONG', t: msg.t } as HostMessage)
+			} else if (msg.type === 'CHAT_SEND') {
+				const clientEntry = this.clients.get(conn.peer)
+				const senderId = clientEntry?.playerId ?? conn.peer
+				const senderName = clientEntry?.name ?? this.hostName
+				const text = msg.text.trim().slice(0, 200)
+				if (!text) return
+				this.onChat?.(senderId, senderName, text)
+				this.broadcast({
+					type: 'CHAT_RECEIVE',
+					playerId: senderId,
+					playerName: senderName,
+					text
+				} as HostMessage)
 			}
 		})
 
@@ -344,6 +399,7 @@ export class GameHost {
 				const filtered = this.state.players.filter((p) => p !== playerId)
 				let nextTurn = this.state.turnPlayerId
 				if (nextTurn === playerId) {
+					if (filtered.length === 0) return
 					const idx = this.state.players.indexOf(playerId)
 					nextTurn = this.state.players[(idx + 1) % this.state.players.length]
 					if (nextTurn === playerId) nextTurn = filtered[0] ?? playerId
@@ -383,15 +439,34 @@ export class GameHost {
 			clearTimeout(this._autoTimer)
 			this._autoTimer = null
 		}
+
+		// Game-specific scheduled action (e.g. Werewolf night phase)
 		const sched = this.def.scheduleAction?.(state)
-		if (!sched) return
-		this._autoTimer = setTimeout(
-			() => {
-				this._autoTimer = null
-				this.handleAction(sched.action.playerId, sched.action)
-			},
-			Math.max(0, sched.delayMs)
-		)
+		if (sched) {
+			this._autoTimer = setTimeout(
+				() => {
+					this._autoTimer = null
+					this.handleAction(sched.action.playerId, sched.action)
+				},
+				Math.max(0, sched.delayMs)
+			)
+			return
+		}
+
+		// Global per-turn timer option
+		const timerSeconds = this._options?.timerSeconds as number | undefined
+		if (!timerSeconds || !state.turnPlayerId) return
+		const validActions = this.def.getValidActions(state, state.turnPlayerId)
+		if (validActions.length === 0) return
+
+		// Pick a "pass"-like action if available, otherwise the first valid one
+		const passAction =
+			validActions.find((a: Action) => a.type === 'PASS' || a.type === 'SKIP') ?? validActions[0]
+
+		this._autoTimer = setTimeout(() => {
+			this._autoTimer = null
+			this.handleAction(passAction.playerId, passAction)
+		}, timerSeconds * 1000)
 	}
 
 	private broadcastLobby() {
@@ -437,6 +512,18 @@ export class GameHost {
 		this.handleAction(this.playerId, action)
 	}
 
+	sendChat(text: string) {
+		const trimmed = text.trim().slice(0, 200)
+		if (!trimmed) return
+		this.onChat?.(this.playerId, this.hostName, trimmed)
+		this.broadcast({
+			type: 'CHAT_RECEIVE',
+			playerId: this.playerId,
+			playerName: this.hostName,
+			text: trimmed
+		} as HostMessage)
+	}
+
 	/** Start the game. Player order = lobby order (host first). */
 	startGame() {
 		this.pendingPlayerIds.clear()
@@ -476,6 +563,7 @@ export class GameHost {
 		for (const timer of this._pendingMigrationReconnects.values()) clearTimeout(timer)
 		this.pendingDisconnects.clear()
 		this._pendingMigrationReconnects.clear()
+		GameHost.clearStoredHostSession(this._code)
 		// If peer is already destroyed (migrateAway was called), skip HOST_GONE
 		if (!this.peer?.destroyed) {
 			this.broadcast({ type: 'HOST_GONE', message: message ?? get(t)('network.hostGone') })

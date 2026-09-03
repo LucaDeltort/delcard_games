@@ -1,7 +1,7 @@
 import { sveltekit } from '@sveltejs/kit/vite'
 import tailwindcss from '@tailwindcss/vite'
 import { readFileSync } from 'fs'
-import { defineConfig } from 'vitest/config'
+import { defineConfig } from 'vite'
 
 const { version } = JSON.parse(readFileSync('package.json', 'utf-8'))
 
@@ -12,8 +12,5 @@ export default defineConfig({
 	},
 	server: {
 		port: 1323
-	},
-	test: {
-		include: ['src/**/*.test.ts']
 	}
 })

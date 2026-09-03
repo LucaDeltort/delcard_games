@@ -576,8 +576,16 @@ describe('blackjack betting — setup & bets', () => {
 		})
 		expect(['playing', 'scoring']).toContain(next.phase)
 		expect(next.zones['hand_p1'].cards).toHaveLength(2)
-		expect(next.coins[P1]).toBe(80)
 		expect(next.bets[P1]).toBe(20)
+		if (next.phase === 'playing') {
+			// No natural blackjack — stake debited, turn continues
+			expect(next.coins[P1]).toBe(80)
+		} else {
+			// Natural blackjack for player or dealer — coins depend on outcome:
+			// Player BJ only → win (130), Dealer BJ + player non-BJ → lose (80),
+			// Both BJ → push (100)
+			expect([80, 100, 130]).toContain(next.coins[P1])
+		}
 	})
 })
 

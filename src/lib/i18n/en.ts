@@ -45,6 +45,9 @@ export default {
 	game: {
 		linkCopied: 'Link copied!',
 		copyLink: 'Copy invite link',
+		shareLink: 'Share invite',
+		shareTitle: 'Join my card game on Delcard',
+		shareText: "You're invited to play {game} — code: {code}",
 		players: 'Players ({n})',
 		start: 'Start game',
 		minPlayersRequired: 'Minimum {n} players required',
@@ -70,7 +73,11 @@ export default {
 		spectating: "Watching — you'll join the next game",
 		waitingToJoin: '{n} waiting to join',
 		joiningNextGame: 'Joining next game',
-		optionsInvalid: 'Total cards must equal player count.'
+		optionsInvalid: 'Total cards must equal player count.',
+		shareResult: 'Share result',
+		resultShared: 'Result shared!',
+		finalScores: 'Final scores',
+		placement: 'Place'
 	},
 	card: {
 		hidden: 'Hidden card',
@@ -145,7 +152,7 @@ export default {
 		pass: 'Pass',
 		cards: '{n} cards',
 		yourTurn: 'Your turn',
-		newTrick: 'New trick — play anything',
+		newTrick: 'New trick - play anything',
 		finished: 'finished',
 		single: 'Single',
 		pair: 'Pair',
@@ -395,6 +402,7 @@ export default {
 		confirmBet: 'Confirm bet',
 		clearBet: 'Clear',
 		allIn: 'All-in',
+		addChip: 'Add {n} chips',
 		betPlaced: 'Bet placed',
 		placingBets: 'Placing bets…',
 		options: {
@@ -416,9 +424,7 @@ export default {
 		language: 'Language',
 		decks: 'Card decks',
 		changelog: 'Changelog',
-		bugReport: 'Report a bug',
-		proposeCardPack: 'Propose a card pack',
-		proposeGame: 'Propose a game'
+		feedback: 'Feedback & suggestions'
 	},
 	decks: {
 		title: 'Card Decks',
@@ -446,20 +452,84 @@ export default {
 	network: {
 		connectionLost: 'Connection with host was lost.',
 		connectionError: 'Connection error.',
-		hostNotFound: 'Room not found — check the code.',
+		hostNotFound: 'Room not found - check the code.',
 		reconnecting: 'Reconnecting…',
-		reconnectFailed: 'Could not reconnect.',
+		reconnectFailed: 'Could not reconnect. Try again or go back home.',
+		retry: 'Retry',
+		goHome: 'Go home',
 		connection: 'Connection',
 		quality: {
 			good: 'good',
 			warn: 'unstable',
 			poor: 'poor'
 		},
+		ping: 'Ping',
+		ms: 'ms',
 		hostGone: 'The host left the game.',
 		kicked: 'You were kicked by the host.',
 		sessionFull: 'Maximum number of players reached in this session.',
 		gameInProgress: 'Game already in progress.',
 		migrating: 'Finding a new host…',
+		migrationTitle: 'Host migration',
+		migrationDescription: 'The previous host left. Finding a replacement…',
 		migrationFailed: 'Could not find a new host.'
+	},
+	stats: {
+		title: 'Statistics',
+		noData: 'No games played yet.',
+		played: 'Played',
+		wins: 'Wins',
+		losses: 'Losses',
+		winRate: 'Win rate',
+		war: {
+			cardsWon: 'Cards won',
+			totalCards: 'Total cards'
+		},
+		fight: {
+			damageDealt: 'Damage dealt',
+			damageTaken: 'Damage taken',
+			attacks: 'Attacks made',
+			charges: 'Charges placed'
+		},
+		color: {
+			cardsLeftInHand: 'Cards left (avg)'
+		},
+		presidents: {
+			wasPresident: 'Times President',
+			wasScum: 'Times Scum',
+			finalRank: 'Final rank (avg)'
+		},
+		purple: {
+			finalScore: 'Final score (avg)'
+		},
+		werewolf: {
+			wasWerewolf: 'Games as werewolf',
+			wasVillager: 'Games as villager',
+			wasLover: 'Games as lover',
+			survived: 'Survivals'
+		},
+		yams: {
+			scoreTotal: 'Total score (avg)',
+			upperSection: 'Upper section (avg)',
+			lowerSection: 'Lower section (avg)',
+			yamsRolled: 'Yams rolled'
+		},
+		blackjack: {
+			netGainLoss: 'Net gain/loss',
+			rebuys: 'Rebuys',
+			coinsFinal: 'Final chips'
+		}
+	},
+	timer: {
+		label: 'Per-turn timer',
+		desc: 'Auto-pass after the delay expires.',
+		off: 'Off',
+		seconds: '{n}s'
+	},
+	chat: {
+		title: 'Chat',
+		placeholder: 'Type a message…',
+		send: 'Send',
+		empty: 'No messages yet.'
 	}
 }

@@ -1,0 +1,107 @@
+name: "🐛 Bug Report"
+description: "Report something that isn't working as expected"
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to file a bug report!
+        Please fill out the sections below — the more detail, the faster we can fix it.
+
+  - type: dropdown
+    id: game
+    attributes:
+      label: Game
+      description: Which game is affected?
+      options:
+        - War
+        - The Fight
+        - Color
+        - Presidents
+        - Purple
+        - Werewolf
+        - Yams
+        - Blackjack
+        - Lobby / General UI
+        - Other / Multiple
+    validations:
+      required: true
+
+  - type: dropdown
+    id: role
+    attributes:
+      label: Your role
+      description: Were you the host or a guest player?
+      options:
+        - Host
+        - Guest (joined with code)
+        - Spectator
+        - Not sure
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: A clear description of the bug.
+      placeholder: "The game froze when..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Exact steps so we can recreate the issue.
+      placeholder: |
+        1. Create a room with code ABCD
+        2. Pick 'Werewolf'
+        3. Start the game with 4 players
+        4. ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behaviour
+      description: What did you think would happen?
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behaviour
+      description: What actually happened?
+    validations:
+      required: true
+
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots / recordings
+      description: If applicable, drag images here.
+
+  - type: input
+    id: browser
+    attributes:
+      label: Browser & OS
+      placeholder: "Chrome 120 on macOS 14"
+    validations:
+      required: true
+
+  - type: textarea
+    id: console-errors
+    attributes:
+      label: Console errors
+      description: Any errors from the browser DevTools console? Paste them here.
+      placeholder: "Uncaught TypeError: ..."
+      render: shell
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: Anything else worth knowing? (network conditions, number of players, etc.)

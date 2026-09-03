@@ -1,0 +1,68 @@
+name: "✨ Feature Request"
+description: "Suggest a new feature or improvement"
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Got an idea to make Delcard Games better?
+        Tell us what and why - concrete problems beat vague ideas.
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      description: Which part of the app does this concern?
+      options:
+        - New game
+        - Existing game (rules / mechanics)
+        - Lobby / Room management
+        - UI / UX
+        - Audio / Sound
+        - Network / Connectivity
+        - Stats / Analytics
+        - Chat
+        - Settings
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or motivation
+      description: What's currently missing or frustrating? Why do you need this?
+      placeholder: "I'm always frustrated when..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed solution
+      description: Describe what you'd like to happen.
+      placeholder: "It would be great if..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Have you thought of other ways to solve this? Why is yours better?
+
+  - type: textarea
+    id: mockups
+    attributes:
+      label: Mockups / references
+      description: Sketches, screenshots from other apps, links — anything visual helps.
+
+  - type: checkboxes
+    id: scope
+    attributes:
+      label: Scope check
+      options:
+        - label: This doesn't require a server/backend (the project is 100% client-side P2P)
+          required: false
+        - label: I've checked existing issues to avoid duplicates
+          required: true

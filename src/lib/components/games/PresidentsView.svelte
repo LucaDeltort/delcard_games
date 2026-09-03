@@ -341,6 +341,9 @@ $effect(() => {
 							class="card-btn {selected
 								? 'card-btn--selected'
 								: ''} {canSelectCard ? 'card-btn--selectable' : 'card-btn--inert'}"
+							aria-pressed={selected}
+							aria-label={$t('card.label', { face: card.face, suit: card.suit ?? '' })}
+							disabled={!canSelectCard}
 						>
 							<PlayingCard {card} size="md" />
 						</button>

@@ -348,6 +348,16 @@
 		{
 			"includes": ["src/app.d.ts"],
 			"linter": { "rules": { "style": { "noNamespace": "off" } } }
+		},
+		{
+			"includes": ["**/*.test.ts", "**/*.edge.test.ts"],
+			"linter": {
+				"rules": {
+					"suspicious": {
+						"noExplicitAny": "off"
+					}
+				}
+			}
 		}
 	],
 	"css": {

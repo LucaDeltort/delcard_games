@@ -106,6 +106,16 @@ function reshuffleDiscard(state: FightState): FightState {
 function popDraw(state: FightState): [FightState, Card] {
 	const s = state.zones.draw.cards.length === 0 ? reshuffleDiscard(state) : state
 	const [raw, ...rest] = s.zones.draw.cards
+	// Guard against empty deck even after reshuffle (all cards exhausted)
+	if (!raw) {
+		const placeholder: Card = {
+			id: `exhausted-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+			face: '',
+			suit: '',
+			isHidden: false
+		}
+		return [{ ...s, zones: { ...s.zones, draw: { ...s.zones.draw, cards: [] } } }, placeholder]
+	}
 	const card = raw.isHidden ? { ...raw, isHidden: false } : raw
 	return [{ ...s, zones: { ...s.zones, draw: { ...s.zones.draw, cards: rest } } }, card]
 }
@@ -372,13 +382,20 @@ export const fight: GameDefinition<FightState> = {
 		if (!state.activePlayers.includes(playerId)) {
 			return { ...state, players: state.players.filter((p) => p !== playerId) }
 		}
+		// Compute next turn BEFORE eliminating (so indexOf still works)
+		const needsTurnAdvance =
+			state.turnPlayerId === playerId || state.pendingBonusAction === playerId
+		const nextPid = needsTurnAdvance
+			? nextActivePid(state.activePlayers, playerId)
+			: state.turnPlayerId
+
 		let s = eliminatePlayer(state, playerId, null)
 		s = { ...s, players: s.players.filter((p) => p !== playerId) }
 		if (s.phase === 'gameover') return s
-		if (state.turnPlayerId === playerId || state.pendingBonusAction === playerId) {
+		if (needsTurnAdvance) {
 			s = {
 				...s,
-				turnPlayerId: nextActivePid(s.activePlayers, playerId),
+				turnPlayerId: nextPid,
 				pendingBonusAction: null
 			}
 		}

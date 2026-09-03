@@ -539,12 +539,12 @@ const dealerWins = $derived(
 					</div>
 					<div class="bet-builder__chips">
 						{#each chipValues as v (v)}
-							<button class="chip" onclick={() => addChip(v)}>+{v}</button>
+							<button class="chip" onclick={() => addChip(v)} aria-label={$t('blackjack.addChip', { n: v })}>+{v}</button>
 						{/each}
-						<button class="chip chip--clear" onclick={() => (betDraft = 0)}>
+						<button class="chip chip--clear" onclick={() => (betDraft = 0)} aria-label={$t('blackjack.clearBet')}>
 							{$t('blackjack.clearBet')}
 						</button>
-						<button class="chip chip--all" onclick={() => (betDraft = myCoins)}>
+						<button class="chip chip--all" onclick={() => (betDraft = myCoins)} aria-label={$t('blackjack.allIn')}>
 							{$t('blackjack.allIn')}
 						</button>
 					</div>

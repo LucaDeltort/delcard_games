@@ -1,7 +1,7 @@
 {
 	"name": "Delcard",
 	"short_name": "Delcard",
-	"description": "Card games with friends — no server",
+	"description": "Card games with friends, no server needed",
 	"start_url": "/",
 	"display": "standalone",
 	"background_color": "#161616",

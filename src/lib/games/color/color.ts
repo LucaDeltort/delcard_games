@@ -666,14 +666,36 @@ export const color: GameDefinition<ColorState> = {
 	onPlayerDisconnect(state, playerId) {
 		const players = state.players.filter((p) => p !== playerId)
 		if (players.length < 2) return { ...state, players, phase: 'gameover' }
-		const nextTurn =
-			state.turnPlayerId === playerId
-				? nextInDir(players, players[0], state.direction)
-				: state.turnPlayerId
+
+		// Find the player after the disconnected one in the original seating order
+		let nextTurn = state.turnPlayerId
+		if (state.turnPlayerId === playerId) {
+			const oldIdx = state.players.indexOf(playerId)
+			for (let i = 1; i <= state.players.length; i++) {
+				const candidate =
+					state.players[
+						(oldIdx + i * state.direction + state.players.length) % state.players.length
+					]
+				if (players.includes(candidate)) {
+					nextTurn = candidate
+					break
+				}
+			}
+		}
+
+		// Remove orphan hand zone
+		const zones = { ...state.zones }
+		delete zones[`hand_${playerId}`]
+
 		return {
 			...state,
 			players,
+			zones,
 			turnPlayerId: nextTurn,
+			pendingDraw: 0,
+			pendingDrawType: null,
+			drewCardId: null,
+			penaltyTurn: false,
 			pendingChallenge: null,
 			lastSkippedPlayer: state.lastSkippedPlayer === playerId ? null : state.lastSkippedPlayer
 		}

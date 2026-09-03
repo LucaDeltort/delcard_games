@@ -9,6 +9,7 @@ export type ClientMessage =
 	| { type: 'RESYNC' }
 	| { type: 'PING'; t: number }
 	| { type: 'PONG'; t: number }
+	| { type: 'CHAT_SEND'; text: string }
 
 export type HostMessage =
 	| { type: 'WELCOME'; playerId: string; gameId: string; hostPlayerId: string }
@@ -19,3 +20,4 @@ export type HostMessage =
 	| { type: 'REJECTED'; message: string }
 	| { type: 'PING'; t: number }
 	| { type: 'PONG'; t: number }
+	| { type: 'CHAT_RECEIVE'; playerId: string; playerName: string; text: string }

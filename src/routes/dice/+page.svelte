@@ -8,9 +8,11 @@ import { dicePacks, resolvePackFor } from '$lib/stores/dicePacks'
 </script>
 
 <Seo
-	title="Dice — Delcard"
-	description="Browse dice styles for your games — classic and custom packs."
+	title="Dice | Delcard"
+	description="Browse dice styles for your games. Classic and custom packs, all free."
 	canonical="/dice"
+	titleFr="Dés | Delcard"
+	descriptionFr="Parcourez les styles de dés pour vos parties. Packs classiques et personnalisés, tout gratuitement."
 />
 
 <div class="mx-auto w-full max-w-5xl flex-1 px-4 py-8">
