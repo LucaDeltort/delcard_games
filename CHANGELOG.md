@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.1 - 2026-10-20
+
+### Features
+- Anonymous usage statistics to improve the site
+- No cookies, no personal data collected
+
 ## v1.0 - 2026-09-03
 
 ### Features
