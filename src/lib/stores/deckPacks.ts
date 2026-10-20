@@ -1,5 +1,6 @@
 import { writable } from 'svelte/store'
 import { browser } from '$app/environment'
+import { track } from '$lib/analytics'
 import { getDeckBySlug } from '$lib/decks/registry'
 import type { CardPack } from '$lib/decks/types'
 
@@ -29,6 +30,7 @@ function createStore() {
 	return {
 		subscribe,
 		select(slug: string, pack: CardPack) {
+			track('deck_pack_selected', { deck: slug, pack: pack.id })
 			update((state) => {
 				const next = { ...state, [slug]: pack.id }
 				if (browser) localStorage.setItem(STORAGE_KEY, JSON.stringify(next))

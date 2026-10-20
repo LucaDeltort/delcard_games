@@ -173,6 +173,7 @@ function setupHostCallbacks(host: GameHost) {
 		gameState = state
 	}
 	host.onError = (msg) => {
+		track('host_error', { game: resolvedGameId, message: msg })
 		hostError = msg
 	}
 	host.onChat = (playerId, playerName, text) => {
@@ -205,14 +206,17 @@ function setupClientCallbacks(client: GameClient) {
 		gameState = state
 	}
 	client.onDisconnected = (msg) => {
+		track('disconnected', { game: resolvedGameId })
 		reconnecting = false
 		migrating = false
 		disconnectedMsg = msg
 	}
 	client.onReconnecting = () => {
+		track('reconnecting', { game: resolvedGameId })
 		reconnecting = true
 	}
 	client.onMigrating = () => {
+		track('host_migrating', { game: resolvedGameId })
 		reconnecting = false
 		migrating = true
 	}
@@ -226,6 +230,7 @@ function setupClientCallbacks(client: GameClient) {
 }
 
 function handleMigration(result: MigrationResult) {
+	track('host_migrated', { game: resolvedGameId, role: result.role })
 	migrating = false
 	reconnecting = false
 	const oldClient = get(activeClient)
@@ -383,7 +388,12 @@ onDestroy(() => {
 // Clean up stored sessions when game ends — prevents stale reconnection attempts
 $effect(() => {
 	if (gameState?.phase === 'gameover' && browser) {
-		track('game_over', { game: resolvedGameId })
+		const winner = games[gameState.activeGameId]?.getWinner(gameState)
+		track('game_over', {
+			game: resolvedGameId,
+			players: gameState.players.length,
+			won: winner === myPlayerId
+		})
 		GameClient.clearStoredSession(code)
 		GameHost.clearStoredHostSession(code)
 	}
@@ -406,6 +416,11 @@ beforeNavigate(({ cancel, to, willUnload, type }) => {
 
 async function confirmLeave() {
 	confirmOpen = false
+	track('game_left', {
+		game: resolvedGameId,
+		role: isHost ? 'host' : 'player',
+		phase: gameState?.phase ?? 'lobby'
+	})
 	// Clean up stored sessions so reload after leaving doesn't try to reconnect
 	GameClient.clearStoredSession(code)
 	GameHost.clearStoredHostSession(code)
@@ -427,6 +442,7 @@ function cancelLeave() {
 }
 
 function confirmKick() {
+	track('player_kicked', { game: resolvedGameId })
 	if (kickTarget) get(activeHost)?.kick(kickTarget.id)
 	kickTarget = null
 }
@@ -437,12 +453,14 @@ function startGame() {
 }
 
 function updateOption(key: string, value: unknown) {
+	track('option_changed', { game: resolvedGameId, key, value: String(value) })
 	get(activeHost)?.updateOption(key, value)
 	lobbyOptions = get(activeHost)?.options ?? {}
 	saveGameOptions(resolvedGameId, lobbyOptions)
 }
 
 function retryReconnect() {
+	track('reconnect_retry', { game: resolvedGameId })
 	reconnectFailed = false
 	const oldClient = get(activeClient)
 	if (!oldClient) return
@@ -478,11 +496,13 @@ function retryReconnect() {
 }
 
 function submitAction(action: Action) {
+	track('game_action', { game: resolvedGameId, type: action.type })
 	if (isHost) get(activeHost)?.submitAction(action)
 	else get(activeClient)?.sendAction(action)
 }
 
 function sendChat(text: string) {
+	track('chat_sent', { game: resolvedGameId })
 	if (isHost) get(activeHost)?.sendChat(text)
 	else get(activeClient)?.sendChat(text)
 }
@@ -496,12 +516,14 @@ async function copyShareLink() {
 	}
 	if (navigator.share && window.matchMedia('(pointer: coarse)').matches) {
 		try {
+			track('share_link_native', { game: resolvedGameId })
 			await navigator.share(shareData)
 			return
 		} catch {
 			// user cancelled — fall through to clipboard
 		}
 	}
+	track('share_link_copied', { game: resolvedGameId })
 	await navigator.clipboard.writeText(link)
 	codeCopied = true
 	setTimeout(() => (codeCopied = false), 3000)
@@ -920,7 +942,10 @@ $effect(() => {
 		winnerId={winner}
 		{isHost}
 		canRematch={!!gameMeta && !_notEnough && !_optionsBad}
-		onRematch={() => get(activeHost)?.startGame()}
+		onRematch={() => {
+			track('rematch', { game: resolvedGameId })
+			get(activeHost)?.startGame()
+		}}
 	/>
 {/if}
 

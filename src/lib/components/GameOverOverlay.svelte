@@ -2,6 +2,7 @@
 import { Check, Share2 } from 'lucide-svelte'
 import { get } from 'svelte/store'
 import { fly } from 'svelte/transition'
+import { track } from '$lib/analytics'
 import { Button } from '$lib/components/ui/button'
 import type { GameStateGeneric } from '$lib/core/types'
 import type { GameDefinition } from '$lib/engine'
@@ -48,6 +49,7 @@ const scores = $derived.by<ScoreEntry[]>(() => {
 })
 
 async function shareResult() {
+	track('result_shared', { game: gameState.activeGameId })
 	let text: string
 	if (scores.length > 0) {
 		const ranking = scores.map((s, i) => `${i + 1}. ${s.name} (${s.score})`).join('\n')

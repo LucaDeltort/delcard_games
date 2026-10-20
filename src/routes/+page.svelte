@@ -87,6 +87,7 @@ async function createGame() {
 									name="game"
 									value={game.id}
 									bind:group={selectedGame}
+									onchange={() => track('game_selected', { game: selectedGame })}
 									class="sr-only"
 								/>
 								<span class="game-name">

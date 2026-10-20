@@ -1,5 +1,6 @@
 import { writable } from 'svelte/store'
 import { browser } from '$app/environment'
+import { track } from '$lib/analytics'
 import { getDiceBySlug } from '$lib/dice/registry'
 import type { DicePack } from '$lib/dice/types'
 
@@ -23,6 +24,7 @@ function createStore() {
 	return {
 		subscribe,
 		select(slug: string, pack: DicePack) {
+			track('dice_pack_selected', { dice: slug, pack: pack.id })
 			update((state) => {
 				const next = { ...state, [slug]: pack.id }
 				if (browser) localStorage.setItem(STORAGE_KEY, JSON.stringify(next))

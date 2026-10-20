@@ -45,6 +45,9 @@ async function joinGame() {
 			setTimeout(() => reject(new Error('__timeout__')), 10000)
 		})
 	} catch (err) {
+		track('join_failed', {
+			reason: err instanceof Error && err.message === '__timeout__' ? 'timeout' : 'error'
+		})
 		if (err instanceof Error && err.message === '__timeout__') {
 			error = get(t)('join.errorTimeout')
 		} else {

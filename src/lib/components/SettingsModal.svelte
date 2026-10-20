@@ -1,6 +1,8 @@
 <script lang="ts">
 import { Dialog } from 'bits-ui'
 import { Bug, ScrollText, Trophy, X } from 'lucide-svelte'
+import { get } from 'svelte/store'
+import { track } from '$lib/analytics'
 import { getChangelog } from '$lib/changelog'
 import StatsContent from '$lib/components/StatsContent.svelte'
 import { Select, SelectContent, SelectItem, SelectTrigger } from '$lib/components/ui/select'
@@ -16,6 +18,7 @@ const langLabels: Record<Locale, string> = { fr: 'Français', en: 'English' }
 
 let lang = $state<Locale>($locale)
 $effect(() => {
+	if (lang !== get(locale)) track('language_changed', { locale: lang })
 	locale.set(lang)
 })
 </script>
@@ -52,13 +55,19 @@ $effect(() => {
 					<span class="text-xs tracking-widest text-muted-foreground uppercase">{$t('settings.timeFormat')}</span>
 					<div class="flex overflow-hidden rounded-md border border-border text-xs">
 						<button
-							onclick={() => settings.update((s) => ({ ...s, timeFormat: '24' }))}
+							onclick={() => {
+								settings.update((s) => ({ ...s, timeFormat: '24' }))
+								track('time_format_changed', { format: '24' })
+							}}
 							class="flex-1 px-3 py-1.5 transition-colors {$settings.timeFormat === '24' ? 'bg-foreground text-background' : 'text-muted-foreground hover:text-foreground'}"
 						>
 							{$t('settings.timeFormat24')}
 						</button>
 						<button
-							onclick={() => settings.update((s) => ({ ...s, timeFormat: '12' }))}
+							onclick={() => {
+								settings.update((s) => ({ ...s, timeFormat: '12' }))
+								track('time_format_changed', { format: '12' })
+							}}
 							class="flex-1 border-l border-border px-3 py-1.5 transition-colors {$settings.timeFormat === '12' ? 'bg-foreground text-background' : 'text-muted-foreground hover:text-foreground'}"
 						>
 							{$t('settings.timeFormat12')}
@@ -70,13 +79,19 @@ $effect(() => {
 					<span class="text-xs tracking-widest text-muted-foreground uppercase">{$t('settings.sound')}</span>
 					<div class="flex overflow-hidden rounded-md border border-border text-xs">
 						<button
-							onclick={() => settings.update((s) => ({ ...s, muted: false }))}
+							onclick={() => {
+								settings.update((s) => ({ ...s, muted: false }))
+								track('sound_toggled', { muted: false })
+							}}
 							class="flex-1 px-3 py-1.5 transition-colors {!$settings.muted ? 'bg-foreground text-background' : 'text-muted-foreground hover:text-foreground'}"
 						>
 							{$t('settings.soundOn')}
 						</button>
 						<button
-							onclick={() => settings.update((s) => ({ ...s, muted: true }))}
+							onclick={() => {
+								settings.update((s) => ({ ...s, muted: true }))
+								track('sound_toggled', { muted: true })
+							}}
 							class="flex-1 border-l border-border px-3 py-1.5 transition-colors {$settings.muted ? 'bg-foreground text-background' : 'text-muted-foreground hover:text-foreground'}"
 						>
 							{$t('settings.soundOff')}
