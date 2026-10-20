@@ -1,6 +1,7 @@
 <script lang="ts">
 import { Dialog } from 'bits-ui'
 import { Info, X } from 'lucide-svelte'
+import { track } from '$lib/analytics'
 import { gameRules } from '$lib/games/index'
 import { locale, t } from '$lib/i18n'
 
@@ -10,6 +11,9 @@ let {
 	children
 }: { gameId: string; size?: number; children?: import('svelte').Snippet } = $props()
 let open = $state(false)
+$effect(() => {
+	if (open) track('rules_opened', { game: gameId })
+})
 const rules = $derived(gameRules[gameId]?.[$locale] ?? null)
 </script>
 

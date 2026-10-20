@@ -4,6 +4,7 @@ import { get } from 'svelte/store'
 import { browser } from '$app/environment'
 import { goto } from '$app/navigation'
 import { page } from '$app/stores'
+import { track } from '$lib/analytics'
 import logo from '$lib/assets/logo.svg'
 import Seo from '$lib/components/Seo.svelte'
 import { Button } from '$lib/components/ui/button'
@@ -44,6 +45,9 @@ async function joinGame() {
 			setTimeout(() => reject(new Error('__timeout__')), 10000)
 		})
 	} catch (err) {
+		track('join_failed', {
+			reason: err instanceof Error && err.message === '__timeout__' ? 'timeout' : 'error'
+		})
 		if (err instanceof Error && err.message === '__timeout__') {
 			error = get(t)('join.errorTimeout')
 		} else {
@@ -55,6 +59,7 @@ async function joinGame() {
 	}
 
 	activeClient.set(client)
+	track('game_joined')
 	goto(`/game/${trimmedCode}?name=${encodeURIComponent(trimmedName)}`)
 }
 </script>
