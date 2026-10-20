@@ -3,6 +3,7 @@ import { ArrowRight, Club, Diamond, Heart, LogIn, Spade } from 'lucide-svelte'
 import { get } from 'svelte/store'
 import { browser } from '$app/environment'
 import { goto } from '$app/navigation'
+import { track } from '$lib/analytics'
 import logo from '$lib/assets/logo.svg'
 import RulesDrawer from '$lib/components/RulesDrawer.svelte'
 import Seo from '$lib/components/Seo.svelte'
@@ -38,6 +39,7 @@ async function createGame() {
 	})
 
 	activeHost.set(host)
+	track('game_created', { game: selectedGame })
 	goto(`/game/${host.code}?role=host&game=${selectedGame}&name=${encodeURIComponent(trimmedName)}`)
 }
 </script>

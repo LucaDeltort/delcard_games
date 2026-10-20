@@ -16,6 +16,7 @@ import { fade } from 'svelte/transition'
 import { browser } from '$app/environment'
 import { beforeNavigate, goto } from '$app/navigation'
 import { page } from '$app/stores'
+import { track } from '$lib/analytics'
 import { onGameStateChange } from '$lib/audio/gameAudio'
 import ChatPanel from '$lib/components/ChatPanel.svelte'
 import ConfirmDialog from '$lib/components/ConfirmDialog.svelte'
@@ -382,6 +383,7 @@ onDestroy(() => {
 // Clean up stored sessions when game ends — prevents stale reconnection attempts
 $effect(() => {
 	if (gameState?.phase === 'gameover' && browser) {
+		track('game_over', { game: resolvedGameId })
 		GameClient.clearStoredSession(code)
 		GameHost.clearStoredHostSession(code)
 	}
@@ -430,6 +432,7 @@ function confirmKick() {
 }
 
 function startGame() {
+	track('game_started', { game: resolvedGameId, players: lobbyPlayers.length })
 	get(activeHost)?.startGame()
 }
 
