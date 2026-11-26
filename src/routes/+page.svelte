@@ -12,6 +12,7 @@ import { Input } from '$lib/components/ui/input'
 import { gameList } from '$lib/games/index'
 import { t } from '$lib/i18n'
 import { GameHost } from '$lib/network/host'
+import { SITE_ORIGIN } from '$lib/seo/config'
 import { activeHost } from '$lib/stores/session'
 
 let selectedGame = $state(gameList[0].id)
@@ -42,15 +43,43 @@ async function createGame() {
 	track('game_created', { game: selectedGame })
 	goto(`/game/${host.code}?role=host&game=${selectedGame}&name=${encodeURIComponent(trimmedName)}`)
 }
+
+const jsonLd = JSON.stringify({
+	'@context': 'https://schema.org',
+	'@graph': [
+		{
+			'@type': 'WebSite',
+			name: 'Delcard',
+			url: `${SITE_ORIGIN}/`,
+			inLanguage: ['fr', 'en']
+		},
+		{
+			'@type': 'WebApplication',
+			name: 'Delcard',
+			url: `${SITE_ORIGIN}/`,
+			applicationCategory: 'GameApplication',
+			operatingSystem: 'Any (web browser)',
+			description:
+				'Free online card and dice games to play with friends in the browser: War, Presidents, Werewolf, Blackjack, Yams and more. No sign-up, no download.',
+			inLanguage: ['fr', 'en'],
+			isAccessibleForFree: true,
+			offers: { '@type': 'Offer', price: '0', priceCurrency: 'EUR' }
+		}
+	]
+})
 </script>
 
 <Seo
-	title="Delcard | Free online card games with friends"
-	description="Play War, Presidents, Werewolf and more with friends. Free, no sign-up, directly in your browser. Peer-to-peer, no server needed."
+	title="Delcard | Free Online Card Games with Friends, No Sign-up"
+	description="Play War, Presidents, Werewolf, Blackjack, Yams and more online with friends. Free, no sign-up, no download: share a code and play in your browser."
 	canonical="/"
-	titleFr="Delcard | Jeux de cartes en ligne gratuits avec des amis"
-	descriptionFr="Jouez à la Bataille, au Président, au Loup-Garou et plus encore entre amis. Gratuit, sans inscription, directement dans votre navigateur. En pair-à-pair, sans serveur."
+	titleFr="Delcard | Jeux de cartes en ligne gratuits entre amis"
+	descriptionFr="Jouez à la Bataille, au Président, au Loup-Garou, au Blackjack, au Yams et plus en ligne entre amis. Gratuit, sans inscription ni téléchargement."
 />
+
+<svelte:head>
+	{@html `<script type="application/ld+json">${jsonLd}</script>`}
+</svelte:head>
 
 <div class="bg-diamond" aria-hidden="true">◆</div>
 <div class="bg-glow" aria-hidden="true"></div>
@@ -58,7 +87,7 @@ async function createGame() {
 <main class="home-root">
 	<header class="home-hero">
 		<img src={logo} alt="Delcard" class="hero-logo" />
-		<h1 class="hero-title">DELCARD</h1>
+		<h1 class="hero-title">DELCARD<span class="sr-only"> — {$t('home.h1Tagline')}</span></h1>
 		<div class="suits-row" aria-hidden="true">
 			<Spade size={14} class="suit-blue" />
 			<Heart size={14} class="suit-red" />

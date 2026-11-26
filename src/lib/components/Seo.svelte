@@ -31,24 +31,30 @@ const metaDescription = $derived(isFr ? (descriptionFr ?? description) : descrip
 <svelte:head>
 	<title>{metaTitle}</title>
 	<meta name="description" content={metaDescription} />
-	<link rel="canonical" href={url} />
 	{#if noindex}
 		<meta name="robots" content="noindex,follow" />
+	{:else}
+		<link rel="canonical" href={url} />
+		<!-- hreflang alternates -->
+		<link rel="alternate" hreflang="fr" href={urlFr} />
+		<link rel="alternate" hreflang="en" href={urlEn} />
+		<link rel="alternate" hreflang="x-default" href={urlFr} />
+		<meta property="og:url" content={url} />
 	{/if}
-	<!-- hreflang alternates -->
-	<link rel="alternate" hreflang="fr" href={urlFr} />
-	<link rel="alternate" hreflang="en" href={urlEn} />
-	<link rel="alternate" hreflang="x-default" href={urlFr} />
 	<!-- Open Graph -->
 	<meta property="og:title" content={metaTitle} />
 	<meta property="og:description" content={metaDescription} />
-	<meta property="og:url" content={url} />
 	<meta property="og:type" content="website" />
 	<meta property="og:site_name" content="Delcard" />
 	<meta property="og:locale" content={isFr ? 'fr_FR' : 'en_US'} />
 	<meta property="og:locale:alternate" content={isFr ? 'en_US' : 'fr_FR'} />
+	<meta property="og:image" content="{SITE_ORIGIN}/og.png" />
+	<meta property="og:image:width" content="1200" />
+	<meta property="og:image:height" content="630" />
+	<meta property="og:image:alt" content="Delcard" />
 	<!-- Twitter -->
-	<meta name="twitter:card" content="summary" />
+	<meta name="twitter:card" content="summary_large_image" />
 	<meta name="twitter:title" content={metaTitle} />
 	<meta name="twitter:description" content={metaDescription} />
+	<meta name="twitter:image" content="{SITE_ORIGIN}/og.png" />
 </svelte:head>

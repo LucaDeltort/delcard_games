@@ -14,6 +14,7 @@ export default {
 		close: 'Fermer'
 	},
 	home: {
+		h1Tagline: 'Jeux de cartes en ligne gratuits entre amis',
 		eyebrow: 'Jeux de cartes entre amis. Sans inscription. Sans serveur.',
 		tagHost: 'HÔTE',
 		tagGuest: 'INVITÉ',
@@ -27,6 +28,7 @@ export default {
 		joinBtn: 'Rejoindre une partie'
 	},
 	join: {
+		h1Tagline: 'Rejoindre une partie de cartes en ligne',
 		eyebrow: 'TABLE PRIVÉE',
 		tagEnter: 'ENTRER',
 		brandLine1: 'Jeux de cartes entre amis.',

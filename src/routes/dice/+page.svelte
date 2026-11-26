@@ -8,11 +8,11 @@ import { dicePacks, resolvePackFor } from '$lib/stores/dicePacks'
 </script>
 
 <Seo
-	title="Dice | Delcard"
-	description="Browse dice styles for your games. Classic and custom packs, all free."
+	title="Dice Styles for Online Dice Games | Delcard"
+	description="Browse Delcard's dice styles: classic and illustrated D6 packs for Yams and other online dice games with friends. Pick your look, free, no sign-up."
 	canonical="/dice"
-	titleFr="Dés | Delcard"
-	descriptionFr="Parcourez les styles de dés pour vos parties. Packs classiques et personnalisés, tout gratuitement."
+	titleFr="Styles de dés pour jouer aux dés en ligne | Delcard"
+	descriptionFr="Parcourez les styles de dés Delcard : packs D6 classiques et illustrés pour le Yams et vos parties de dés en ligne entre amis. Gratuit, sans inscription."
 />
 
 <div class="mx-auto w-full max-w-5xl flex-1 px-4 py-8">

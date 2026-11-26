@@ -14,6 +14,7 @@ export default {
 		close: 'Close'
 	},
 	home: {
+		h1Tagline: 'Free online card games with friends',
 		eyebrow: 'Card games with friends. No sign-up. No server.',
 		tagHost: 'HOST',
 		tagGuest: 'GUEST',
@@ -27,6 +28,7 @@ export default {
 		joinBtn: 'Join a game'
 	},
 	join: {
+		h1Tagline: 'Join an online card game',
 		eyebrow: 'PRIVATE TABLE',
 		tagEnter: 'ENTER',
 		brandLine1: 'Card games with friends.',

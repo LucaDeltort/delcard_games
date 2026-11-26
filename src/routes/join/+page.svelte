@@ -65,11 +65,11 @@ async function joinGame() {
 </script>
 
 <Seo
-	title="Join a game | Delcard"
-	description="Enter your game code to join a friend's card game instantly. Free, no sign-up needed."
+	title="Join an Online Card Game with a Friend's Code | Delcard"
+	description="Enter the code your friend shared to join their online card game instantly. Free, no sign-up, no download: it runs right in your browser."
 	canonical="/join"
-	titleFr="Rejoindre une partie | Delcard"
-	descriptionFr="Entrez votre code de partie pour rejoindre immédiatement une partie de cartes entre amis. Gratuit, sans inscription."
+	titleFr="Rejoindre une partie de cartes avec un code | Delcard"
+	descriptionFr="Entrez le code partagé par votre ami pour rejoindre sa partie de cartes en ligne. Gratuit, sans inscription ni téléchargement, dans le navigateur."
 />
 
 <main class="join-root">
@@ -80,7 +80,7 @@ async function joinGame() {
 		<aside class="brand-side">
 			<span class="eyebrow">{$t('join.eyebrow')}</span>
 			<img src={logo} alt="Delcard" class="brand-logo" />
-			<h1 class="brand-title">DELCARD</h1>
+			<h1 class="brand-title">DELCARD<span class="sr-only"> — {$t('join.h1Tagline')}</span></h1>
 			<p class="brand-sub">
 				{$t('join.brandLine1')}<br />{$t('join.brandLine2')}
 			</p>

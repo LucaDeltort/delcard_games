@@ -62,12 +62,12 @@ async function switchPack(packId: string) {
 </script>
 
 <Seo
-	title={entry ? `${entry.name} | Delcard` : 'Deck | Delcard'}
-	description={entry ? `Browse ${entry.name} card packs and styles. Free, no sign-up.` : ''}
+	title={entry ? `${entry.name} Card Packs & Styles | Delcard` : 'Deck | Delcard'}
+	description={entry ? `Browse every ${entry.name} card pack on Delcard and preview the art. Pick a style for your online card games with friends. Free, no sign-up.` : ''}
 	canonical="/decks/{slug}"
 	noindex={!entry}
-	titleFr={entry ? `${entry.name} | Delcard` : 'Jeu de cartes | Delcard'}
-	descriptionFr={entry ? `Parcourez les packs et styles de ${entry.name}. Gratuit, sans inscription.` : ''}
+	titleFr={entry ? `${entry.name} : packs et styles de cartes | Delcard` : 'Jeu de cartes | Delcard'}
+	descriptionFr={entry ? `Découvrez tous les packs ${entry.name} de Delcard et leurs illustrations. Choisissez un style pour vos parties de cartes en ligne entre amis. Gratuit.` : ''}
 />
 
 <div class="mx-auto w-full max-w-5xl flex-1 px-4 py-8">

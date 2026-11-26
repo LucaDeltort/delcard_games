@@ -21,12 +21,12 @@ $effect(() => {
 </script>
 
 <Seo
-	title={entry ? `${entry.name} | Delcard` : 'Dice | Delcard'}
-	description={entry ? `Browse ${entry.name} dice packs and styles. Free, no sign-up.` : ''}
+	title={entry ? `${entry.name} Dice Packs & Styles | Delcard` : 'Dice | Delcard'}
+	description={entry ? `Browse every ${entry.name} dice pack on Delcard and preview each face. Pick a style for Yams and other online dice games with friends. Free.` : ''}
 	canonical="/dice/{slug}"
 	noindex={!entry}
-	titleFr={entry ? `${entry.name} | Delcard` : 'Dés | Delcard'}
-	descriptionFr={entry ? `Parcourez les packs et styles de dés ${entry.name}. Gratuit, sans inscription.` : ''}
+	titleFr={entry ? `${entry.name} : packs et styles de dés | Delcard` : 'Dés | Delcard'}
+	descriptionFr={entry ? `Découvrez tous les packs de dés ${entry.name} de Delcard et chaque face. Choisissez un style pour le Yams et vos parties de dés en ligne. Gratuit.` : ''}
 />
 
 <div class="mx-auto w-full max-w-5xl flex-1 px-4 py-8">

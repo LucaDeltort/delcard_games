@@ -12,12 +12,14 @@ Fixed: SSR locale from URL (`/` = fr, `?lang=en` = en), self-canonical variants,
 
 ## Warnings
 
-- [ ] No `og:image`; `twitter:card="summary"` without image — no rich link previews. `Seo.svelte`
-- [ ] No JSON-LD (`WebSite`, `WebApplication`/`VideoGame` on home)
-- [ ] Titles/descriptions too short, no target keywords (`Dice | Delcard` 14 chars, descriptions 65–90 chars vs 150–160). `decks`, `dice`, `decks/[type]`, `dice/[slug]` pages
-- [ ] `/stats`: no description, no canonical, not noindexed, orphan page. `src/routes/stats/+page.svelte`
-- [ ] Home + `/join` `<h1>` = "DELCARD" (brand only, no keyword)
-- [ ] Game page canonical `/game` points to a 404. `src/routes/game/[id]/+page.svelte`
+Fixed: `static/og.png` (1200×630) + `summary_large_image`; `WebSite` + `WebApplication` JSON-LD on home; keyword titles/descriptions (EN+FR); `sr-only` keyword in home/join `<h1>`; noindex pages drop canonical/hreflang/og:url; `/stats` uses `Seo` with noindex.
+
+- [x] No `og:image`; `twitter:card="summary"` without image — no rich link previews. `Seo.svelte`
+- [x] No JSON-LD (`WebSite`, `WebApplication`/`VideoGame` on home)
+- [x] Titles/descriptions too short, no target keywords (`Dice | Delcard` 14 chars, descriptions 65–90 chars vs 150–160). `decks`, `dice`, `decks/[type]`, `dice/[slug]` pages
+- [x] `/stats`: no description, no canonical, not noindexed, orphan page. `src/routes/stats/+page.svelte`
+- [x] Home + `/join` `<h1>` = "DELCARD" (brand only, no keyword)
+- [x] Game page canonical `/game` points to a 404. `src/routes/game/[id]/+page.svelte`
 
 ## Opportunities
 
