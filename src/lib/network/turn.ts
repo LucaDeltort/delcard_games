@@ -1,4 +1,4 @@
-import { PUBLIC_TURN_CREDS_URL } from '$env/static/public'
+import { env } from '$env/dynamic/public'
 
 const FETCH_TIMEOUT_MS = 8000
 const CACHE_TTL_MS = 10 * 60 * 1000
@@ -14,12 +14,14 @@ function isValidIceServer(entry: unknown): entry is RTCIceServer {
 }
 
 export async function getTurnIceServers(): Promise<RTCIceServer[]> {
-	if (!PUBLIC_TURN_CREDS_URL) return []
+	// Optional: unset locally means STUN only (dynamic env, so a missing var doesn't break the build)
+	const credsUrl = env.PUBLIC_TURN_CREDS_URL
+	if (!credsUrl) return []
 
 	if (cache && cache.expiresAt > Date.now()) return cache.value
 
 	try {
-		const res = await fetch(PUBLIC_TURN_CREDS_URL, {
+		const res = await fetch(credsUrl, {
 			signal: AbortSignal.timeout(FETCH_TIMEOUT_MS)
 		})
 		if (!res.ok) throw new Error(`HTTP ${res.status}`)
