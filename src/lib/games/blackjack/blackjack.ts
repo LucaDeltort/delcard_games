@@ -345,7 +345,6 @@ export const blackjack: GameDefinition<BlackjackState> = {
 	minPlayers: 1,
 	maxPlayers: 6,
 	optionsSchema: blackjackOptionsSchema,
-	isNew: true,
 
 	setup(players, rawOptions) {
 		const options = parseOptions(rawOptions)

@@ -51,7 +51,6 @@ export const purple: GameDefinition<PurpleState> = {
 	deckType: 'FrenchDeckWithoutJoker',
 	minPlayers: 2,
 	maxPlayers: 8,
-	isNew: true,
 	optionsSchema: [
 		{
 			key: 'endTurnOnEmptyDeck',

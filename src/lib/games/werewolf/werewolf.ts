@@ -53,7 +53,6 @@ export const werewolf: GameDefinition<WerewolfState> = {
 	deckType: 'WerewolfDeck',
 	minPlayers: 4,
 	maxPlayers: 16,
-	isNew: true,
 
 	optionsSchema: [
 		{

@@ -149,7 +149,6 @@ export const yams: GameDefinition<YamsState> = {
 	diceSlug: 'd6',
 	minPlayers: 2,
 	maxPlayers: 6,
-	isNew: true,
 
 	setup(players) {
 		return {
