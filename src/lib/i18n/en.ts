@@ -14,6 +14,7 @@ export default {
 		close: 'Close'
 	},
 	home: {
+		h1Tagline: 'Free online card games with friends',
 		eyebrow: 'Card games with friends. No sign-up. No server.',
 		tagHost: 'HOST',
 		tagGuest: 'GUEST',
@@ -27,6 +28,7 @@ export default {
 		joinBtn: 'Join a game'
 	},
 	join: {
+		h1Tagline: 'Join an online card game',
 		eyebrow: 'PRIVATE TABLE',
 		tagEnter: 'ENTER',
 		brandLine1: 'Card games with friends.',
@@ -425,6 +427,18 @@ export default {
 		decks: 'Card decks',
 		changelog: 'Changelog',
 		feedback: 'Feedback & suggestions'
+	},
+	gamesPage: {
+		title: 'Games',
+		h1: '{name} online with friends',
+		intro:
+			'Play for free in your browser, no sign-up, no download: create a table, share the code with your friends and play.',
+		play: 'Start a game',
+		rules: 'Rules',
+		tips: 'Tips',
+		faq: 'Frequently asked questions',
+		otherGames: 'Other games',
+		footerLink: 'Game rules'
 	},
 	decks: {
 		title: 'Card Decks',

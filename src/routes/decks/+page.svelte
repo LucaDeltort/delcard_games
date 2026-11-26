@@ -2,22 +2,22 @@
 import { ArrowLeft, ChevronRight } from 'lucide-svelte'
 import Seo from '$lib/components/Seo.svelte'
 import { deckRegistry } from '$lib/decks/registry'
-import { t } from '$lib/i18n'
+import { localHref, t } from '$lib/i18n'
 import { deckPacks, resolvePackFor } from '$lib/stores/deckPacks'
 </script>
 
 <Seo
-	title="Card Decks | Delcard"
-	description="Browse card deck styles for your games. Pick your look, all free."
+	title="Card Decks & Styles for Online Card Games | Delcard"
+	description="Browse Delcard's card decks: classic French deck, Color deck, Werewolf cards and illustrated packs. Pick your style for every online game, for free."
 	canonical="/decks"
-	titleFr="Jeux de cartes | Delcard"
-	descriptionFr="Parcourez les styles de jeux de cartes pour vos parties. Choisissez votre style, tout gratuitement."
+	titleFr="Jeux de cartes et styles pour jouer en ligne | Delcard"
+	descriptionFr="Parcourez les jeux de cartes Delcard : jeu français classique, jeu Color, cartes Loup-Garou et packs illustrés. Choisissez votre style, gratuitement."
 />
 
 <div class="mx-auto w-full max-w-5xl flex-1 px-4 py-8">
 	<div class="mb-6">
 		<a
-			href="/"
+			href={$localHref('/')}
 			class="flex w-fit items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
 		>
 			<ArrowLeft size={14} />
@@ -32,7 +32,7 @@ import { deckPacks, resolvePackFor } from '$lib/stores/deckPacks'
 			{@const pack = resolvePackFor($deckPacks, deck.slug)}
 			{@const ext = pack.ext ?? '.png'}
 			<a
-				href="/decks/{deck.slug}"
+				href={$localHref(`/decks/${deck.slug}`)}
 				class="group flex items-center gap-5 rounded-2xl border border-border bg-card px-5 py-4 transition-all hover:border-primary/40 hover:bg-card/80"
 			>
 				<img

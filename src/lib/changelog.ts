@@ -3,6 +3,24 @@ type ReleaseNote = { version: string; date: string; items: ReleaseItem[] }
 
 const changelog: ReleaseNote[] = [
 	{
+		version: '1.2',
+		date: '2026-11-26',
+		items: [
+			{
+				fr: 'Une page par jeu avec les règles, des conseils et les questions fréquentes',
+				en: 'A page for every game with rules, tips and frequently asked questions'
+			},
+			{
+				fr: 'Aperçu avec image quand vous partagez un lien Delcard',
+				en: 'Image preview when you share a Delcard link'
+			},
+			{
+				fr: 'Bouton des paramètres plus facile à toucher sur mobile',
+				en: 'Settings button easier to tap on mobile'
+			}
+		]
+	},
+	{
 		version: '1.1',
 		date: '2026-10-20',
 		items: [

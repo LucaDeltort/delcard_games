@@ -18,6 +18,10 @@ const crumbs = $derived(
 )
 </script>
 
+<svelte:head>
+	<title>Lab | Delcard</title>
+</svelte:head>
+
 <style>
 :global(.lab-grid-layout) {
 	background-image:

@@ -1,15 +1,18 @@
 <script lang="ts">
 import './layout.css'
 import { Coffee, Settings as SettingsIcon } from 'lucide-svelte'
+import { browser } from '$app/environment'
 import { page } from '$app/stores'
-import favicon from '$lib/assets/favicon.svg'
 import { unlockAudio } from '$lib/audio/player'
 import SettingsModal from '$lib/components/SettingsModal.svelte'
 import WhatsNew from '$lib/components/WhatsNew.svelte'
-import { t } from '$lib/i18n'
+import { locale, localHref, t, urlLocale } from '$lib/i18n'
 import { settingsOpen } from '$lib/stores/settings'
 
 let { children } = $props()
+
+// SSR renders in the URL's locale (?lang=en, else fr). Render is synchronous, so the shared store is safe here.
+if (!browser) locale.set(urlLocale($page.url))
 
 $effect(() => {
 	const handler = () => unlockAudio()
@@ -25,13 +28,15 @@ const isImmersive = $derived(
 </script>
 
 <svelte:head>
-    <title>{$t("common.appTitle")}</title>
-    <link rel="icon" href={favicon} />
+    <!-- Fallback only: pages set their own title (Seo.svelte), and a layout title can override it in SSR -->
+    {#if $page.error}
+        <title>{$t("common.appTitle")}</title>
+    {/if}
 </svelte:head>
 {#if !isImmersive}
     <button
         onclick={() => ($settingsOpen = true)}
-        class="fixed right-4 z-50 rounded-md border border-border bg-card px-3 py-2 text-muted-foreground transition-colors hover:text-foreground"
+        class="fixed right-4 z-50 flex size-11 items-center justify-center rounded-md border border-border bg-card text-muted-foreground transition-colors hover:text-foreground"
         style="top: calc(1rem + env(safe-area-inset-top))"
         aria-label={$t("settings.title")}
     >
@@ -45,7 +50,7 @@ const isImmersive = $derived(
 <div class="flex min-h-dvh flex-col">
     {@render children()}
     {#if !isImmersive}
-        <footer class="py-4 text-center text-xs text-muted-foreground">© 2026 Luca Deltort · MIT License</footer>
+        <footer class="py-4 text-center text-xs text-muted-foreground"><a href={$localHref("/games")} class="underline-offset-2 hover:text-foreground hover:underline">{$t("gamesPage.footerLink")}</a> · © 2026 Luca Deltort · MIT License</footer>
     {/if}
 </div>
 {#if !isImmersive}

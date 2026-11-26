@@ -2,16 +2,27 @@
 import { Dialog } from 'bits-ui'
 import { ArrowLeft, Check, Flag, X } from 'lucide-svelte'
 import { page } from '$app/stores'
+import JsonLd from '$lib/components/JsonLd.svelte'
 import Seo from '$lib/components/Seo.svelte'
 import type { Card } from '$lib/core/types'
 import { cardSrc, preloadPack } from '$lib/decks/preload'
 import { getDeckBySlug } from '$lib/decks/registry'
-import { t } from '$lib/i18n'
+import { locale, localHref, t } from '$lib/i18n'
+import { absUrl, breadcrumbLd } from '$lib/seo/jsonld'
 import { deckPacks, resolvePackFor } from '$lib/stores/deckPacks'
 
 const slug = $derived($page.params.type ?? '')
 const entry = $derived(getDeckBySlug(slug))
 const defaultPack = $derived(resolvePackFor($deckPacks, slug))
+const breadcrumb = $derived(
+	entry
+		? breadcrumbLd([
+				{ name: 'Delcard', url: absUrl('/', $locale) },
+				{ name: $t('decks.title'), url: absUrl('/decks', $locale) },
+				{ name: $t(entry.nameKey), url: absUrl(`/decks/${slug}`, $locale) }
+			])
+		: null
+)
 
 let previewPackId = $state<string | null>(null)
 let renderedPackId = $state<string | null>(null)
@@ -61,19 +72,21 @@ async function switchPack(packId: string) {
 }
 </script>
 
+{#if breadcrumb}<JsonLd data={breadcrumb} />{/if}
+
 <Seo
-	title={entry ? `${entry.name} | Delcard` : 'Deck | Delcard'}
-	description={entry ? `Browse ${entry.name} card packs and styles. Free, no sign-up.` : ''}
+	title={entry ? `${entry.name} Card Packs & Styles | Delcard` : 'Deck | Delcard'}
+	description={entry ? `Browse every ${entry.name} card pack on Delcard and preview the art. Pick a style for your online card games with friends. Free, no sign-up.` : ''}
 	canonical="/decks/{slug}"
 	noindex={!entry}
-	titleFr={entry ? `${entry.name} | Delcard` : 'Jeu de cartes | Delcard'}
-	descriptionFr={entry ? `Parcourez les packs et styles de ${entry.name}. Gratuit, sans inscription.` : ''}
+	titleFr={entry ? `${entry.name} : packs et styles de cartes | Delcard` : 'Jeu de cartes | Delcard'}
+	descriptionFr={entry ? `Découvrez tous les packs ${entry.name} de Delcard et leurs illustrations. Choisissez un style pour vos parties de cartes en ligne entre amis. Gratuit.` : ''}
 />
 
 <div class="mx-auto w-full max-w-5xl flex-1 px-4 py-8">
 	<div class="mb-6">
 		<a
-			href="/decks"
+			href={$localHref('/decks')}
 			class="flex w-fit items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
 		>
 			<ArrowLeft size={14} />

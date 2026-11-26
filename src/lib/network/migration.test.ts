@@ -3,6 +3,9 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { GameStateGeneric } from '$lib/core/types'
 import type { Action, GameDefinition } from '$lib/engine'
 
+// SvelteKit's dynamic env is only initialized by the server runtime; no TURN in tests
+vi.mock('$env/dynamic/public', () => ({ env: {} }))
+
 // ── Minimal game def for testing ────────────────────────────
 
 function makeTestGame(): GameDefinition<GameStateGeneric> {

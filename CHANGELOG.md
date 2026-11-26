@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.2 - 2026-11-26
+
+### Features
+- A page for every game with rules, tips and frequently asked questions
+- Image preview when you share a Delcard link
+- Settings button easier to tap on mobile
+
 ## v1.1 - 2026-10-20
 
 ### Features

@@ -14,6 +14,7 @@ export default {
 		close: 'Fermer'
 	},
 	home: {
+		h1Tagline: 'Jeux de cartes en ligne gratuits entre amis',
 		eyebrow: 'Jeux de cartes entre amis. Sans inscription. Sans serveur.',
 		tagHost: 'HÔTE',
 		tagGuest: 'INVITÉ',
@@ -27,6 +28,7 @@ export default {
 		joinBtn: 'Rejoindre une partie'
 	},
 	join: {
+		h1Tagline: 'Rejoindre une partie de cartes en ligne',
 		eyebrow: 'TABLE PRIVÉE',
 		tagEnter: 'ENTRER',
 		brandLine1: 'Jeux de cartes entre amis.',
@@ -429,6 +431,18 @@ export default {
 		decks: 'Jeux de cartes',
 		changelog: 'Notes de version',
 		feedback: 'Retour & suggestions'
+	},
+	gamesPage: {
+		title: 'Jeux',
+		h1: '{name} en ligne entre amis',
+		intro:
+			'Jouez gratuitement dans votre navigateur, sans inscription ni téléchargement : créez une table, partagez le code à vos amis et jouez.',
+		play: 'Créer une partie',
+		rules: 'Règles',
+		tips: 'Conseils',
+		faq: 'Questions fréquentes',
+		otherGames: 'Autres jeux',
+		footerLink: 'Règles des jeux'
 	},
 	decks: {
 		title: 'Jeux de cartes',

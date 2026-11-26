@@ -1,16 +1,22 @@
 <script lang="ts">
 import { ArrowLeft, Trophy } from 'lucide-svelte'
+import Seo from '$lib/components/Seo.svelte'
 import StatsContent from '$lib/components/StatsContent.svelte'
-import { t } from '$lib/i18n'
+import { localHref, t } from '$lib/i18n'
 </script>
 
-<svelte:head>
-	<title>{$t('stats.title')} - Delcard</title>
-</svelte:head>
+<Seo
+	title="Statistics | Delcard"
+	description="Your local game history and win stats on Delcard."
+	canonical="/stats"
+	noindex={true}
+	titleFr="Statistiques | Delcard"
+	descriptionFr="Votre historique de parties et vos statistiques de victoires sur Delcard."
+/>
 
 <div class="mx-auto max-w-2xl px-4 py-8">
 	<a
-		href="/"
+		href={$localHref('/')}
 		class="mb-6 inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
 	>
 		<ArrowLeft size={16} />

@@ -2,14 +2,25 @@
 import { ArrowLeft, Check, Flag } from 'lucide-svelte'
 import { page } from '$app/stores'
 import Dice from '$lib/components/Dice.svelte'
+import JsonLd from '$lib/components/JsonLd.svelte'
 import Seo from '$lib/components/Seo.svelte'
 import { getDiceBySlug } from '$lib/dice/registry'
-import { t } from '$lib/i18n'
+import { locale, localHref, t } from '$lib/i18n'
+import { absUrl, breadcrumbLd } from '$lib/seo/jsonld'
 import { dicePacks, resolvePackFor } from '$lib/stores/dicePacks'
 
 const slug = $derived($page.params.slug ?? '')
 const entry = $derived(getDiceBySlug(slug))
 const defaultPack = $derived(resolvePackFor($dicePacks, slug))
+const breadcrumb = $derived(
+	entry
+		? breadcrumbLd([
+				{ name: 'Delcard', url: absUrl('/', $locale) },
+				{ name: $t('dice.title'), url: absUrl('/dice', $locale) },
+				{ name: $t(entry.nameKey), url: absUrl(`/dice/${slug}`, $locale) }
+			])
+		: null
+)
 
 let previewPackId = $state<string | null>(null)
 const previewPack = $derived(entry?.packs.find((p) => p.id === previewPackId) ?? defaultPack)
@@ -20,19 +31,21 @@ $effect(() => {
 })
 </script>
 
+{#if breadcrumb}<JsonLd data={breadcrumb} />{/if}
+
 <Seo
-	title={entry ? `${entry.name} | Delcard` : 'Dice | Delcard'}
-	description={entry ? `Browse ${entry.name} dice packs and styles. Free, no sign-up.` : ''}
+	title={entry ? `${entry.name} Dice Packs & Styles | Delcard` : 'Dice | Delcard'}
+	description={entry ? `Browse every ${entry.name} dice pack on Delcard and preview each face. Pick a style for Yams and other online dice games with friends. Free.` : ''}
 	canonical="/dice/{slug}"
 	noindex={!entry}
-	titleFr={entry ? `${entry.name} | Delcard` : 'Dés | Delcard'}
-	descriptionFr={entry ? `Parcourez les packs et styles de dés ${entry.name}. Gratuit, sans inscription.` : ''}
+	titleFr={entry ? `${entry.name} : packs et styles de dés | Delcard` : 'Dés | Delcard'}
+	descriptionFr={entry ? `Découvrez tous les packs de dés ${entry.name} de Delcard et chaque face. Choisissez un style pour le Yams et vos parties de dés en ligne. Gratuit.` : ''}
 />
 
 <div class="mx-auto w-full max-w-5xl flex-1 px-4 py-8">
 	<div class="mb-6">
 		<a
-			href="/dice"
+			href={$localHref('/dice')}
 			class="flex w-fit items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
 		>
 			<ArrowLeft size={14} />
