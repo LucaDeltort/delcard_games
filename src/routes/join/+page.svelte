@@ -9,7 +9,7 @@ import logo from '$lib/assets/logo.svg'
 import Seo from '$lib/components/Seo.svelte'
 import { Button } from '$lib/components/ui/button'
 import { Input } from '$lib/components/ui/input'
-import { t } from '$lib/i18n'
+import { localHref, t } from '$lib/i18n'
 import { GameClient } from '$lib/network/client'
 import { activeClient } from '$lib/stores/session'
 
@@ -130,7 +130,7 @@ async function joinGame() {
 				<button type="button" class="btn-join" onclick={joinGame} disabled={joining}>
 					{joining ? $t('join.connecting') : $t('join.joinBtn')}
 				</button>
-				<Button href="/" variant="ghost" class="w-full">{$t('join.back')}</Button>
+				<Button href={$localHref('/')} variant="ghost" class="w-full">{$t('join.back')}</Button>
 			</div>
 		</section>
 	</div>

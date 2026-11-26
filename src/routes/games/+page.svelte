@@ -3,7 +3,7 @@ import { ArrowLeft, ChevronRight } from 'lucide-svelte'
 import Seo from '$lib/components/Seo.svelte'
 import { gameList } from '$lib/games/index'
 import { playerRange } from '$lib/games/seo'
-import { t } from '$lib/i18n'
+import { localHref, t } from '$lib/i18n'
 </script>
 
 <Seo
@@ -17,7 +17,7 @@ import { t } from '$lib/i18n'
 <div class="mx-auto w-full max-w-5xl flex-1 px-4 py-8">
 	<div class="mb-6">
 		<a
-			href="/"
+			href={$localHref('/')}
 			class="flex w-fit items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
 		>
 			<ArrowLeft size={14} />
@@ -30,7 +30,7 @@ import { t } from '$lib/i18n'
 	<div class="flex flex-col gap-3">
 		{#each gameList as game}
 			<a
-				href="/games/{game.id}"
+				href={$localHref(`/games/${game.id}`)}
 				class="group flex items-center gap-5 rounded-2xl border border-border bg-card px-5 py-4 transition-all hover:border-primary/40 hover:bg-card/80"
 			>
 				<div class="min-w-0 flex-1">

@@ -44,3 +44,9 @@ export const t = derived(locale, ($locale) => {
 		return raw.replace(/\{(\w+)\}/g, (_, k) => String(params[k] ?? `{${k}}`))
 	}
 })
+
+/** Internal link in the active locale: English keeps `?lang=en` so crawlers stay on the EN variant */
+export const localHref = derived(locale, ($locale) => (href: string): string => {
+	if ($locale !== 'en') return href
+	return `${href}${href.includes('?') ? '&' : '?'}lang=en`
+})

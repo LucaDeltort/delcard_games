@@ -6,7 +6,7 @@ import Seo from '$lib/components/Seo.svelte'
 import type { Card } from '$lib/core/types'
 import { cardSrc, preloadPack } from '$lib/decks/preload'
 import { getDeckBySlug } from '$lib/decks/registry'
-import { t } from '$lib/i18n'
+import { localHref, t } from '$lib/i18n'
 import { deckPacks, resolvePackFor } from '$lib/stores/deckPacks'
 
 const slug = $derived($page.params.type ?? '')
@@ -73,7 +73,7 @@ async function switchPack(packId: string) {
 <div class="mx-auto w-full max-w-5xl flex-1 px-4 py-8">
 	<div class="mb-6">
 		<a
-			href="/decks"
+			href={$localHref('/decks')}
 			class="flex w-fit items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
 		>
 			<ArrowLeft size={14} />

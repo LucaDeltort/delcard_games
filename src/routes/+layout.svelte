@@ -6,7 +6,7 @@ import { page } from '$app/stores'
 import { unlockAudio } from '$lib/audio/player'
 import SettingsModal from '$lib/components/SettingsModal.svelte'
 import WhatsNew from '$lib/components/WhatsNew.svelte'
-import { locale, t, urlLocale } from '$lib/i18n'
+import { locale, localHref, t, urlLocale } from '$lib/i18n'
 import { settingsOpen } from '$lib/stores/settings'
 
 let { children } = $props()
@@ -50,7 +50,7 @@ const isImmersive = $derived(
 <div class="flex min-h-dvh flex-col">
     {@render children()}
     {#if !isImmersive}
-        <footer class="py-4 text-center text-xs text-muted-foreground"><a href="/games" class="underline-offset-2 hover:text-foreground hover:underline">{$t("gamesPage.footerLink")}</a> · © 2026 Luca Deltort · MIT License</footer>
+        <footer class="py-4 text-center text-xs text-muted-foreground"><a href={$localHref("/games")} class="underline-offset-2 hover:text-foreground hover:underline">{$t("gamesPage.footerLink")}</a> · © 2026 Luca Deltort · MIT License</footer>
     {/if}
 </div>
 {#if !isImmersive}

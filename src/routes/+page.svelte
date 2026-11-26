@@ -10,7 +10,7 @@ import Seo from '$lib/components/Seo.svelte'
 import { Button } from '$lib/components/ui/button'
 import { Input } from '$lib/components/ui/input'
 import { gameList } from '$lib/games/index'
-import { t } from '$lib/i18n'
+import { localHref, t } from '$lib/i18n'
 import { GameHost } from '$lib/network/host'
 import { SITE_ORIGIN } from '$lib/seo/config'
 import { activeHost } from '$lib/stores/session'
@@ -158,7 +158,7 @@ const jsonLd = JSON.stringify({
 		</div>
 
 		<!-- Join -->
-		<a href="/join" class="panel panel--join">
+		<a href={$localHref('/join')} class="panel panel--join">
 			<div class="panel-head">
 				<span class="panel-tag panel-tag--pink">{$t('home.tagGuest')}</span>
 				<h2 class="panel-title">{$t('home.joinTitle')}</h2>
@@ -178,7 +178,7 @@ const jsonLd = JSON.stringify({
 	</div>
 
 	<div class="browse-grid">
-		<a href="/decks" class="browse-card browse-card--blue">
+		<a href={$localHref('/decks')} class="browse-card browse-card--blue">
 			<div class="browse-imgs">
 				<img
 					src="/ui/button_decks_card_1.svg"
@@ -208,7 +208,7 @@ const jsonLd = JSON.stringify({
 			</div>
 		</a>
 
-		<a href="/dice" class="browse-card browse-card--pink">
+		<a href={$localHref('/dice')} class="browse-card browse-card--pink">
 			<div class="browse-imgs browse-imgs--dice">
 				<img
 					src="/dice/D6/classic/4.svg"
