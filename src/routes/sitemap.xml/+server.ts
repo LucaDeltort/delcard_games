@@ -16,7 +16,7 @@ export function GET() {
 
 	const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-${urls.map((u) => `  <url><loc>${SITE_ORIGIN}${u}</loc></url>`).join('\n')}
+${urls.flatMap((u) => [u, `${u}?lang=en`].map((l) => `  <url><loc>${SITE_ORIGIN}${l}</loc></url>`)).join('\n')}
 </urlset>`
 
 	return new Response(xml, { headers: { 'Content-Type': 'application/xml' } })

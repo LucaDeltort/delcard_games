@@ -1,48 +1,54 @@
 <script lang="ts">
+import { page } from '$app/stores'
+import { locale, urlLocale } from '$lib/i18n'
 import { SITE_ORIGIN } from '$lib/seo/config'
 
 interface Props {
+	/** English title, served on `?lang=en` */
 	title: string
+	/** English description, served on `?lang=en` */
 	description: string
 	canonical: string
 	noindex?: boolean
-	/** Optional French translation for client-side locale switching */
+	/** French title (default locale); falls back to `title` */
 	titleFr?: string
+	/** French description (default locale); falls back to `description` */
 	descriptionFr?: string
 }
 
 const { title, description, canonical, noindex = false, titleFr, descriptionFr }: Props = $props()
 
-const url = $derived(SITE_ORIGIN + canonical)
-const urlFr = $derived(`${url}?lang=fr`)
+// French is served at the bare URL, English at ?lang=en. Each variant is self-canonical.
+const urlFr = $derived(SITE_ORIGIN + canonical)
+const urlEn = $derived(`${urlFr}?lang=en`)
+const url = $derived(urlLocale($page.url) === 'en' ? urlEn : urlFr)
+
+const isFr = $derived($locale === 'fr')
+const metaTitle = $derived(isFr ? (titleFr ?? title) : title)
+const metaDescription = $derived(isFr ? (descriptionFr ?? description) : description)
 </script>
 
 <svelte:head>
-	<title>{title}</title>
-	<meta name="description" content={description} />
+	<title>{metaTitle}</title>
+	<meta name="description" content={metaDescription} />
 	<link rel="canonical" href={url} />
 	{#if noindex}
 		<meta name="robots" content="noindex,follow" />
 	{/if}
 	<!-- hreflang alternates -->
-	<link rel="alternate" hreflang="en" href={url} />
 	<link rel="alternate" hreflang="fr" href={urlFr} />
-	<link rel="alternate" hreflang="x-default" href={url} />
+	<link rel="alternate" hreflang="en" href={urlEn} />
+	<link rel="alternate" hreflang="x-default" href={urlFr} />
 	<!-- Open Graph -->
-	<meta property="og:title" content={title} />
-	<meta property="og:description" content={description} />
+	<meta property="og:title" content={metaTitle} />
+	<meta property="og:description" content={metaDescription} />
 	<meta property="og:url" content={url} />
 	<meta property="og:type" content="website" />
 	<meta property="og:site_name" content="Delcard" />
+	<meta property="og:locale" content={isFr ? 'fr_FR' : 'en_US'} />
+	<meta property="og:locale:alternate" content={isFr ? 'en_US' : 'fr_FR'} />
 	<!-- Twitter -->
 	<meta name="twitter:card" content="summary" />
-	<meta name="twitter:title" content={title} />
-	<meta name="twitter:description" content={description} />
-	<!-- French alternates rendered for indexing -->
-	{#if titleFr}
-		<meta property="og:locale:alternate" content="fr_FR" />
-	{/if}
-	{#if descriptionFr}
-		<meta name="description-fr" content={descriptionFr} />
-	{/if}
+	<meta name="twitter:title" content={metaTitle} />
+	<meta name="twitter:description" content={metaDescription} />
 </svelte:head>

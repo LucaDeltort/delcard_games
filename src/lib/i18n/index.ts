@@ -8,6 +8,11 @@ type Params = Record<string, string | number>
 
 const translations: Record<Locale, typeof fr> = { fr, en }
 
+/** Locale served for a URL: French by default, English via `?lang=en` (used for SSR + SEO tags) */
+export function urlLocale(url: URL): Locale {
+	return url.searchParams.get('lang') === 'en' ? 'en' : 'fr'
+}
+
 function getStored(): Locale {
 	if (!browser) return 'fr'
 	const urlParams = new URLSearchParams(window.location.search)

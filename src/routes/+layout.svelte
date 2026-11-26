@@ -1,15 +1,19 @@
 <script lang="ts">
 import './layout.css'
 import { Coffee, Settings as SettingsIcon } from 'lucide-svelte'
+import { browser } from '$app/environment'
 import { page } from '$app/stores'
 import favicon from '$lib/assets/favicon.svg'
 import { unlockAudio } from '$lib/audio/player'
 import SettingsModal from '$lib/components/SettingsModal.svelte'
 import WhatsNew from '$lib/components/WhatsNew.svelte'
-import { t } from '$lib/i18n'
+import { locale, t, urlLocale } from '$lib/i18n'
 import { settingsOpen } from '$lib/stores/settings'
 
 let { children } = $props()
+
+// SSR renders in the URL's locale (?lang=en, else fr). Render is synchronous, so the shared store is safe here.
+if (!browser) locale.set(urlLocale($page.url))
 
 $effect(() => {
 	const handler = () => unlockAudio()
@@ -25,7 +29,10 @@ const isImmersive = $derived(
 </script>
 
 <svelte:head>
-    <title>{$t("common.appTitle")}</title>
+    <!-- Fallback only: pages set their own title (Seo.svelte), and a layout title can override it in SSR -->
+    {#if $page.error}
+        <title>{$t("common.appTitle")}</title>
+    {/if}
     <link rel="icon" href={favicon} />
 </svelte:head>
 {#if !isImmersive}
