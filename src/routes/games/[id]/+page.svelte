@@ -1,11 +1,14 @@
 <script lang="ts">
 import { ArrowLeft } from 'lucide-svelte'
 import { page } from '$app/stores'
+import JsonLd from '$lib/components/JsonLd.svelte'
 import Seo from '$lib/components/Seo.svelte'
 import { Button } from '$lib/components/ui/button'
+import { commonFaq, gameContent } from '$lib/games/content'
 import { gameList, gameRules } from '$lib/games/index'
 import { gameNames, playerRange } from '$lib/games/seo'
 import { locale, localHref, t } from '$lib/i18n'
+import { absUrl, breadcrumbLd, faqLd } from '$lib/seo/jsonld'
 
 const id = $derived($page.params.id ?? '')
 const game = $derived(gameList.find((g) => g.id === id))
@@ -13,6 +16,16 @@ const names = $derived(gameNames(id))
 const players = $derived(game ? playerRange(game) : '')
 const rules = $derived(gameRules[id]?.[$locale] ?? null)
 const others = $derived(gameList.filter((g) => g.id !== id))
+const name = $derived($t(`${id}.name`))
+const content = $derived(gameContent[id]?.[$locale] ?? null)
+const faq = $derived([...(content?.faq ?? []), ...commonFaq($locale, name)])
+const breadcrumb = $derived(
+	breadcrumbLd([
+		{ name: 'Delcard', url: absUrl('/', $locale) },
+		{ name: $t('gamesPage.title'), url: absUrl('/games', $locale) },
+		{ name, url: absUrl(`/games/${id}`, $locale) }
+	])
+)
 </script>
 
 <Seo
@@ -40,8 +53,14 @@ const others = $derived(gameList.filter((g) => g.id !== id))
 	</div>
 
 	{#if game}
-		<h1 class="mb-2 text-2xl tracking-tight">{$t('gamesPage.h1', { name: $t(`${id}.name`) })}</h1>
+		<JsonLd data={breadcrumb} />
+		<JsonLd data={faqLd(faq)} />
+
+		<h1 class="mb-2 text-2xl tracking-tight">{$t('gamesPage.h1', { name })}</h1>
 		<p class="mb-6 text-sm text-muted-foreground">{players}&nbsp;{$t('common.players')}</p>
+		{#if content}
+			<p class="mb-4 text-sm leading-relaxed">{content.about}</p>
+		{/if}
 		<p class="mb-6 text-sm">{$t('gamesPage.intro')}</p>
 		<Button href={$localHref(`/?game=${id}`)} class="mb-10">{$t('gamesPage.play')}</Button>
 
@@ -49,6 +68,25 @@ const others = $derived(gameList.filter((g) => g.id !== id))
 			<h2 class="mb-3 text-lg tracking-tight">{$t('gamesPage.rules')}</h2>
 			<div class="mb-10 whitespace-pre-wrap rounded-2xl border border-border bg-card px-5 py-4 text-sm leading-relaxed text-muted-foreground">{rules}</div>
 		{/if}
+
+		{#if content}
+			<h2 class="mb-3 text-lg tracking-tight">{$t('gamesPage.tips')}</h2>
+			<ul class="mb-10 list-disc space-y-1.5 pl-5 text-sm leading-relaxed">
+				{#each content.tips as tip}
+					<li>{tip}</li>
+				{/each}
+			</ul>
+		{/if}
+
+		<h2 class="mb-3 text-lg tracking-tight">{$t('gamesPage.faq')}</h2>
+		<div class="mb-10 flex flex-col gap-4">
+			{#each faq as item}
+				<div>
+					<h3 class="text-sm font-medium">{item.q}</h3>
+					<p class="mt-1 text-sm leading-relaxed text-muted-foreground">{item.a}</p>
+				</div>
+			{/each}
+		</div>
 
 		<h2 class="mb-3 text-lg tracking-tight">{$t('gamesPage.otherGames')}</h2>
 		<ul class="flex flex-wrap gap-2">

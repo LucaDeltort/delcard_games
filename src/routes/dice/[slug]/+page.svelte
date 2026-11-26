@@ -2,14 +2,25 @@
 import { ArrowLeft, Check, Flag } from 'lucide-svelte'
 import { page } from '$app/stores'
 import Dice from '$lib/components/Dice.svelte'
+import JsonLd from '$lib/components/JsonLd.svelte'
 import Seo from '$lib/components/Seo.svelte'
 import { getDiceBySlug } from '$lib/dice/registry'
-import { localHref, t } from '$lib/i18n'
+import { locale, localHref, t } from '$lib/i18n'
+import { absUrl, breadcrumbLd } from '$lib/seo/jsonld'
 import { dicePacks, resolvePackFor } from '$lib/stores/dicePacks'
 
 const slug = $derived($page.params.slug ?? '')
 const entry = $derived(getDiceBySlug(slug))
 const defaultPack = $derived(resolvePackFor($dicePacks, slug))
+const breadcrumb = $derived(
+	entry
+		? breadcrumbLd([
+				{ name: 'Delcard', url: absUrl('/', $locale) },
+				{ name: $t('dice.title'), url: absUrl('/dice', $locale) },
+				{ name: $t(entry.nameKey), url: absUrl(`/dice/${slug}`, $locale) }
+			])
+		: null
+)
 
 let previewPackId = $state<string | null>(null)
 const previewPack = $derived(entry?.packs.find((p) => p.id === previewPackId) ?? defaultPack)
@@ -19,6 +30,8 @@ $effect(() => {
 	previewPackId = null
 })
 </script>
+
+{#if breadcrumb}<JsonLd data={breadcrumb} />{/if}
 
 <Seo
 	title={entry ? `${entry.name} Dice Packs & Styles | Delcard` : 'Dice | Delcard'}

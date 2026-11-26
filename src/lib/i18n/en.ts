@@ -435,6 +435,8 @@ export default {
 			'Play for free in your browser, no sign-up, no download: create a table, share the code with your friends and play.',
 		play: 'Start a game',
 		rules: 'Rules',
+		tips: 'Tips',
+		faq: 'Frequently asked questions',
 		otherGames: 'Other games',
 		footerLink: 'Game rules'
 	},

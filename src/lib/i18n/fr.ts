@@ -439,6 +439,8 @@ export default {
 			'Jouez gratuitement dans votre navigateur, sans inscription ni téléchargement : créez une table, partagez le code à vos amis et jouez.',
 		play: 'Créer une partie',
 		rules: 'Règles',
+		tips: 'Conseils',
+		faq: 'Questions fréquentes',
 		otherGames: 'Autres jeux',
 		footerLink: 'Règles des jeux'
 	},

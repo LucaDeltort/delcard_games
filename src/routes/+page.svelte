@@ -5,6 +5,7 @@ import { browser } from '$app/environment'
 import { goto } from '$app/navigation'
 import { track } from '$lib/analytics'
 import logo from '$lib/assets/logo.svg'
+import JsonLd from '$lib/components/JsonLd.svelte'
 import RulesDrawer from '$lib/components/RulesDrawer.svelte'
 import Seo from '$lib/components/Seo.svelte'
 import { Button } from '$lib/components/ui/button'
@@ -46,7 +47,7 @@ async function createGame() {
 	goto(`/game/${host.code}?role=host&game=${selectedGame}&name=${encodeURIComponent(trimmedName)}`)
 }
 
-const jsonLd = JSON.stringify({
+const jsonLd = {
 	'@context': 'https://schema.org',
 	'@graph': [
 		{
@@ -68,7 +69,7 @@ const jsonLd = JSON.stringify({
 			offers: { '@type': 'Offer', price: '0', priceCurrency: 'EUR' }
 		}
 	]
-})
+}
 </script>
 
 <Seo
@@ -79,9 +80,7 @@ const jsonLd = JSON.stringify({
 	descriptionFr="Jouez à la Bataille, au Président, au Loup-Garou, au Blackjack, au Yams et plus en ligne entre amis. Gratuit, sans inscription ni téléchargement."
 />
 
-<svelte:head>
-	{@html `<script type="application/ld+json">${jsonLd}</script>`}
-</svelte:head>
+<JsonLd data={jsonLd} />
 
 <div class="bg-diamond" aria-hidden="true">◆</div>
 <div class="bg-glow" aria-hidden="true"></div>

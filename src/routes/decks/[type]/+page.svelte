@@ -2,16 +2,27 @@
 import { Dialog } from 'bits-ui'
 import { ArrowLeft, Check, Flag, X } from 'lucide-svelte'
 import { page } from '$app/stores'
+import JsonLd from '$lib/components/JsonLd.svelte'
 import Seo from '$lib/components/Seo.svelte'
 import type { Card } from '$lib/core/types'
 import { cardSrc, preloadPack } from '$lib/decks/preload'
 import { getDeckBySlug } from '$lib/decks/registry'
-import { localHref, t } from '$lib/i18n'
+import { locale, localHref, t } from '$lib/i18n'
+import { absUrl, breadcrumbLd } from '$lib/seo/jsonld'
 import { deckPacks, resolvePackFor } from '$lib/stores/deckPacks'
 
 const slug = $derived($page.params.type ?? '')
 const entry = $derived(getDeckBySlug(slug))
 const defaultPack = $derived(resolvePackFor($deckPacks, slug))
+const breadcrumb = $derived(
+	entry
+		? breadcrumbLd([
+				{ name: 'Delcard', url: absUrl('/', $locale) },
+				{ name: $t('decks.title'), url: absUrl('/decks', $locale) },
+				{ name: $t(entry.nameKey), url: absUrl(`/decks/${slug}`, $locale) }
+			])
+		: null
+)
 
 let previewPackId = $state<string | null>(null)
 let renderedPackId = $state<string | null>(null)
@@ -60,6 +71,8 @@ async function switchPack(packId: string) {
 	loading = false
 }
 </script>
+
+{#if breadcrumb}<JsonLd data={breadcrumb} />{/if}
 
 <Seo
 	title={entry ? `${entry.name} Card Packs & Styles | Delcard` : 'Deck | Delcard'}
