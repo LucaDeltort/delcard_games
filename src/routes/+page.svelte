@@ -15,7 +15,9 @@ import { GameHost } from '$lib/network/host'
 import { SITE_ORIGIN } from '$lib/seo/config'
 import { activeHost } from '$lib/stores/session'
 
-let selectedGame = $state(gameList[0].id)
+// Preselect from /?game=<id> (links from /games/<id>)
+const gameParam = browser ? new URLSearchParams(window.location.search).get('game') : null
+let selectedGame = $state(gameList.find((g) => g.id === gameParam)?.id ?? gameList[0].id)
 let playerName = $state(browser ? (localStorage.getItem('playerName') ?? '') : '')
 let creating = $state(false)
 let error = $state('')

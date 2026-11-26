@@ -23,13 +23,16 @@ Fixed: `static/og.png` (1200×630) + `summary_large_image`; `WebSite` + `WebAppl
 
 ## Opportunities
 
-- [ ] No indexable per-game pages (War, Presidents, Werewolf, Yams, Blackjack…) — rules already exist in `RulesDrawer`; target "how to play X online"
-- [ ] Non-standard `<meta name="description-fr">` — ignored by engines. `Seo.svelte`
-- [ ] Dice previews `alt=""` on `/dice/[slug]`
-- [ ] Sitemap has no `<lastmod>`
+Fixed: `/games` index + `/games/[id]` pages (rules, CTA `/?game=<id>` preselects the game, other-game links), footer link, sitemap entries; settings button 44×44.
+
+- [x] No indexable per-game pages (War, Presidents, Werewolf, Yams, Blackjack…) — rules already exist in `RulesDrawer`; target "how to play X online"
+- [x] Non-standard `<meta name="description-fr">` — ignored by engines. `Seo.svelte`
+- [x] ~~Dice previews `alt=""` on `/dice/[slug]`~~ — false positive: `Dice.svelte` container has `role="img"` + `aria-label`, faces are decorative
+- [ ] Sitemap has no `<lastmod>` — skipped: no reliable per-page change date; a build date would mislead
 - [ ] Cloudflare-managed robots.txt blocks GPTBot, ClaudeBot, Google-Extended, GoogleOther… (`ai-train=no`) — no AI citations; classic search unaffected. Owner's choice
-- [ ] Duplicate favicon links (`app.html` + layout); `theme-color` `#222222` vs manifest `#002fa7`
-- [ ] Settings button ~42×34px, under 44px touch target. `src/routes/+layout.svelte`
+- [x] Duplicate favicon links (`app.html` + layout) — removed from layout
+- [ ] `theme-color` `#222222` vs manifest `#002fa7` — owner choice (browser bar vs PWA title bar)
+- [x] Settings button ~42×34px, under 44px touch target. `src/routes/+layout.svelte`
 
 ## Passing
 

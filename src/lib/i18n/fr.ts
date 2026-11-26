@@ -432,6 +432,16 @@ export default {
 		changelog: 'Notes de version',
 		feedback: 'Retour & suggestions'
 	},
+	gamesPage: {
+		title: 'Jeux',
+		h1: '{name} en ligne entre amis',
+		intro:
+			'Jouez gratuitement dans votre navigateur, sans inscription ni téléchargement : créez une table, partagez le code à vos amis et jouez.',
+		play: 'Créer une partie',
+		rules: 'Règles',
+		otherGames: 'Autres jeux',
+		footerLink: 'Règles des jeux'
+	},
 	decks: {
 		title: 'Jeux de cartes',
 		browse: 'Parcourir',

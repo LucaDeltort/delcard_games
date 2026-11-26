@@ -428,6 +428,16 @@ export default {
 		changelog: 'Changelog',
 		feedback: 'Feedback & suggestions'
 	},
+	gamesPage: {
+		title: 'Games',
+		h1: '{name} online with friends',
+		intro:
+			'Play for free in your browser, no sign-up, no download: create a table, share the code with your friends and play.',
+		play: 'Start a game',
+		rules: 'Rules',
+		otherGames: 'Other games',
+		footerLink: 'Game rules'
+	},
 	decks: {
 		title: 'Card Decks',
 		browse: 'Browse',
